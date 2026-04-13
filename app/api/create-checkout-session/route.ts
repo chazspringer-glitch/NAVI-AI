@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const dynamic = "force-dynamic";
+
+let _stripe: Stripe | null = null;
+function getStripe() {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error("STRIPE_SECRET_KEY not set");
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const stripe = getStripe();
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/[^/]*$/, "") || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
