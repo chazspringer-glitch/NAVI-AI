@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 /* ── Static mock data ─────────────────────────────────────────────────────── */
 
@@ -74,8 +74,81 @@ function renderBold(text: string) {
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 
+interface SupabaseClient {
+  id: string;
+  name: string;
+  email: string;
+  business_name: string;
+  service_type: string;
+  created_at: string;
+}
+
 export default function AdminDashboardPanel({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<AdminTab>("dashboard");
+
+  // ── Supabase clients state ──────────────────────────────────────────────
+  const [dbClients, setDbClients] = useState<SupabaseClient[]>([]);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  // Add-client form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formBusiness, setFormBusiness] = useState("");
+  const [formService, setFormService] = useState("");
+  const [formSaving, setFormSaving] = useState(false);
+
+  const loadClients = useCallback(async () => {
+    setDbLoading(true);
+    setDbError(null);
+    try {
+      const res = await fetch("/api/clients");
+      const json = await res.json();
+      if (Array.isArray(json.clients)) {
+        setDbClients(json.clients);
+      }
+    } catch {
+      setDbError("Could not load clients");
+    } finally {
+      setDbLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  const handleAddClient = async () => {
+    if (!formName || !formEmail || !formBusiness || !formService) return;
+    setFormSaving(true);
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formName,
+          email: formEmail,
+          business_name: formBusiness,
+          service_type: formService,
+        }),
+      });
+      if (res.ok) {
+        setFormName(""); setFormEmail(""); setFormBusiness(""); setFormService("");
+        setShowAddForm(false);
+        await loadClients();
+      }
+    } catch {
+      // silent — form stays open so user can retry
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  // Merge: show Supabase clients if available, fall back to static mock data
+  const displayClients = dbClients.length > 0
+    ? dbClients.map((c) => ({ name: c.name, service: c.service_type, status: "Active" as string, revenue: "—", email: c.email, businessName: c.business_name }))
+    : CLIENTS.map((c) => ({ ...c, email: "", businessName: "" }));
 
   return (
     <div style={{
@@ -261,41 +334,130 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
 
       {/* ── Clients ────────────────────────────────────────────────────── */}
       {tab === "clients" && (
-        <div style={{
-          borderRadius: 12,
-          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-          border: "1px solid rgba(201,162,39,0.10)",
-          overflow: "hidden",
-        }}>
-          <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Client Roster</div>
-            <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>{CLIENTS.length} total</div>
-          </div>
-          {CLIENTS.map(({ name, service, status, revenue }, i) => (
-            <div key={name} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "12px 16px",
-              borderBottom: i < CLIENTS.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+        <>
+          {/* Add Client button + form */}
+          {!showAddForm ? (
+            <button
+              onClick={() => setShowAddForm(true)}
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 10,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                background: "rgba(201,162,39,0.06)",
+                border: "1px solid rgba(201,162,39,0.18)",
+                color: "#C9A227", fontSize: 10, fontFamily: "monospace",
+                cursor: "pointer", fontWeight: 600, transition: "all 0.18s ease",
+              }}
+            >
+              <span style={{ fontSize: 14 }}>➕</span> Add New Client
+            </button>
+          ) : (
+            <div style={{
+              padding: "14px 16px", borderRadius: 12,
+              background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+              border: "1px solid rgba(201,162,39,0.18)",
+              display: "flex", flexDirection: "column", gap: 8,
             }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 }}>{name}</div>
-                <div style={{ fontSize: 9, color: "#64748b" }}>{service}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#C9A227", marginBottom: 2 }}>New Client</div>
+              {[
+                { label: "Name", value: formName, set: setFormName, placeholder: "Full name" },
+                { label: "Email", value: formEmail, set: setFormEmail, placeholder: "email@example.com" },
+                { label: "Business", value: formBusiness, set: setFormBusiness, placeholder: "Business name" },
+                { label: "Service", value: formService, set: setFormService, placeholder: "e.g. Startup Launch Package" },
+              ].map(({ label, value, set, placeholder }) => (
+                <div key={label}>
+                  <div style={{ fontSize: 8, color: "#475569", marginBottom: 3, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
+                  <input
+                    value={value}
+                    onChange={(e) => set(e.target.value)}
+                    placeholder={placeholder}
+                    style={{
+                      width: "100%", padding: "8px 10px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "#e2e8f0", fontSize: 11, fontFamily: "monospace",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <button
+                  onClick={handleAddClient}
+                  disabled={formSaving || !formName || !formEmail || !formBusiness || !formService}
+                  style={{
+                    flex: 1, padding: "8px", borderRadius: 8, cursor: "pointer",
+                    background: formSaving ? "rgba(201,162,39,0.08)" : "rgba(201,162,39,0.12)",
+                    border: "1px solid rgba(201,162,39,0.30)",
+                    color: "#C9A227", fontSize: 10, fontFamily: "monospace", fontWeight: 600,
+                    opacity: (!formName || !formEmail || !formBusiness || !formService) ? 0.4 : 1,
+                  }}
+                >
+                  {formSaving ? "Saving..." : "Save Client"}
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  style={{
+                    padding: "8px 14px", borderRadius: 8, cursor: "pointer",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "#64748b", fontSize: 10, fontFamily: "monospace",
+                  }}
+                >
+                  Cancel
+                </button>
               </div>
-              <span style={{
-                padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
-                color: STATUS_COLOR[status] || "#64748b",
-                background: `${STATUS_COLOR[status] || "#64748b"}15`,
-                border: `1px solid ${STATUS_COLOR[status] || "#64748b"}30`,
-                flexShrink: 0,
-              }}>
-                {status}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#34d399", flexShrink: 0, minWidth: 50, textAlign: "right" }}>
-                {revenue}
-              </span>
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* Client list */}
+          <div style={{
+            borderRadius: 12,
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(201,162,39,0.10)",
+            overflow: "hidden",
+          }}>
+            <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Client Roster</div>
+                <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>
+                  {displayClients.length} total{dbClients.length > 0 ? " (from database)" : " (sample data)"}
+                </div>
+              </div>
+              {dbLoading && (
+                <div style={{ fontSize: 9, color: "#C9A227" }}>Loading...</div>
+              )}
+            </div>
+            {dbError && (
+              <div style={{ padding: "8px 16px", fontSize: 9, color: "#f59e0b", background: "rgba(245,158,11,0.06)" }}>
+                {dbError} — showing sample data
+              </div>
+            )}
+            {displayClients.map(({ name, service, status, revenue }, i) => (
+              <div key={`${name}-${i}`} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "12px 16px",
+                borderBottom: i < displayClients.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 }}>{name}</div>
+                  <div style={{ fontSize: 9, color: "#64748b" }}>{service}</div>
+                </div>
+                <span style={{
+                  padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+                  color: STATUS_COLOR[status] || "#64748b",
+                  background: `${STATUS_COLOR[status] || "#64748b"}15`,
+                  border: `1px solid ${STATUS_COLOR[status] || "#64748b"}30`,
+                  flexShrink: 0,
+                }}>
+                  {status}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#34d399", flexShrink: 0, minWidth: 50, textAlign: "right" }}>
+                  {revenue}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* ── Content ────────────────────────────────────────────────────── */}
