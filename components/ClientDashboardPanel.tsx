@@ -200,10 +200,10 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
       fontFamily: "monospace",
     }}>
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* ── Hero Section ──────────────────────────────────────────────── */}
       <div style={{
         position: "relative", overflow: "hidden",
-        padding: "16px 16px 14px",
+        padding: asPage ? "24px 20px 20px" : "16px 16px 14px",
         borderBottom: "1px solid rgba(201,162,39,0.12)",
         flexShrink: 0,
       }}>
@@ -264,22 +264,14 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
             </button>
           </div>
         </div>
-      </div>
 
-      {/* ── Content ──────────────────────────────────────────────────── */}
-      <div style={{
-        ...(asPage
-          ? { padding: "14px 16px 140px", display: "flex", flexDirection: "column" as const, gap: 14, maxWidth: 600, margin: "0 auto", width: "100%" }
-          : { flex: 1, overflowY: "auto" as const, padding: "14px 16px 24px", display: "flex", flexDirection: "column" as const, gap: 14 }),
-      }}>
-
-        {/* ── Stats Cards ──────────────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
+        {/* Stats inside hero */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginTop: 16, position: "relative" }}>
           {STATS.map(({ label, value, change, icon, accent }) => (
             <div key={label} style={{
               padding: "14px 12px 12px",
               borderRadius: 12,
-              background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+              background: "rgba(255,255,255,0.03)",
               border: `1px solid ${accent}22`,
               position: "relative", overflow: "hidden",
             }}>
@@ -302,8 +294,40 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
             </div>
           ))}
         </div>
+      </div>
 
-        {/* ── Content Calendar ──────────────────────────────────────────── */}
+      {/* ── Content ──────────────────────────────────────────────────── */}
+      <div style={{
+        ...(asPage
+          ? { padding: "20px 20px 140px", display: "flex", flexDirection: "column" as const, gap: 20, maxWidth: 600, margin: "0 auto", width: "100%" }
+          : { flex: 1, overflowY: "auto" as const, padding: "16px 16px 24px", display: "flex", flexDirection: "column" as const, gap: 20 }),
+      }}>
+
+        {/* ── Your Growth ──────────────────────────────────────────────── */}
+        <div style={{
+          borderRadius: 14,
+          padding: "16px 18px",
+          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+          border: "1px solid rgba(0,212,255,0.10)",
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#00d4ff", marginBottom: 14 }}>Your Growth</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {[
+              { label: "This Week", value: "+312", sub: "new impressions", color: "#34d399" },
+              { label: "Top Platform", value: "Instagram", sub: "68% of traffic", color: "#C9A227" },
+              { label: "Best Time", value: "12–2 PM", sub: "highest engagement", color: "#a855f7" },
+              { label: "Content Score", value: "8.4/10", sub: "above average", color: "#00d4ff" },
+            ].map(({ label, value, sub, color }) => (
+              <div key={label} style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.04em", marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color, marginBottom: 2 }}>{value}</div>
+                <div style={{ fontSize: 8, color: "#475569" }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Your Content (merged calendar + uploads) ──────────────────── */}
         {(() => {
           const PLAT_COLOR: Record<string, string> = { Instagram: "#C9A227", Facebook: "#00d4ff", TikTok: "#f472b6", LinkedIn: "#a855f7", Twitter: "#00d4ff" };
 
@@ -338,20 +362,19 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
 
           return (
             <div style={{
-              borderRadius: 12,
+              borderRadius: 14,
               background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
               border: "1px solid rgba(201,162,39,0.10)",
-              overflow: "hidden",
             }}>
               <div style={{
-                padding: "14px 16px 10px",
+                padding: "16px 18px 12px",
                 borderBottom: "1px solid rgba(255,255,255,0.04)",
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Content Calendar</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#C9A227" }}>Your Content</div>
                   <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>
-                    Apr 14 – Apr 20, 2026{scheduledPosts.length > 0 ? ` · ${scheduledPosts.length} scheduled` : ""}
+                    Calendar · Uploads · Schedule{scheduledPosts.length > 0 ? ` · ${scheduledPosts.length} queued` : ""}
                   </div>
                 </div>
                 <button
@@ -569,131 +592,77 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
                   })}
                 </>
               )}
+
+              {/* ── Uploads (inside same card) ───────────────────────────── */}
+              <div style={{ padding: "12px 16px 6px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ fontSize: 9, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
+                    Uploads · {uploads.length} file{uploads.length !== 1 ? "s" : ""}
+                  </div>
+                </div>
+              </div>
+
+              {uploadError && (
+                <div style={{ padding: "6px 16px", fontSize: 9, color: "#f87171", background: "rgba(239,68,68,0.06)" }}>
+                  {uploadError}
+                </div>
+              )}
+
+              {uploading && (
+                <div style={{ padding: "10px 16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 10, color: "#C9A227" }}>Uploading...</div>
+                </div>
+              )}
+
+              {!uploading && uploads.length === 0 && (
+                <div style={{ padding: "14px 16px 16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>No files yet — tap Upload above</div>
+                </div>
+              )}
+
+              {uploads.length > 0 && (
+                <div style={{ padding: "6px 12px 12px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 8 }}>
+                  {uploads.map((u) => {
+                    const isVideo = u.file_type.startsWith("video/");
+                    return (
+                      <div key={u.id} style={{
+                        borderRadius: 8, overflow: "hidden",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(0,0,0,0.3)",
+                        position: "relative",
+                      }}>
+                        {isVideo ? (
+                          <video src={u.public_url} style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} muted />
+                        ) : (
+                          <img src={u.public_url} alt={u.file_name} style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} />
+                        )}
+                        <div style={{ position: "absolute", top: 4, right: 4, padding: "1px 5px", borderRadius: 4, background: "rgba(0,0,0,0.6)", fontSize: 7, color: "#94a3b8", fontWeight: 600 }}>
+                          {isVideo ? "VIDEO" : "IMG"}
+                        </div>
+                        <div style={{ padding: "5px 6px" }}>
+                          <div style={{ fontSize: 8, color: "#94a3b8", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.file_name}</div>
+                          <div style={{ fontSize: 7, color: "#334155", marginTop: 1 }}>{(u.file_size / 1024).toFixed(0)} KB</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })()}
 
-        {/* ── My Content (uploads) ──────────────────────────────────────── */}
-        <div style={{
-          borderRadius: 12,
-          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-          border: "1px solid rgba(201,162,39,0.10)",
-          overflow: "hidden",
-        }}>
-          <div style={{
-            padding: "14px 16px 10px",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>My Content</div>
-              <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>
-                {uploads.length} file{uploads.length !== 1 ? "s" : ""} uploaded
-              </div>
-            </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              style={{
-                padding: "5px 12px", borderRadius: 7,
-                background: "rgba(201,162,39,0.08)",
-                border: "1px solid rgba(201,162,39,0.22)",
-                color: "#C9A227", fontSize: 9, fontWeight: 600,
-                cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-                opacity: uploading ? 0.5 : 1,
-              }}
-            >
-              <span style={{ fontSize: 11 }}>➕</span> Add Files
-            </button>
-          </div>
-
-          {/* Upload error */}
-          {uploadError && (
-            <div style={{ padding: "8px 16px", fontSize: 9, color: "#f87171", background: "rgba(239,68,68,0.06)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-              {uploadError}
-            </div>
-          )}
-
-          {/* Uploading state */}
-          {uploading && (
-            <div style={{ padding: "12px 16px", textAlign: "center" }}>
-              <div style={{ fontSize: 10, color: "#C9A227" }}>Uploading...</div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!uploading && uploads.length === 0 && (
-            <div style={{ padding: "20px 16px", textAlign: "center" }}>
-              <div style={{ fontSize: 16, marginBottom: 6 }}>📁</div>
-              <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4 }}>No content uploaded yet</div>
-              <div style={{ fontSize: 8, color: "#475569" }}>Upload images or videos to get started</div>
-            </div>
-          )}
-
-          {/* Content grid */}
-          {uploads.length > 0 && (
-            <div style={{ padding: "10px 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              {uploads.map((u) => {
-                const isVideo = u.file_type.startsWith("video/");
-                return (
-                  <div key={u.id} style={{
-                    borderRadius: 8, overflow: "hidden",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    background: "rgba(0,0,0,0.3)",
-                    position: "relative",
-                  }}>
-                    {isVideo ? (
-                      <video
-                        src={u.public_url}
-                        style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
-                        muted
-                      />
-                    ) : (
-                      <img
-                        src={u.public_url}
-                        alt={u.file_name}
-                        style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
-                      />
-                    )}
-                    {/* Type badge */}
-                    <div style={{
-                      position: "absolute", top: 4, right: 4,
-                      padding: "1px 5px", borderRadius: 4,
-                      background: "rgba(0,0,0,0.6)",
-                      fontSize: 7, color: "#94a3b8", fontWeight: 600,
-                    }}>
-                      {isVideo ? "VIDEO" : "IMG"}
-                    </div>
-                    <div style={{ padding: "5px 6px" }}>
-                      <div style={{
-                        fontSize: 8, color: "#94a3b8", fontWeight: 500,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>
-                        {u.file_name}
-                      </div>
-                      <div style={{ fontSize: 7, color: "#334155", marginTop: 1 }}>
-                        {(u.file_size / 1024).toFixed(0)} KB · {new Date(u.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* ── AI Content Generator ──────────────────────────────────────── */}
         <div style={{
-          borderRadius: 12,
+          borderRadius: 14,
           background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
           border: "1px solid rgba(168,85,247,0.12)",
-          overflow: "hidden",
         }}>
           <div style={{
-            padding: "14px 16px 10px",
+            padding: "16px 18px 12px",
             borderBottom: "1px solid rgba(255,255,255,0.04)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#a855f7" }}>AI Content Generator</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#a855f7" }}>AI Content Generator</div>
             <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Generate captions, hashtags, and post ideas</div>
           </div>
 
