@@ -32,6 +32,7 @@ const PodcastPanel            = dynamic(() => import("@/components/PodcastPanel"
 const LuckyModePanel          = dynamic(() => import("@/components/LuckyModePanel"),          { ssr: false });
 const HandsFreeBar            = dynamic(() => import("@/components/HandsFreeBar"),            { ssr: false });
 const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboardPanel"),     { ssr: false });
+const ClientDashboardPanel    = dynamic(() => import("@/components/ClientDashboardPanel"),    { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -733,6 +734,7 @@ export default function HomePage() {
   const [legalRightsSeenRef] = useState(() => ({ current: false }));
   const [showSystemHealth,  setShowSystemHealth]        = useState(false);
   const [showAdminDash,     setShowAdminDash]            = useState(false);
+  const [showClientDash,    setShowClientDash]           = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [showHousingPanel,  setShowHousingPanel]   = useState(false);
   const [showHousingHub,    setShowHousingHub]     = useState(false);
@@ -2210,6 +2212,13 @@ export default function HomePage() {
       {showAdminDash && isAdmin && (
         <AdminDashboardPanel
           onClose={() => setShowAdminDash(false)}
+        />
+      )}
+
+      {/* Client Dashboard */}
+      {showClientDash && (
+        <ClientDashboardPanel
+          onClose={() => setShowClientDash(false)}
         />
       )}
 
@@ -4672,6 +4681,31 @@ export default function HomePage() {
             <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.5 }}>→</span>
           </button>
         )}
+
+        {/* ── Client Dashboard button ───────────────────────────────────────── */}
+        <button
+          onClick={() => { setShowClientDash(true); setMenuOpen(false); }}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            padding: "9px 12px", borderRadius: 10, cursor: "pointer",
+            background: "rgba(0,212,255,0.05)",
+            border: "1px solid rgba(0,212,255,0.18)",
+            color: "#00d4ff", fontSize: 11, fontFamily: "monospace",
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,212,255,0.10)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,212,255,0.35)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,212,255,0.05)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,212,255,0.18)";
+          }}
+        >
+          <span style={{ fontSize: 14 }}>📈</span>
+          <span style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Client Dashboard</span>
+          <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.5 }}>→</span>
+        </button>
 
         {/* ── Admin passcode input (non-admin only) ─────────────────────────── */}
         {!isAdmin && showAdminInput && (
