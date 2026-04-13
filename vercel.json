@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "app/api/chat/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/tts/route.ts": {
+      "maxDuration": 25
+    },
+    "app/api/resources/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/housing/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

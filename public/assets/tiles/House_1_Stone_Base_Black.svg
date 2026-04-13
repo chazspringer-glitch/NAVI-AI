@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" width="64" height="80" style="image-rendering:pixelated;shape-rendering:crispEdges">
+
+  <!-- ── ROOF ── -->
+  <!-- Main roof shape -->
+  <polygon points="32,2 4,26 60,26" fill="#6e3018"/>
+  <!-- Roof shingles (horizontal bands) -->
+  <rect x="20" y="10" width="24" height="3" fill="#7e3c1e"/>
+  <rect x="12" y="16" width="40" height="3" fill="#7e3c1e"/>
+  <rect x="6"  y="22" width="52" height="3" fill="#7e3c1e"/>
+  <!-- Roof ridge peak -->
+  <rect x="30" y="2"  width="4"  height="4" fill="#5a2610"/>
+  <!-- Roof highlight -->
+  <rect x="16" y="12" width="10" height="2" fill="#904428"/>
+  <rect x="8"  y="18" width="12" height="2" fill="#904428"/>
+  <!-- Roof eave (dark underside) -->
+  <rect x="3"  y="24" width="58" height="4" fill="#1a1a1a"/>
+
+  <!-- ── STONE WALLS ── -->
+  <!-- Main wall fill -->
+  <rect x="4" y="28" width="56" height="38" fill="#7a7a7a"/>
+
+  <!-- Stone block rows (alternating offsets like real masonry) -->
+  <!-- Row A -->
+  <rect x="5"  y="29" width="17" height="6" fill="#848484" rx="0"/>
+  <rect x="23" y="29" width="18" height="6" fill="#767676" rx="0"/>
+  <rect x="42" y="29" width="17" height="6" fill="#848484" rx="0"/>
+  <!-- mortar lines -->
+  <rect x="4"  y="35" width="56" height="1" fill="#606060"/>
+  <rect x="22" y="29" width="1" height="6" fill="#606060"/>
+  <rect x="41" y="29" width="1" height="6" fill="#606060"/>
+
+  <!-- Row B (offset) -->
+  <rect x="5"  y="36" width="11" height="6" fill="#767676"/>
+  <rect x="17" y="36" width="20" height="6" fill="#848484"/>
+  <rect x="38" y="36" width="14" height="6" fill="#767676"/>
+  <rect x="53" y="36" width="7"  height="6" fill="#848484"/>
+  <!-- mortar lines -->
+  <rect x="4"  y="42" width="56" height="1" fill="#606060"/>
+  <rect x="16" y="36" width="1" height="6" fill="#606060"/>
+  <rect x="37" y="36" width="1" height="6" fill="#606060"/>
+  <rect x="52" y="36" width="1" height="6" fill="#606060"/>
+
+  <!-- Row C -->
+  <rect x="5"  y="43" width="17" height="6" fill="#848484"/>
+  <rect x="23" y="43" width="18" height="6" fill="#767676"/>
+  <rect x="42" y="43" width="17" height="6" fill="#848484"/>
+  <!-- mortar lines -->
+  <rect x="4"  y="49" width="56" height="1" fill="#606060"/>
+  <rect x="22" y="43" width="1" height="6" fill="#606060"/>
+  <rect x="41" y="43" width="1" height="6" fill="#606060"/>
+
+  <!-- Row D (offset) -->
+  <rect x="5"  y="50" width="11" height="6" fill="#767676"/>
+  <rect x="17" y="50" width="20" height="6" fill="#848484"/>
+  <rect x="38" y="50" width="14" height="6" fill="#767676"/>
+  <rect x="53" y="50" width="7"  height="6" fill="#848484"/>
+  <!-- mortar lines -->
+  <rect x="4"  y="56" width="56" height="1" fill="#606060"/>
+  <rect x="16" y="50" width="1" height="6" fill="#606060"/>
+  <rect x="37" y="50" width="1" height="6" fill="#606060"/>
+  <rect x="52" y="50" width="1" height="6" fill="#606060"/>
+
+  <!-- Row E -->
+  <rect x="5"  y="57" width="17" height="6" fill="#848484"/>
+  <rect x="23" y="57" width="18" height="6" fill="#767676"/>
+  <rect x="42" y="57" width="17" height="6" fill="#848484"/>
+  <!-- mortar lines -->
+  <rect x="4"  y="63" width="56" height="1" fill="#606060"/>
+  <rect x="22" y="57" width="1" height="6" fill="#606060"/>
+  <rect x="41" y="57" width="1" height="6" fill="#606060"/>
+
+  <!-- ── WINDOWS ── -->
+  <!-- Left window frame (black) -->
+  <rect x="7"  y="31" width="14" height="14" fill="#111"/>
+  <!-- Left window glass -->
+  <rect x="8"  y="32" width="12" height="12" fill="#7bb5e0"/>
+  <!-- Left window cross -->
+  <rect x="8"  y="37" width="12" height="2"  fill="#111"/>
+  <rect x="13" y="32" width="2"  height="12" fill="#111"/>
+  <!-- Window sill -->
+  <rect x="6"  y="44" width="16" height="2"  fill="#555"/>
+
+  <!-- Right window frame -->
+  <rect x="43" y="31" width="14" height="14" fill="#111"/>
+  <!-- Right window glass -->
+  <rect x="44" y="32" width="12" height="12" fill="#7bb5e0"/>
+  <!-- Right window cross -->
+  <rect x="44" y="37" width="12" height="2"  fill="#111"/>
+  <rect x="49" y="32" width="2"  height="12" fill="#111"/>
+  <!-- Window sill -->
+  <rect x="42" y="44" width="16" height="2"  fill="#555"/>
+
+  <!-- ── DOOR ── -->
+  <!-- Door frame (black) -->
+  <rect x="23" y="50" width="18" height="16" fill="#111"/>
+  <!-- Door wood -->
+  <rect x="24" y="51" width="16" height="15" fill="#5c3010"/>
+  <!-- Door panels (recessed look) -->
+  <rect x="25" y="52" width="6"  height="6"  fill="#4e2808"/>
+  <rect x="33" y="52" width="6"  height="6"  fill="#4e2808"/>
+  <rect x="25" y="60" width="14" height="5"  fill="#4e2808"/>
+  <!-- Door knob -->
+  <rect x="35" y="58" width="3"  height="3"  fill="#c8a030"/>
+  <!-- Door highlight -->
+  <rect x="24" y="51" width="2"  height="14" fill="#6e3c18"/>
+
+  <!-- ── BLACK STONE BASE ── -->
+  <rect x="0" y="64" width="64" height="16" fill="#111"/>
+  <!-- Base stone blocks -->
+  <rect x="2"  y="66" width="18" height="8" fill="#1e1e1e"/>
+  <rect x="21" y="66" width="20" height="8" fill="#222222"/>
+  <rect x="42" y="66" width="20" height="8" fill="#1e1e1e"/>
+  <!-- Base mortar lines -->
+  <rect x="0"  y="74" width="64" height="1" fill="#0a0a0a"/>
+  <rect x="20" y="64" width="1"  height="10" fill="#0a0a0a"/>
+  <rect x="41" y="64" width="1"  height="10" fill="#0a0a0a"/>
+
+  <!-- ── OUTLINE ── -->
+  <rect x="3"  y="27" width="58" height="1" fill="#111"/>
+  <rect x="3"  y="27" width="1"  height="37" fill="#111"/>
+  <rect x="60" y="27" width="1"  height="37" fill="#111"/>
+
+</svg>

@@ -1,0 +1,438 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #08080f;
+  --bg-surface: #10101a;
+  --bg-card: #14141f;
+  --border: #1e1e30;
+  --neon-cyan: #00d4ff;
+  --neon-purple: #a855f7;
+  --neon-pink: #f472b6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: #e2e8f0;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: #2d2d45;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3d3d5c;
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Neon text */
+.neon-text-cyan {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 20px rgba(0, 212, 255, 0.4);
+}
+.neon-text-pink {
+  color: var(--neon-pink);
+  text-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 20px rgba(244, 114, 182, 0.4);
+}
+.neon-text-purple {
+  color: var(--neon-purple);
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Neon border */
+.neon-border-cyan {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3), inset 0 0 8px rgba(0, 212, 255, 0.05);
+}
+.neon-border-pink {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 8px rgba(244, 114, 182, 0.3), inset 0 0 8px rgba(244, 114, 182, 0.05);
+}
+
+/* Holographic gradient text */
+.holo-text {
+  background: linear-gradient(135deg, #00d4ff, #a855f7, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Scan line overlay */
+.scan-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.scan-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.4), transparent);
+  animation: scanLine 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Message bubble animations */
+.msg-enter {
+  animation: fadeInUp 0.3s ease-out forwards;
+  will-change: transform, opacity;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* Typing dots */
+.typing-dot {
+  animation: typing 1.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 100% { opacity: 0.3; transform: translateY(0);    }
+  50%       { opacity: 1;   transform: translateY(-4px); }
+}
+
+/* Bond bar fill */
+.bond-fill {
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: width;
+}
+
+/* Particle burst */
+.particle-burst {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Evolution overlay animations */
+@keyframes evoFadeInOut {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes evoFlash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  70%  { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+@keyframes evoRing {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes evoText {
+  0%   { opacity: 0; transform: scale(0.7) translateY(12px); }
+  15%  { opacity: 1; transform: scale(1.08) translateY(0); }
+  30%  { transform: scale(1); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.95) translateY(-8px); }
+}
+
+/* Mobile safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Springer Industries branding fade-in */
+@keyframes brandFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Mode / tab / overlay transition keyframes */
+@keyframes modeIn {
+  0%   { opacity: 0; transform: scale(0.95) translateY(12px); }
+  60%  { opacity: 1; transform: scale(1.015) translateY(-3px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes tabIn {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.97); }
+  58%  { opacity: 1; transform: translateY(-4px) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes tabOut {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.97); }
+}
+@keyframes overlayIn {
+  0%   { opacity: 0; transform: translateY(22px) scale(0.96); }
+  55%  { opacity: 1; transform: translateY(-5px) scale(1.008); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes modeLabelIn {
+  0%   { opacity: 0; transform: translateX(8px) scale(0.88); }
+  62%  { opacity: 1; transform: translateX(-2px) scale(1.06); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes switchBadge {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  18%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  72%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+}
+@keyframes countdownBar {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+/* Achievement Dock animations */
+@keyframes dockBounceIn {
+  0%   { transform: scale(0);    opacity: 0; }
+  55%  { transform: scale(1.28); opacity: 1; }
+  75%  { transform: scale(0.92); }
+  90%  { transform: scale(1.06); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+@keyframes dockPulse {
+  0%, 100% { box-shadow: 0 0 8px  var(--badge-glow), 0 0 2px var(--badge-border); }
+  50%       { box-shadow: 0 0 20px var(--badge-glow), 0 0 8px var(--badge-glow), 0 0 2px var(--badge-border); }
+}
+@keyframes dockBannerIn {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+@keyframes dockTipIn {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+/* Hide horizontal scrollbar inside dock */
+.dock-scroll::-webkit-scrollbar { display: none; }
+
+/* GPU-layer hints for frequently animated elements */
+.scan-overlay::after { will-change: transform; }
+
+
+/* ── NaviIntro cinematic entrance ─────────────────────────────────────── */
+@keyframes introCameraZoom {
+  0%   { transform: scale(1.026); }
+  100% { transform: scale(1);     }
+}
+@keyframes introGlow {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  72%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes introRing {
+  0%   { transform: translate(-50%, -50%) scale(0.18); opacity: 0;   }
+  15%  { opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(3.2);  opacity: 0;   }
+}
+@keyframes introContent {
+  0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+  18%  { opacity: 1; transform: scale(1.02) translateY(-3px); }
+  30%  { transform: scale(1) translateY(0); }
+  78%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.97) translateY(-8px); }
+}
+@keyframes introDot {
+  0%   { transform: rotate(var(--dot-angle)) translateY(0)     scale(0);   opacity: 0; }
+  22%  { opacity: 1; }
+  38%  { transform: rotate(var(--dot-angle)) translateY(-14px)  scale(1);              }
+  100% { transform: rotate(var(--dot-angle)) translateY(-88px)  scale(0.2); opacity: 0; }
+}
+@keyframes introSkipHint {
+  0%,  58% { opacity: 0; }
+  72%      { opacity: 1; }
+  100%     { opacity: 0; }
+}
+@keyframes introFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-9px); }
+}
+
+/* ── NaviIntro boot orb ────────────────────────────────────────────────── */
+@keyframes introOrbBreathe {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1.00; }
+}
+@keyframes introOrbCloudA {
+  0%   { transform: translate(0%,  0%)  rotate(0deg);   }
+  33%  { transform: translate(-6%, 5%)  rotate(120deg); }
+  66%  { transform: translate(5%, -4%)  rotate(240deg); }
+  100% { transform: translate(0%,  0%)  rotate(360deg); }
+}
+@keyframes introOrbCloudB {
+  0%   { transform: translate(0%,  0%)   rotate(0deg);    }
+  50%  { transform: translate(8%, -6%)   rotate(-180deg); }
+  100% { transform: translate(0%,  0%)   rotate(-360deg); }
+}
+@keyframes introOrbCore {
+  0%, 100% { opacity: 0.65; transform: translate(-50%, -50%) scale(0.90); }
+  50%      { opacity: 1.00; transform: translate(-50%, -50%) scale(1.12); }
+}
+@keyframes introOrbBuild {
+  0%   { opacity: 0.08; }
+  30%  { opacity: 0.45; }
+  100% { opacity: 1.00; }
+}
+
+/* Purpose-response NAVI glow pulse */
+@keyframes purposePulse {
+  0%, 100% { opacity: 0.55; transform: scale(1);    }
+  50%       { opacity: 1;    transform: scale(1.06); }
+}
+
+/* ── Cinematic mic awakening animations ──────────────────────────────────── */
+
+/* Dormant: slow, gentle ring expanding outward */
+@keyframes micDormantRing {
+  0%   { transform: scale(1);    opacity: 0.45; }
+  65%  { transform: scale(1.65); opacity: 0;    }
+  100% { transform: scale(1.65); opacity: 0;    }
+}
+
+/* Dormant: button itself softly breathes with a cyan glow */
+@keyframes micDormantGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(0,212,255,0.08), 0 0 24px rgba(0,212,255,0.04); }
+  50%       { box-shadow: 0 0 24px rgba(0,212,255,0.22), 0 0 48px rgba(0,212,255,0.10); }
+}
+
+/* Activating: fast expanding burst rings */
+@keyframes micActivatingRing {
+  0%   { transform: scale(1);    opacity: 0.65; }
+  100% { transform: scale(2.0);  opacity: 0;    }
+}
+
+/* Ready/activating badge pulse */
+@keyframes micReadyPulse {
+  0%, 100% { opacity: 0.75; }
+  50%       { opacity: 1;    }
+}
+
+/* Dormant badge fade in/out */
+@keyframes micDormantBadge {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.85; }
+}
+
+/* ── STEM Mode cinematic animations ─────────────────────────────────────────── */
+@keyframes stemFadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes stemZoomIn {
+  0%   { opacity: 0; transform: scale(0.6);  }
+  65%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1);    }
+}
+@keyframes stemBubblePop {
+  0%   { opacity: 0; transform: scale(0.82) translateY(8px);  }
+  60%  { opacity: 1; transform: scale(1.03) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0);     }
+}
+@keyframes stemCardIn {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes stemCelebratePulse {
+  0%   { opacity: 0.22; transform: scale(0.90); }
+  100% { opacity: 0.65; transform: scale(1.10); }
+}
+@keyframes stemXpReveal {
+  0%   { opacity: 0; transform: scale(0.4)  translateY(28px); }
+  65%  { opacity: 1; transform: scale(1.20) translateY(-8px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0);     }
+}
+@keyframes stemParticle {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--pdx), var(--pdy)) scale(0.1); }
+}
+@keyframes stemIntroGlow {
+  0%   { opacity: 0; transform: scale(0.85); }
+  40%  { opacity: 1; transform: scale(1);    }
+  100% { opacity: 1; transform: scale(1);    }
+}
+@keyframes stemDotPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%       { transform: scale(1.35); opacity: 1;   }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Lucky Mode animations ───────────────────────────────────────────────── */
+@keyframes luckyIntroIn {
+  0%   { opacity: 0; transform: scale(0.82) translateY(18px); }
+  45%  { opacity: 1; transform: scale(1.03) translateY(-4px); }
+  65%  { transform: scale(1) translateY(0); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.96) translateY(-10px); }
+}
+@keyframes luckySubtitleIn {
+  0%,  20% { opacity: 0; transform: translateY(14px); }
+  50%       { opacity: 1; transform: translateY(0); }
+  82%       { opacity: 1; }
+  100%      { opacity: 0; }
+}
+@keyframes luckyParticle {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+  18%  { opacity: 1; transform: translate(var(--lx), var(--ly)) scale(1) rotate(120deg); }
+  100% { opacity: 0; transform: translate(calc(var(--lx) * 2.8), calc(var(--ly) * 2.8)) scale(0.15) rotate(360deg); }
+}
+@keyframes luckyBallReveal {
+  0%   { opacity: 0; transform: scale(0) rotate(-180deg); }
+  55%  { transform: scale(1.18) rotate(6deg); }
+  75%  { transform: scale(0.94) rotate(-2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes luckyBallGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+  50%       { box-shadow: 0 0 18px 4px rgba(245,158,11,0.5), 0 0 36px 8px rgba(124,58,237,0.25); }
+}
+@keyframes luckyHeroPulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(245,158,11,0.22), 0 0 44px rgba(124,58,237,0.12); }
+  50%       { box-shadow: 0 0 44px rgba(245,158,11,0.40), 0 0 80px rgba(124,58,237,0.25); }
+}
+@keyframes luckyTapPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(245,158,11,0.35); }
+  50%       { transform: scale(1.03); box-shadow: 0 0 36px rgba(245,158,11,0.55), 0 0 56px rgba(124,58,237,0.25); }
+}
+@keyframes luckyStarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── HandsFreeBar animation ──────────────────────────────────────────────── */
+@keyframes handsFreeFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

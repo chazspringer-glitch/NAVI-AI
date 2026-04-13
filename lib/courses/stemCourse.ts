@@ -1,0 +1,331 @@
+import type { Course } from "./courseTypes";
+
+export const stemCourse: Course = {
+  id: "stem",
+  title: "STEM Explorer",
+  subtitle: "AI & Technology Fundamentals",
+  description: "A structured introduction to artificial intelligence, technology, and coding for the next generation of innovators.",
+  audience: "Ages 10–16 · Grades 5–10",
+  duration: "~3 hours",
+  icon: "🔬",
+  color: "#6366f1",
+  glow: "rgba(99,102,241,0.3)",
+  completionXP: 25,
+  certTitle: "Certificate of Completion — STEM Explorer",
+  certBody: "has successfully completed the STEM Explorer: AI & Technology Fundamentals course, demonstrating proficiency in artificial intelligence concepts, prompt engineering, creative AI applications, and introductory coding.",
+
+  modules: [
+    {
+      id: "1",
+      number: 1,
+      title: "Understanding AI",
+      description: "Discover what artificial intelligence is, how it learns, and where it shows up in everyday life.",
+      icon: "🤖",
+      color: "#6366f1",
+      glow: "rgba(99,102,241,0.25)",
+      completionXP: 10,
+      lessons: [
+        {
+          id: "1-1",
+          title: "What is Artificial Intelligence?",
+          duration: "8 min",
+          xp: 10,
+          objectives: [
+            { id: "o1", text: "Define artificial intelligence in your own words" },
+            { id: "o2", text: "Explain the difference between AI and regular software" },
+            { id: "o3", text: "Give 3 real examples of AI you encounter daily" },
+          ],
+          concepts: [
+            "AI = computer systems that learn from experience and make decisions — unlike regular software which follows fixed rules.",
+            "Traditional programs: if this happens, do that. AI programs: look at thousands of examples and figure out the pattern yourself.",
+            "AI is already everywhere: the 'For You' feed on TikTok, spam filters in Gmail, Siri and Alexa, face unlock on your phone.",
+            "AI doesn't think like a human — it finds patterns in data. It can be extremely good at specific tasks but struggles outside them.",
+          ],
+          task: {
+            instruction: "Look around your home, school, or neighborhood. Find 3 things you believe use AI. For each one, describe what problem it solves and what you think it learned to do.",
+            hint: "Think about apps on your phone, smart devices, recommendation systems, or anything that seems to 'know' what you want.",
+          },
+        },
+        {
+          id: "1-2",
+          title: "How Does AI Learn?",
+          duration: "10 min",
+          xp: 10,
+          objectives: [
+            { id: "o1", text: "Explain what training data is and why it matters" },
+            { id: "o2", text: "Describe supervised learning using a real-world analogy" },
+            { id: "o3", text: "Identify what bad training data looks like" },
+          ],
+          concepts: [
+            "AI learns from training data — thousands (or millions) of examples labeled by humans.",
+            "Supervised learning: show the AI 10,000 labeled photos of cats and dogs → it learns what makes a cat a cat.",
+            "The quality of training data determines the quality of AI. Garbage in, garbage out.",
+            "Bias in training data = bias in AI. If an AI only sees certain types of faces, it may not recognize others well.",
+            "After training, the AI is tested on new examples it has never seen — this is how we know if it actually learned.",
+          ],
+          task: {
+            instruction: "You're training an AI to recognize pizza from photos. Describe: (1) What 5 types of training images you'd use, (2) What labels you'd give each image, (3) What 'bad' training data might look like and why it would cause problems.",
+            hint: "Think about what makes pizza unique — and what might confuse an AI (flatbreads? calzones? very unusual toppings?).",
+          },
+        },
+        {
+          id: "1-3",
+          title: "AI Around the World",
+          duration: "10 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Name AI applications in at least 4 different industries" },
+            { id: "o2", text: "Research one real AI tool and explain how it helps people" },
+            { id: "o3", text: "Describe one potential downside of AI in that industry" },
+          ],
+          concepts: [
+            "Healthcare: AI reads X-rays and MRI scans, sometimes catching cancer earlier than doctors can.",
+            "Agriculture: AI drones monitor crops, detect disease, and tell farmers exactly where to water or fertilize.",
+            "Education: AI tutors adapt to each student's pace — faster when they understand, slower when they struggle.",
+            "Transportation: self-driving systems use AI to see the road, predict other drivers, and make split-second decisions.",
+            "Climate: AI models predict natural disasters, optimize energy grids, and help cities plan for the future.",
+          ],
+          task: {
+            instruction: "Pick ONE industry from the lesson (or choose your own). Find a real AI tool being used in that industry. Write: (1) What the tool is called, (2) Exactly what it does, (3) How it helps people, (4) One risk or problem it might cause.",
+            hint: "Search '[industry] AI tool 2024' — pick something real that you can find news or official information about.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      number: 2,
+      title: "Talking to AI",
+      description: "Master the skill of writing prompts that get useful, specific, and high-quality responses from AI.",
+      icon: "💬",
+      color: "#0ea5e9",
+      glow: "rgba(14,165,233,0.25)",
+      completionXP: 10,
+      lessons: [
+        {
+          id: "2-1",
+          title: "What is a Prompt?",
+          duration: "8 min",
+          xp: 10,
+          objectives: [
+            { id: "o1", text: "Define 'prompt' and explain why clarity matters" },
+            { id: "o2", text: "Identify the difference between a vague and specific prompt" },
+            { id: "o3", text: "Write the same question two ways — vague and specific" },
+          ],
+          concepts: [
+            "A prompt is the instruction you give to an AI. It's your side of the conversation.",
+            "AI can only work with what you give it. A vague prompt gets a vague answer. A specific prompt gets a useful one.",
+            "Think of it like giving someone directions: 'go downtown' vs. 'go 3 blocks north, turn left on Main, it's the blue building.'",
+            "The same AI with a bad prompt vs. a good prompt produces completely different results — it's not luck, it's a skill.",
+          ],
+          task: {
+            instruction: "Write the same question or request two ways: (1) Vague version — less than 5 words, (2) Specific version — include what you want, who it's for, and what format you'd like. Then test both with NAVI or any AI and describe what was different about the two answers.",
+            hint: "Start with something you genuinely want to know or create — school topic, hobby, creative project, or a question you've always wondered about.",
+          },
+        },
+        {
+          id: "2-2",
+          title: "Getting Better Answers",
+          duration: "12 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Apply role, context, and format upgrades to any prompt" },
+            { id: "o2", text: "Improve a weak prompt using all three techniques" },
+            { id: "o3", text: "Compare the output quality of the original vs. upgraded prompt" },
+          ],
+          concepts: [
+            "Upgrade 1 — Give AI a role: 'You are a science teacher explaining to a 12-year-old...' This sets the voice and expertise level.",
+            "Upgrade 2 — Add context: 'I'm studying for a test on Friday and need the key points, not a full essay.'",
+            "Upgrade 3 — Specify format: 'Give me a numbered list of 5 points, each in one sentence.'",
+            "Combining all three narrows the output from 'whatever the AI thinks is right' to 'exactly what you need.'",
+          ],
+          task: {
+            instruction: "Start with this prompt: 'Explain photosynthesis.' Rewrite it using all 3 upgrades (role, context, format). Test both versions on NAVI or any AI. Write: (1) Your upgraded prompt, (2) What was different about the two answers, (3) Which was more useful for you and why.",
+            hint: "Your upgraded version should tell the AI: who it is, who you are, and what kind of answer you want.",
+          },
+        },
+        {
+          id: "2-3",
+          title: "AI Safety and Responsibility",
+          duration: "10 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Name 2 limitations of current AI systems" },
+            { id: "o2", text: "Explain why verifying AI answers matters — especially for school work" },
+            { id: "o3", text: "Describe one situation where you should NOT trust AI output" },
+          ],
+          concepts: [
+            "AI can be confidently wrong — it generates text that sounds right but may be factually incorrect.",
+            "AI doesn't 'know' things the way you do. It predicts the most likely next word based on patterns, not facts.",
+            "Never share personal info with AI: your name, address, school, passwords, or photos of yourself.",
+            "AI can reflect bias from its training data — it may give different quality answers about different groups of people.",
+            "For school work: AI can help you learn and draft, but the understanding and final judgment should always be yours.",
+          ],
+          task: {
+            instruction: "Ask NAVI or any AI a specific factual question about a historical event (not something vague — pick a real date, person, or event). Then verify the answer using at least one other source (textbook, encyclopedia, or reputable news site). Write: (1) The question you asked, (2) What the AI said, (3) What your source says, (4) What matched, what didn't, and what you learned.",
+            hint: "Try asking about a specific battle, invention, or historical figure — specific enough that you can fact-check the details.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      number: 3,
+      title: "Create with AI",
+      description: "Use AI as a creative partner to write, design, and build original projects.",
+      icon: "🎨",
+      color: "#10b981",
+      glow: "rgba(16,185,129,0.25)",
+      completionXP: 15,
+      lessons: [
+        {
+          id: "3-1",
+          title: "AI-Assisted Writing",
+          duration: "12 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Use AI to draft and improve a piece of writing" },
+            { id: "o2", text: "Identify the parts that are yours vs. the AI's contribution" },
+            { id: "o3", text: "Explain the difference between AI-assisted and AI-generated work" },
+          ],
+          concepts: [
+            "AI is a writing partner, not a ghostwriter. Your ideas, judgment, and voice are still the product.",
+            "The best writing workflow: you draft the idea → AI expands it → you refine and add your perspective.",
+            "AI is excellent at: fixing grammar, restructuring paragraphs, suggesting stronger word choices, varying sentence length.",
+            "AI struggles with: your personal experiences, genuine emotion, specific cultural context, and original insight.",
+            "A piece of writing that uses AI well is still YOUR work — you directed the process, made the choices, and own the result.",
+          ],
+          task: {
+            instruction: "Write a 3-sentence paragraph about your favorite place — somewhere you've actually been. Then ask NAVI to improve your paragraph (share the text directly). Compare the two versions side by side and write: (1) What the AI changed, (2) What you liked about the AI version, (3) What you'd change back — and why.",
+            hint: "Be specific in your paragraph about sensory details — what you see, hear, or feel there. Specific writing gives AI more to work with.",
+          },
+        },
+        {
+          id: "3-2",
+          title: "Designing with AI",
+          duration: "15 min",
+          xp: 20,
+          objectives: [
+            { id: "o1", text: "Write a 'creative prompt' that describes a visual or creative idea in detail" },
+            { id: "o2", text: "Use an AI tool to create an original piece of content" },
+            { id: "o3", text: "Reflect on the connection between prompt quality and creative output" },
+          ],
+          concepts: [
+            "AI tools can generate images, write poems, compose music, create presentations, and more.",
+            "The creative skill is description. The more precisely you describe what you want, the closer the output will be.",
+            "Creative prompting: include style ('in the style of a watercolor painting'), mood ('bright and hopeful'), subject, and context.",
+            "Iteration is part of creative AI work — your first result is a starting point. Refine your prompt until you get what you want.",
+            "Real applications: designers use AI to explore concepts before committing. Writers use it to break writer's block.",
+          ],
+          task: {
+            instruction: "Create an AI-generated piece of content (image description, short poem, or story outline) about a problem you'd like to solve in your school or community. Show: (1) The creative prompt you wrote, (2) What the AI produced, (3) At least one revision you made to improve the result, and (4) Why this problem matters to you.",
+            hint: "If you can't use an image generator, write a highly detailed visual description and ask NAVI to expand it into a scene — then ask what image tools you could try.",
+          },
+        },
+        {
+          id: "3-3",
+          title: "Your AI Mini-Project",
+          duration: "20 min",
+          xp: 25,
+          objectives: [
+            { id: "o1", text: "Complete an original project using at least 2 different AI interactions" },
+            { id: "o2", text: "Document your prompts and the AI's contributions" },
+            { id: "o3", text: "Reflect on what you added that AI could not have done alone" },
+          ],
+          concepts: [
+            "A good AI project shows direction, not just use. You decide the goal, guide the AI, and own the outcome.",
+            "Required elements: clear goal, creative prompts, at least 2 revisions, and your own additions or perspective.",
+            "Documenting your process is part of the skill — professionals keep records of what worked so they can repeat it.",
+            "Questions to answer in your reflection: What did AI do well? Where did it fail? What would you do differently next time?",
+          ],
+          task: {
+            instruction: "Create a one-page project on any topic you care about using AI as your assistant. Your project must include: (1) A clear goal or question, (2) The specific prompts you used (at least 2), (3) The AI-generated content, (4) What you added, changed, or corrected yourself, (5) A 2-sentence reflection on what you learned about working with AI.",
+            hint: "Topics could be: a topic you're studying in school, a community issue you care about, a creative story, or a plan for something you want to build or achieve.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "4",
+      number: 4,
+      title: "Intro to Coding",
+      description: "Discover how code works and use AI to read, write, and debug programs — no experience required.",
+      icon: "💻",
+      color: "#f59e0b",
+      glow: "rgba(245,158,11,0.25)",
+      completionXP: 15,
+      lessons: [
+        {
+          id: "4-1",
+          title: "What is Code?",
+          duration: "10 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Define code and explain what it does" },
+            { id: "o2", text: "Name 3 programming languages and their common uses" },
+            { id: "o3", text: "Read a simple Python snippet and explain what it does" },
+          ],
+          concepts: [
+            "Code = instructions a computer can understand and follow. Every app, website, and game is built from code.",
+            "Python: used for data, AI, and automation. Easy to read — great for beginners.",
+            "JavaScript: runs in web browsers — makes websites interactive.",
+            "Swift: builds iPhone apps. Kotlin: builds Android apps.",
+            "Code is just a language — like Spanish or French — for communicating with computers. Anyone can learn it.",
+            "Reading code: look for what goes in, what happens to it, and what comes out.",
+          ],
+          task: {
+            instruction: "Read this code: `name = 'Alex'\nprint('Hello, ' + name + '!')`\n\nWrite in plain English: (1) What do you think line 1 does? (2) What do you think line 2 does? (3) What would the output be? (4) What would happen if you changed 'Alex' to your own name?",
+            hint: "Don't worry about being perfectly right — the goal is to reason through it. What do you think 'print' means in this context?",
+          },
+        },
+        {
+          id: "4-2",
+          title: "AI Writes Code",
+          duration: "15 min",
+          xp: 20,
+          objectives: [
+            { id: "o1", text: "Use NAVI or Claude Code to generate a working script" },
+            { id: "o2", text: "Read the generated code and explain each section in plain language" },
+            { id: "o3", text: "Ask one follow-up question to understand something you didn't get" },
+          ],
+          concepts: [
+            "AI can write, explain, and fix code — but you still need to understand what you're asking for and whether it worked.",
+            "Think of AI as a very fast assistant who needs clear instructions. Vague requests → code that doesn't do what you wanted.",
+            "Good code request: 'Write a Python program that asks for my name and prints a greeting with today's date.'",
+            "When you get code back: read it line by line. Ask AI to explain any part you don't understand.",
+            "Understanding AI-written code is a professional skill — developers do this every day.",
+          ],
+          task: {
+            instruction: "Ask NAVI: 'Write a simple Python program that tells me what day of the week it is today.' Copy the code you receive and write: (1) Your explanation of each line in plain language, (2) What you think the output would be, (3) One thing you don't understand — then ask NAVI to explain it.",
+            hint: "You don't need to actually run the code — just read it and reason through it. What variables do you see? What do you think each function name means?",
+          },
+        },
+        {
+          id: "4-3",
+          title: "Debug and Build",
+          duration: "20 min",
+          xp: 25,
+          objectives: [
+            { id: "o1", text: "Identify a bug in a piece of code and describe what went wrong" },
+            { id: "o2", text: "Use AI assistance to fix the bug" },
+            { id: "o3", text: "Add one new feature to the working code" },
+          ],
+          concepts: [
+            "Debugging = finding and fixing mistakes in code. Every programmer does it — it's a skill, not a failure.",
+            "Common bugs: typos in variable names, wrong punctuation, logic errors (the code runs but does the wrong thing).",
+            "Bug-fixing process: read the error message → identify which line it points to → understand what went wrong → fix it → test.",
+            "AI is excellent for debugging: paste the code + the error message and ask 'What's wrong with this?'",
+            "Adding features: 'Take this code and add X' — AI will modify the existing code to include the new feature.",
+          ],
+          task: {
+            instruction: "Take any code you wrote or generated in this course. Change one thing to intentionally break it — a typo, a missing quote, or a wrong variable name. Then: (1) Describe what you changed and what error you'd expect, (2) Ask NAVI to help you find and fix the bug, (3) Add one new feature to the working code (e.g., make it print something extra, ask for user input, or repeat an action). Document the whole process.",
+            hint: "If you're not sure how to break code, try removing a quotation mark or changing a function name slightly. Then watch how AI describes what went wrong.",
+          },
+        },
+      ],
+    },
+  ],
+};

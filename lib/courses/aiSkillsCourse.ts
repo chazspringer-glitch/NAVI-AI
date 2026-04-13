@@ -1,0 +1,333 @@
+import type { Course } from "./courseTypes";
+
+export const aiSkillsCourse: Course = {
+  id: "ai_skills",
+  title: "AI Skills",
+  subtitle: "Professional AI Mastery",
+  description: "A results-driven course for working adults — practical AI skills, prompt engineering, automation, and income generation with AI tools.",
+  audience: "Working Adults · All Skill Levels",
+  duration: "~5 hours",
+  icon: "⚡",
+  color: "#8b5cf6",
+  glow: "rgba(139,92,246,0.3)",
+  completionXP: 30,
+  certTitle: "Certificate of Completion — AI Skills: Professional Mastery",
+  certBody: "has successfully completed the AI Skills: Professional Mastery course, demonstrating proficiency in AI tool selection, advanced prompt engineering, workflow automation, and AI-driven income generation strategies.",
+
+  modules: [
+    {
+      id: "1",
+      number: 1,
+      title: "AI Foundations for Work",
+      description: "Understand the AI landscape, build the right professional mindset, and learn to evaluate AI output critically.",
+      icon: "🤖",
+      color: "#00d4ff",
+      glow: "rgba(0,212,255,0.22)",
+      completionXP: 10,
+      lessons: [
+        {
+          id: "1-1",
+          title: "The AI Landscape",
+          duration: "10 min",
+          xp: 10,
+          objectives: [
+            { id: "o1", text: "Name and compare 3 major AI tools for professional use" },
+            { id: "o2", text: "Select the right AI tool for a given work task" },
+            { id: "o3", text: "Document the differences in output quality across tools" },
+          ],
+          concepts: [
+            "Claude: excels at long documents, nuanced reasoning, and following complex instructions. Best for analysis, writing, and code.",
+            "ChatGPT: widely used, versatile, strong general performance. Good for brainstorming and drafting.",
+            "Gemini: tight Google integration — useful if your work lives in Docs, Gmail, or Workspace.",
+            "Perplexity: AI search with source citations — ideal for research where you need to verify facts.",
+            "The professional edge: knowing which tool to use for which task, rather than defaulting to one for everything.",
+          ],
+          task: {
+            instruction: "Run the same work-related prompt through Claude and one other AI tool (your choice). Use something relevant to your actual job or business. Document: (1) The exact prompt you used, (2) The full response from each tool, (3) Which was more useful for your task and specifically why, (4) Which tool you'll use by default for this type of task going forward.",
+            hint: "Use a real task from your work — a draft email, a research question, a plan you need to outline. The more relevant to your actual situation, the more useful this exercise will be.",
+          },
+        },
+        {
+          id: "1-2",
+          title: "The Working-With-AI Mindset",
+          duration: "12 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Articulate the difference between 'using AI' and 'working with AI'" },
+            { id: "o2", text: "Identify 5 tasks in your current role that AI could enhance by 50% or more" },
+            { id: "o3", text: "Describe a specific iterative AI workflow for one of those tasks" },
+          ],
+          concepts: [
+            "'Using AI': ask a question, accept the answer. 'Working with AI': iterate, direct, refine, and co-create.",
+            "The gap in output quality between someone who asks once and someone who iterates is enormous — often the difference between mediocre and excellent.",
+            "AI as a thought partner: challenge your assumptions, generate alternatives you wouldn't have considered, stress-test ideas before committing.",
+            "Time audit: most professionals can cut 5–15 hours per week once they identify their highest-leverage AI opportunities.",
+            "The best AI workflows: you provide the goal, judgment, and context. AI provides speed, volume, and alternatives.",
+          ],
+          task: {
+            instruction: "Audit your last 3 workdays in detail. List every recurring task: emails, research, drafting, analysis, reporting. For each task, estimate: (1) How many minutes it takes currently, (2) What role AI could play (draft, research, summarize, etc.), (3) Time saved per instance, (4) Time saved per week. Identify your top 5 highest-leverage AI opportunities.",
+            hint: "Include small tasks — even 5 minutes saved on something you do 10 times a day is almost an hour. Don't overlook email responses, status updates, and summaries.",
+          },
+        },
+        {
+          id: "1-3",
+          title: "Output Quality and Verification",
+          duration: "12 min",
+          xp: 15,
+          objectives: [
+            { id: "o1", text: "Evaluate AI output against 3 quality criteria: accuracy, tone, and appropriateness" },
+            { id: "o2", text: "Identify and correct a hallucinated or inappropriate detail in AI output" },
+            { id: "o3", text: "Establish a personal verification process for AI-generated professional content" },
+          ],
+          concepts: [
+            "AI is confident even when wrong. It will state false information with the same tone as true information.",
+            "Hallucinations: plausible-sounding but fabricated facts — names, dates, statistics, citations. Always verify numbers and specific claims.",
+            "Quality checklist: (1) Is this factually accurate? (2) Is the tone right for my audience? (3) Does it match my voice? (4) Would I be comfortable sending this with my name on it?",
+            "The verification habit separates professionals from amateurs. One AI error in a client document can damage your credibility significantly.",
+            "Rule: anything that will be seen by a client, employer, or external stakeholder needs human review before sending.",
+          ],
+          task: {
+            instruction: "Ask an AI to write a professional email for a real scenario from your work (client follow-up, proposal intro, job application, or meeting request). Rate the AI's output 1–10 for: (1) Factual accuracy, (2) Professional tone for your industry, (3) Match with your personal voice. Then rewrite it to the standard you'd actually send. Document every specific change you made and why.",
+            hint: "The more realistic the scenario, the more useful this exercise will be. Use a real email you need to send or recently sent — compare the AI version to what you actually wrote.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "2",
+      number: 2,
+      title: "Prompt Engineering",
+      description: "Master the frameworks professionals use to get consistent, high-quality results from any AI model.",
+      icon: "⚡",
+      color: "#f59e0b",
+      glow: "rgba(245,158,11,0.22)",
+      completionXP: 15,
+      lessons: [
+        {
+          id: "2-1",
+          title: "The RTFC Framework",
+          duration: "15 min",
+          xp: 20,
+          objectives: [
+            { id: "o1", text: "Write a prompt using all 4 elements of Role + Task + Format + Context" },
+            { id: "o2", text: "Demonstrate measurably improved output compared to a prompt without RTFC" },
+            { id: "o3", text: "Apply RTFC to 3 different work tasks" },
+          ],
+          concepts: [
+            "Role: 'You are a senior [role] with expertise in [area]...' — sets the AI's voice, expertise level, and approach.",
+            "Task: Be specific about exactly what you need — verb + deliverable + scope. 'Write a 3-point executive summary' not 'summarize this.'",
+            "Format: 'Respond as a numbered list / table / 3-paragraph memo / bullet points.' Saves you reformatting time.",
+            "Context: 'My audience is [who]. The goal is [what]. Constraints include [limitations].' Context is the most-overlooked element.",
+            "RTFC example: 'You are a senior marketing strategist. Write a 3-week content calendar for Instagram. Format it as a table with date, post type, caption, and hashtags. Context: food truck in Atlanta, $0 ad budget, targeting local families aged 25–45.'",
+          ],
+          task: {
+            instruction: "Write 3 RTFC prompts for actual tasks in your current job or business — one for writing, one for research or analysis, one for planning. For each: (1) Write the full RTFC prompt, (2) Test it and paste the output, (3) Compare to a version without RTFC, (4) Rate the improvement 1–10.",
+            hint: "The more specific your context, the better. Include industry, audience, constraints, and desired tone. Generic prompts get generic answers.",
+          },
+        },
+        {
+          id: "2-2",
+          title: "Advanced Prompting Techniques",
+          duration: "15 min",
+          xp: 25,
+          objectives: [
+            { id: "o1", text: "Apply chain-of-thought prompting to a multi-step problem" },
+            { id: "o2", text: "Use few-shot prompting to get output in a specific style or format" },
+            { id: "o3", text: "Document a 3-step iterative refinement workflow" },
+          ],
+          concepts: [
+            "Chain-of-thought: add 'Think step by step before answering' — forces the AI to reason through a problem rather than jump to a conclusion. Critical for analysis and complex decisions.",
+            "Few-shot: give the AI 2–3 examples of what you want before asking it to produce. 'Here are 3 examples of the tone I want: [examples]. Now write one for [topic].'",
+            "Negative prompting: 'Do NOT include jargon, bullet points, or corporate language.' Telling AI what to avoid is as powerful as telling it what to do.",
+            "Iteration mindset: your first prompt is a research question, not a final answer. The output tells you what to ask next.",
+            "Professionals who iterate 3–5 times produce work that looks like it was written by someone with much more experience.",
+          ],
+          task: {
+            instruction: "Pick a complex recurring task from your work — analysis, planning, a difficult conversation, or a strategic decision. (1) Write a chain-of-thought prompt for it ('Think step by step before answering...'), (2) Run it through at least 3 iterations, refining based on each output, (3) Document all 3 prompts and outputs, (4) Describe what changed between iteration 1 and iteration 3.",
+            hint: "Great candidates: competitive analysis, pricing decisions, difficult client situations, or any task where you need to consider multiple factors before deciding.",
+          },
+        },
+        {
+          id: "2-3",
+          title: "Your Prompt Library",
+          duration: "15 min",
+          xp: 25,
+          objectives: [
+            { id: "o1", text: "Create a reusable prompt library with at least 5 templates for your role or industry" },
+            { id: "o2", text: "Structure each template with RTFC and variable placeholders" },
+            { id: "o3", text: "Test each template and document a sample output" },
+          ],
+          concepts: [
+            "Professionals who maintain prompt libraries consistently outperform those who start from scratch. Your library is a professional asset.",
+            "Template structure: fixed elements (role, general task, format) + [VARIABLE] slots (specific topic, client name, context).",
+            "Organize by task type: Writing, Research, Analysis, Planning, Client Communication, Internal Comms.",
+            "Version your prompts — when you find an improvement, update the template. Track what changed and why it works better.",
+            "A library of 20 high-quality templates covers 80% of professional AI use cases for most roles.",
+          ],
+          task: {
+            instruction: "Build your personal prompt library. Create 5 templates for your most common work tasks. For each template provide: (1) Task category and name, (2) The full RTFC template with [VARIABLE] placeholders clearly marked, (3) A real filled-in example, (4) The actual output you got when you tested it. Format this as something you'd actually save and use.",
+            hint: "Think about what you do multiple times per week — emails, summaries, reports, outreach messages, research questions. Those are your best candidates.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "3",
+      number: 3,
+      title: "Automation & Workflows",
+      description: "Identify, design, and build AI-powered workflows that save 5–20 hours per week.",
+      icon: "🔄",
+      color: "#10b981",
+      glow: "rgba(16,185,129,0.22)",
+      completionXP: 20,
+      lessons: [
+        {
+          id: "3-1",
+          title: "Audit Your Work for Automation",
+          duration: "15 min",
+          xp: 20,
+          objectives: [
+            { id: "o1", text: "Identify at least 3 tasks in your workflow that are candidates for full or partial automation" },
+            { id: "o2", text: "Score each candidate by frequency, time cost, and automation feasibility" },
+            { id: "o3", text: "Describe the ideal automated version of your top candidate" },
+          ],
+          concepts: [
+            "Highest automation ROI: tasks done more than weekly, rule-based decisions, data moving between systems, and scheduled reports.",
+            "Automation spectrum: fully automated (AI does it, no human needed) → assisted (AI drafts, human approves) → augmented (AI helps you work faster).",
+            "You don't need to be technical to automate. Tools like Zapier require zero coding and connect 5,000+ apps.",
+            "The audit question: 'If I could never do this task again, how would it get done?' — that answer is your automation design.",
+            "Most professionals discover 30–40% of their weekly tasks can be automated or significantly accelerated.",
+          ],
+          task: {
+            instruction: "Map your typical workday hour by hour. For each activity, mark: (A) Fully automatable, (B) Partially automatable, (C) Needs a human. For your top 3 automation candidates, write: (1) The task name, (2) How often you do it and how long it takes, (3) The ideal automated version — trigger, process, output, (4) What tool you'd use to automate it (even if you haven't used it yet).",
+            hint: "Look for tasks that follow the same steps every time — email responses to common questions, weekly reports, data collection, social media posting, or scheduling.",
+          },
+        },
+        {
+          id: "3-2",
+          title: "Automation Tools in Practice",
+          duration: "20 min",
+          xp: 30,
+          objectives: [
+            { id: "o1", text: "Compare Zapier, Make, and n8n for a specific use case in your work" },
+            { id: "o2", text: "Build one working automation that saves you real time this week" },
+            { id: "o3", text: "Document the automation's trigger, steps, and expected time savings" },
+          ],
+          concepts: [
+            "Zapier: easiest to use, 5,000+ integrations, generous free tier. Best starting point for most professionals.",
+            "Make (Integromat): more flexible visual builder, handles complex logic, better pricing at scale.",
+            "n8n: open-source, self-hostable, maximum customization and data privacy. Requires more setup but offers full control.",
+            "Rule of thumb: start with Zapier → graduate to Make when you need branching logic → use n8n for sensitive data or custom integrations.",
+            "Quick wins: Gmail → Notion task when emails arrive, form submission → Slack notification, scheduled summaries sent automatically.",
+          ],
+          task: {
+            instruction: "Build one real, working automation using Zapier or Make that saves you time starting this week. Examples: new email → create task, form fill → notify team on Slack, weekly time → generate and send a summary. Document: (1) What you built, (2) The trigger and each step, (3) Screenshot or description of your working automation, (4) How many minutes per week it will save you.",
+            hint: "Start with a Zapier 'Zap' — their templates are a great starting point. Pick something you'll actually use rather than something impressive but irrelevant.",
+          },
+        },
+        {
+          id: "3-3",
+          title: "Design a Multi-Step AI Pipeline",
+          duration: "20 min",
+          xp: 35,
+          objectives: [
+            { id: "o1", text: "Design a complete multi-step AI workflow from trigger to final output" },
+            { id: "o2", text: "Identify where AI, automation tools, and human review each play a role" },
+            { id: "o3", text: "Document the pipeline to production-ready specification" },
+          ],
+          concepts: [
+            "An AI pipeline chains multiple AI calls and automation steps. Example: trigger (new form submission) → AI classifies intent → AI drafts response → human reviews → automated send.",
+            "Design before building. A well-designed pipeline on paper is 80% of the work — the build is just execution.",
+            "Every pipeline needs human checkpoints: where does a human need to verify, approve, or intervene?",
+            "Pipeline documentation: trigger → input data → each step (tool + prompt + logic) → output → next step → final output → human action (if any).",
+            "Professionals who have documented pipelines can delegate, scale, and train others. Undocumented processes die when the person leaves.",
+          ],
+          task: {
+            instruction: "Design a complete AI pipeline for your #1 automation candidate from the previous lesson. Create a written spec that includes: (1) Trigger: what starts the pipeline, (2) Each step: tool used, AI prompt (if applicable), and what it produces, (3) Decision points: where does it branch based on conditions?, (4) Human review checkpoints, (5) Final output and where it goes, (6) Estimated time saved per week. You don't need to build it — just design it to production-ready specification.",
+            hint: "Treat this like you're handing the design to someone else to build. It should be clear enough that they could implement it without asking you questions.",
+          },
+        },
+      ],
+    },
+
+    {
+      id: "4",
+      number: 4,
+      title: "Making Money with AI",
+      description: "Turn your AI skills into real income — from freelancing to productized services to consulting.",
+      icon: "💰",
+      color: "#f472b6",
+      glow: "rgba(244,114,182,0.22)",
+      completionXP: 20,
+      lessons: [
+        {
+          id: "4-1",
+          title: "Your AI Income Map",
+          duration: "15 min",
+          xp: 20,
+          objectives: [
+            { id: "o1", text: "Identify 3 AI income paths that match your existing skills" },
+            { id: "o2", text: "Research current market rates for AI-powered services in your niche" },
+            { id: "o3", text: "Rank your top 3 opportunities by potential, startup cost, and skill match" },
+          ],
+          concepts: [
+            "5 fastest AI income paths: (1) AI-powered copywriting/content, (2) Research and report generation, (3) Prompt engineering consulting, (4) Building no-code AI tools for businesses, (5) Teaching AI skills to teams.",
+            "Key principle: your existing expertise × AI capability = your unique value. A nurse who knows AI prompting is more valuable to healthcare clients than a generalist AI person.",
+            "Market rates (2024): AI copywriting $50–150/hour, AI consulting $100–300/hour, no-code AI tools $500–5,000/project, AI training workshops $500–2,000/session.",
+            "Platform research: search Upwork and Fiverr for your niche + 'AI' to see what's being paid for right now.",
+          ],
+          task: {
+            instruction: "Research the market for AI-powered services that match your background. Search Upwork or Fiverr for at least 3 types of AI services in your niche. Then create your AI Income Map: (1) Your top 3 opportunities with estimated rates, (2) Your existing skills that make you a strong fit for each, (3) What you'd need to learn or build to start, (4) Your ranked choice — which you'll pursue first and why.",
+            hint: "The best opportunity isn't always the highest paying — it's the one where your existing expertise gives you an unfair advantage over general AI users.",
+          },
+        },
+        {
+          id: "4-2",
+          title: "Build Your First Offer",
+          duration: "20 min",
+          xp: 35,
+          objectives: [
+            { id: "o1", text: "Define a productized AI service with a specific deliverable, price, and target client" },
+            { id: "o2", text: "Write a service description that communicates clear value" },
+            { id: "o3", text: "Draft your first outreach message to a potential client" },
+          ],
+          concepts: [
+            "Productizing: turn your service into a clear, repeatable offer. 'I do marketing' is not an offer. 'I write 4 SEO blog posts per month optimized for your industry, delivered on the 1st and 15th, for $600/month' is an offer.",
+            "Anatomy of a great offer: what you deliver (specific) + who it's for (specific) + results they can expect (measurable) + price + timeline.",
+            "Pricing: charge based on value delivered, not hours worked. If you save a client 10 hours/week, price relative to that value — not to your hourly rate.",
+            "The first client is about proof, not profit. One case study is worth more than any portfolio page.",
+            "Outreach: short, specific, and about them — not you. 'I saw you're hiring for X, which means you probably need Y. I do Y in 3 days for $Z.'",
+          ],
+          task: {
+            instruction: "Write your complete first offer: (1) Offer name (specific, value-focused), (2) Exactly what you deliver (format, quantity, timeline), (3) Who it's for (industry, role, company size), (4) The result they get (measurable outcome), (5) Your price (don't leave this blank — choose a number), (6) Your outreach message — write a real message to one specific potential client (real or hypothetical, but specific).",
+            hint: "Start with something you can deliver right now using AI tools you already know. Your first version doesn't have to be perfect — it has to exist.",
+          },
+        },
+        {
+          id: "4-3",
+          title: "Deliver, Document, Scale",
+          duration: "20 min",
+          xp: 40,
+          objectives: [
+            { id: "o1", text: "Deliver your AI service once (paid or unpaid) and document the complete process" },
+            { id: "o2", text: "Create a repeatable delivery process from your documentation" },
+            { id: "o3", text: "Identify one specific change that would let you serve 2x the clients in the same time" },
+          ],
+          concepts: [
+            "Your first delivery teaches you more about your business than any course. Do it imperfect rather than not doing it.",
+            "Document everything during your first delivery: prompts used, time per step, what worked, what needed revision, client feedback.",
+            "A business system = documented process + tools + templates. Your notes from delivery #1 become your operating manual.",
+            "Scale math: if delivery takes 3 hours, you can serve 12-15 clients per week at 40 hours. What can you automate to cut delivery to 1.5 hours?",
+            "The difference between a freelancer and a business: freelancers sell time; businesses sell repeatable value through systems.",
+          ],
+          task: {
+            instruction: "Deliver your AI service once — to a real client, a friend's business, or a hypothetical scenario you work through completely. Document: (1) The complete delivery process step by step, (2) Every AI prompt you used (save these as templates), (3) Total time spent on each step, (4) The final deliverable (or description of it), (5) What you'd do differently, (6) Your plan to cut delivery time by 30% on the second engagement.",
+            hint: "If you can't find a real client yet, pick a local business you know and do a sample project as if they hired you. Real output, real process — just no payment yet. This becomes your portfolio piece.",
+          },
+        },
+      ],
+    },
+  ],
+};
