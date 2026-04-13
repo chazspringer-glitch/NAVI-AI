@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 /* ── Static data ──────────────────────────────────────────────────────────── */
 
@@ -28,7 +29,7 @@ const NAVI_GREETING = [
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 
-export default function ClientDashboardPanel({ onClose }: { onClose: () => void }) {
+export default function ClientDashboardPanel({ onClose, showLogout = false }: { onClose: () => void; showLogout?: boolean }) {
   const [chatMessages, setChatMessages] = useState<{ role: "navi" | "user"; text: string }[]>(
     NAVI_GREETING.map((text) => ({ role: "navi" as const, text }))
   );
@@ -94,6 +95,20 @@ export default function ClientDashboardPanel({ onClose }: { onClose: () => void 
             }}>
               Active
             </div>
+            {showLogout && (
+              <button
+                onClick={async () => { await supabase.auth.signOut(); }}
+                style={{
+                  padding: "4px 10px", borderRadius: 6,
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.18)",
+                  color: "#f87171", fontSize: 8, fontFamily: "monospace",
+                  fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Logout
+              </button>
+            )}
             <button
               onClick={onClose}
               style={{
