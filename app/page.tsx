@@ -32,6 +32,7 @@ const PodcastPanel            = dynamic(() => import("@/components/PodcastPanel"
 const LuckyModePanel          = dynamic(() => import("@/components/LuckyModePanel"),          { ssr: false });
 const HandsFreeBar            = dynamic(() => import("@/components/HandsFreeBar"),            { ssr: false });
 const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboardPanel"),     { ssr: false });
+const MyBusinessIntro         = dynamic(() => import("@/components/MyBusinessIntro"),         { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -734,6 +735,7 @@ export default function HomePage() {
   const [legalRightsSeenRef] = useState(() => ({ current: false }));
   const [showSystemHealth,  setShowSystemHealth]        = useState(false);
   const [showAdminDash,     setShowAdminDash]            = useState(false);
+  const [showBusinessIntro, setShowBusinessIntro]       = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2382,6 +2384,16 @@ export default function HomePage() {
       {/* ── Hands-Free Mode indicator bar ── */}
       {handsFreeMode && (
         <HandsFreeBar onStop={toggleHandsFree} />
+      )}
+
+      {/* ── My Business cinematic intro ── */}
+      {showBusinessIntro && (
+        <MyBusinessIntro
+          onComplete={() => {
+            setShowBusinessIntro(false);
+            window.location.href = "/client";
+          }}
+        />
       )}
 
       {/* ── Springer Industries cinematic intro (Founders / Work With Us tab) ── */}
@@ -4079,30 +4091,6 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* My Business — logged in only */}
-        {isLoggedIn && (
-          <div style={{ display: "flex", gap: 6 }}>
-            <a
-              href="/client"
-              style={{
-                flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
-                fontFamily: "monospace", letterSpacing: "0.04em", cursor: "pointer",
-                background: "linear-gradient(135deg, rgba(52,211,153,0.12), rgba(0,212,255,0.08))",
-                border: "1px solid rgba(52,211,153,0.35)",
-                color: "#34d399",
-                boxShadow: "0 0 12px rgba(52,211,153,0.12)",
-                fontWeight: "bold",
-                textDecoration: "none",
-                textAlign: "center",
-                display: "block",
-                transition: "all 0.2s ease",
-              }}
-            >
-              💼 My Business
-            </a>
-          </div>
-        )}
-
         {/* Tab switcher — row 2 */}
         <div style={{ display: "flex", gap: 6 }}>
           <button
@@ -4324,6 +4312,46 @@ export default function HomePage() {
                 </button>
               );
             })}
+
+            {/* My Business — in Mode grid */}
+            <button
+              onClick={() => {
+                if (!isLoggedIn) {
+                  window.location.href = "/login?redirect=onboarding";
+                  return;
+                }
+                setShowBusinessIntro(true);
+                setMenuOpen(false);
+              }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 12px", borderRadius: 12,
+                gridColumn: "1 / -1",
+                background: isLoggedIn
+                  ? "linear-gradient(135deg, rgba(52,211,153,0.10), rgba(0,212,255,0.06))"
+                  : "rgba(255,255,255,0.03)",
+                border: isLoggedIn
+                  ? "1px solid rgba(52,211,153,0.30)"
+                  : "1px solid rgba(255,255,255,0.08)",
+                color: isLoggedIn ? "#34d399" : "#475569",
+                fontSize: 13, fontFamily: "monospace", cursor: "pointer",
+                boxShadow: isLoggedIn ? "0 0 10px rgba(52,211,153,0.10)" : "none",
+                opacity: isLoggedIn ? 1 : 0.6,
+              }}
+            >
+              <span>{isLoggedIn ? "💼" : "🔒"}</span>
+              <span>My Business</span>
+              {!isLoggedIn && (
+                <span style={{ fontSize: 7, fontFamily: "monospace", color: "#64748b", marginLeft: "auto", letterSpacing: "0.1em" }}>
+                  SIGN UP
+                </span>
+              )}
+              {isLoggedIn && (
+                <span style={{ fontSize: 7, fontFamily: "monospace", color: "rgba(52,211,153,0.5)", marginLeft: "auto", letterSpacing: "0.1em" }}>
+                  CLIENT
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
