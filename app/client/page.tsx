@@ -47,8 +47,6 @@ export default function ClientPage() {
   }
 
   return (
-    <div style={{ height: "100vh", overflow: "hidden" }}>
-      <ClientDashboardPanel onClose={() => router.push("/")} showLogout />
-    </div>
+    <ClientDashboardPanel onClose={() => router.push("/")} showLogout asPage />
   );
 }

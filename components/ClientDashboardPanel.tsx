@@ -31,7 +31,7 @@ const NAVI_GREETING = [
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 
-export default function ClientDashboardPanel({ onClose, showLogout = false }: { onClose: () => void; showLogout?: boolean }) {
+export default function ClientDashboardPanel({ onClose, showLogout = false, asPage = false }: { onClose: () => void; showLogout?: boolean; asPage?: boolean }) {
   const [chatMessages, setChatMessages] = useState<{ role: "navi" | "user"; text: string }[]>(
     NAVI_GREETING.map((text) => ({ role: "navi" as const, text }))
   );
@@ -44,6 +44,13 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Enable natural scrolling when rendered as a page
+  useEffect(() => {
+    if (!asPage) return;
+    document.documentElement.classList.add("dashboard-scroll");
+    return () => { document.documentElement.classList.remove("dashboard-scroll"); };
+  }, [asPage]);
 
   // Get current user + load uploads
   useEffect(() => {
@@ -187,11 +194,9 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
 
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 70,
-      display: "flex", flexDirection: "column",
-      overflow: "hidden",
-      background: "rgba(4,4,12,0.98)",
-      backdropFilter: "blur(20px)",
+      ...(asPage
+        ? { minHeight: "100vh", background: "#08080f" }
+        : { position: "fixed" as const, inset: 0, zIndex: 70, display: "flex", flexDirection: "column" as const, overflow: "hidden", background: "rgba(4,4,12,0.98)", backdropFilter: "blur(20px)" }),
       fontFamily: "monospace",
     }}>
 
@@ -261,11 +266,15 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
         </div>
       </div>
 
-      {/* ── Scrollable content ─────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* ── Content ──────────────────────────────────────────────────── */}
+      <div style={{
+        ...(asPage
+          ? { padding: "14px 16px 140px", display: "flex", flexDirection: "column" as const, gap: 14, maxWidth: 600, margin: "0 auto", width: "100%" }
+          : { flex: 1, overflowY: "auto" as const, padding: "14px 16px 24px", display: "flex", flexDirection: "column" as const, gap: 14 }),
+      }}>
 
         {/* ── Stats Cards ──────────────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
           {STATS.map(({ label, value, change, icon, accent }) => (
             <div key={label} style={{
               padding: "14px 12px 12px",
@@ -402,7 +411,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
                           color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                          outline: "none", colorScheme: "dark",
+                          outline: "none", colorScheme: "dark", position: "relative" as const, zIndex: 10,
                         }}
                       />
                     </div>
@@ -417,7 +426,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
                           color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                          outline: "none", colorScheme: "dark",
+                          outline: "none", colorScheme: "dark", position: "relative" as const, zIndex: 10,
                         }}
                       />
                     </div>
@@ -433,7 +442,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
                           color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                          outline: "none",
+                          outline: "none", position: "relative" as const, zIndex: 10,
                         }}
                       >
                         {["Image Post", "Video Post", "Story", "Reel", "Carousel"].map((t) => (
@@ -451,7 +460,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
                           color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                          outline: "none",
+                          outline: "none", position: "relative" as const, zIndex: 10,
                         }}
                       >
                         {["Instagram", "Facebook", "TikTok", "LinkedIn", "Twitter"].map((p) => (
@@ -701,7 +710,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
                   color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                  outline: "none",
+                  outline: "none", position: "relative" as const, zIndex: 10,
                 }}
               />
             </div>
@@ -716,7 +725,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
                   color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
-                  outline: "none",
+                  outline: "none", position: "relative" as const, zIndex: 10,
                 }}
               />
             </div>
@@ -805,66 +814,105 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
           </div>
         </div>
 
-        {/* ── NAVI Assistant ────────────────────────────────────────────── */}
+        {/* ── NAVI Assistant (inline when overlay) ─────────────────────── */}
+        {!asPage && (
+          <div style={{
+            borderRadius: 12,
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(0,212,255,0.12)",
+            overflow: "hidden",
+            display: "flex", flexDirection: "column",
+          }}>
+            <div style={{
+              padding: "12px 16px 10px",
+              borderBottom: "1px solid rgba(0,212,255,0.08)",
+              display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.05) 70%)",
+                border: "1px solid rgba(0,212,255,0.30)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, boxShadow: "0 0 10px rgba(0,212,255,0.15)",
+              }}>🤖</div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
+                <div style={{ fontSize: 8, color: "#334155" }}>AI Marketing Assistant</div>
+              </div>
+              <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 8px rgba(52,211,153,0.5)" }} />
+            </div>
+            <div style={{ maxHeight: 200, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {chatMessages.map((msg, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{
+                    maxWidth: "85%", padding: "7px 10px",
+                    borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px",
+                    background: msg.role === "user" ? "rgba(201,162,39,0.10)" : "rgba(0,212,255,0.06)",
+                    border: msg.role === "user" ? "1px solid rgba(201,162,39,0.18)" : "1px solid rgba(0,212,255,0.10)",
+                    fontSize: 10, color: msg.role === "user" ? "#e2e8f0" : "#94a3b8", lineHeight: 1.5,
+                  }}>{msg.text}</div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+            <div style={{ padding: "8px 12px 10px", borderTop: "1px solid rgba(0,212,255,0.08)", display: "flex", gap: 6 }}>
+              <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleChatSend(); }} placeholder="Ask NAVI anything..."
+                style={{ flex: 1, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(0,212,255,0.12)", color: "#e2e8f0", fontSize: 10, outline: "none", position: "relative", zIndex: 10 }} />
+              <button onClick={handleChatSend} disabled={!chatInput.trim()}
+                style={{ padding: "8px 14px", borderRadius: 8, background: chatInput.trim() ? "rgba(0,212,255,0.10)" : "rgba(255,255,255,0.03)", border: chatInput.trim() ? "1px solid rgba(0,212,255,0.25)" : "1px solid rgba(255,255,255,0.06)", color: chatInput.trim() ? "#00d4ff" : "#334155", fontSize: 10, fontWeight: 600, cursor: chatInput.trim() ? "pointer" : "default" }}>
+                Send
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── Floating NAVI (page mode only) ──────────────────────────── */}
+      {asPage && (
         <div style={{
-          borderRadius: 12,
-          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-          border: "1px solid rgba(0,212,255,0.12)",
+          position: "fixed",
+          bottom: 20, left: "50%", transform: "translateX(-50%)",
+          width: "90%", maxWidth: 500, zIndex: 50,
+          borderRadius: 16,
+          background: "rgba(10,10,18,0.95)",
+          border: "1px solid rgba(0,212,255,0.18)",
+          boxShadow: "0 -4px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0,212,255,0.08)",
+          backdropFilter: "blur(16px)",
           overflow: "hidden",
           display: "flex", flexDirection: "column",
         }}>
-          {/* Chat header */}
+          {/* Header */}
           <div style={{
-            padding: "12px 16px 10px",
+            padding: "10px 14px 8px",
             borderBottom: "1px solid rgba(0,212,255,0.08)",
-            display: "flex", alignItems: "center", gap: 10,
+            display: "flex", alignItems: "center", gap: 8,
           }}>
             <div style={{
-              width: 26, height: 26, borderRadius: "50%",
+              width: 22, height: 22, borderRadius: "50%",
               background: "radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.05) 70%)",
               border: "1px solid rgba(0,212,255,0.30)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12,
-              boxShadow: "0 0 10px rgba(0,212,255,0.15)",
-            }}>
-              🤖
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
-              <div style={{ fontSize: 8, color: "#334155" }}>AI Marketing Assistant</div>
-            </div>
-            <div style={{
-              marginLeft: "auto", width: 6, height: 6, borderRadius: "50%",
-              background: "#34d399", boxShadow: "0 0 8px rgba(52,211,153,0.5)",
-            }} />
+              fontSize: 10, boxShadow: "0 0 8px rgba(0,212,255,0.15)",
+            }}>🤖</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
+            <div style={{ marginLeft: "auto", width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 6px rgba(52,211,153,0.5)" }} />
           </div>
 
           {/* Messages */}
           <div style={{
-            maxHeight: 200, overflowY: "auto", padding: "12px 14px",
-            display: "flex", flexDirection: "column", gap: 8,
+            maxHeight: 150, overflowY: "auto", padding: "8px 12px",
+            display: "flex", flexDirection: "column", gap: 6,
           }}>
             {chatMessages.map((msg, i) => (
-              <div key={i} style={{
-                display: "flex",
-                justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-              }}>
+              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 <div style={{
-                  maxWidth: "85%",
-                  padding: "7px 10px",
+                  maxWidth: "85%", padding: "6px 10px",
                   borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px",
-                  background: msg.role === "user"
-                    ? "rgba(201,162,39,0.10)"
-                    : "rgba(0,212,255,0.06)",
-                  border: msg.role === "user"
-                    ? "1px solid rgba(201,162,39,0.18)"
-                    : "1px solid rgba(0,212,255,0.10)",
-                  fontSize: 10,
-                  color: msg.role === "user" ? "#e2e8f0" : "#94a3b8",
-                  lineHeight: 1.5,
-                }}>
-                  {msg.text}
-                </div>
+                  background: msg.role === "user" ? "rgba(201,162,39,0.10)" : "rgba(0,212,255,0.06)",
+                  border: msg.role === "user" ? "1px solid rgba(201,162,39,0.18)" : "1px solid rgba(0,212,255,0.10)",
+                  fontSize: 10, color: msg.role === "user" ? "#e2e8f0" : "#94a3b8", lineHeight: 1.5,
+                }}>{msg.text}</div>
               </div>
             ))}
             <div ref={chatEndRef} />
@@ -882,26 +930,22 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
               onKeyDown={(e) => { if (e.key === "Enter") handleChatSend(); }}
               placeholder="Ask NAVI anything..."
               style={{
-                flex: 1, padding: "8px 10px", borderRadius: 8,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(0,212,255,0.12)",
-                color: "#e2e8f0", fontSize: 10,
-                outline: "none",
+                flex: 1, padding: "10px 12px", borderRadius: 10,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(0,212,255,0.15)",
+                color: "#e2e8f0", fontSize: 12, fontFamily: "monospace",
+                outline: "none", position: "relative", zIndex: 10,
               }}
             />
             <button
               onClick={handleChatSend}
               disabled={!chatInput.trim()}
               style={{
-                padding: "8px 14px", borderRadius: 8,
-                background: chatInput.trim()
-                  ? "rgba(0,212,255,0.10)"
-                  : "rgba(255,255,255,0.03)",
-                border: chatInput.trim()
-                  ? "1px solid rgba(0,212,255,0.25)"
-                  : "1px solid rgba(255,255,255,0.06)",
+                padding: "10px 16px", borderRadius: 10,
+                background: chatInput.trim() ? "rgba(0,212,255,0.12)" : "rgba(255,255,255,0.03)",
+                border: chatInput.trim() ? "1px solid rgba(0,212,255,0.28)" : "1px solid rgba(255,255,255,0.06)",
                 color: chatInput.trim() ? "#00d4ff" : "#334155",
-                fontSize: 10, fontWeight: 600,
+                fontSize: 11, fontWeight: 600,
                 cursor: chatInput.trim() ? "pointer" : "default",
               }}
             >
@@ -909,8 +953,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
             </button>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
