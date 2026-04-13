@@ -1039,11 +1039,13 @@ export default function HomePage() {
 
   // Check Supabase auth for "My Business" tab visibility
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("[NAVI] Auth check:", session ? `logged in (${session.user.id})` : "not logged in", error?.message ?? "");
       setIsLoggedIn(!!session);
       setAuthUserId(session?.user?.id ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[NAVI] Auth change:", event, session ? "logged in" : "logged out");
       setIsLoggedIn(!!session);
       setAuthUserId(session?.user?.id ?? null);
     });

@@ -24,7 +24,8 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      console.log("[Signup] Attempting signup for:", email);
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -32,8 +33,10 @@ export default function SignupPage() {
         },
       });
       if (authError) {
+        console.error("[Signup] Error:", authError.message);
         setError(authError.message);
       } else {
+        console.log("[Signup] Success — user:", data.user?.id, "confirmed:", data.user?.confirmed_at ? "yes" : "pending");
         setSuccess(true);
       }
     } catch {

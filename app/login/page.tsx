@@ -15,7 +15,8 @@ function LoginForm() {
 
   // Redirect if already logged in
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("[Login] Session check:", session ? "active" : "none", error?.message ?? "");
       if (session) router.replace(redirectTo === "onboarding" ? "/" : "/client");
     });
   }, [router, redirectTo]);
@@ -25,13 +26,17 @@ function LoginForm() {
     setError("");
     setLoading(true);
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("[Login] Attempting sign in for:", email);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) {
+        console.error("[Login] Error:", authError.message);
         setError(authError.message);
       } else {
+        console.log("[Login] Success — user:", data.user?.id, "session:", !!data.session);
         router.push(redirectTo === "onboarding" ? "/" : "/client");
       }
-    } catch {
+    } catch (err) {
+      console.error("[Login] Unexpected error:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

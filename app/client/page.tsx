@@ -11,7 +11,9 @@ export default function ClientPage() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    console.log("[Client] Checking session...");
+    supabase.auth.getSession().then(({ data: { session: s }, error }) => {
+      console.log("[Client] Session:", s ? `active (${s.user.id})` : "none", error?.message ?? "");
       if (!s) {
         router.replace("/login");
       } else {
@@ -20,11 +22,13 @@ export default function ClientPage() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      console.log("[Client] Auth change:", event, s ? "session active" : "no session");
       if (!s) {
         router.replace("/login");
       } else {
         setSession(s);
+        setChecking(false);
       }
     });
 

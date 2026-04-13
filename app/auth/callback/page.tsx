@@ -12,20 +12,25 @@ export default function AuthCallback() {
     // The JS client auto-detects and exchanges them on init.
     // We just wait for the session to appear, then redirect.
     const handleAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("[Auth Callback] Processing email confirmation...");
+      console.log("[Auth Callback] URL hash present:", window.location.hash.length > 0);
+
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("[Auth Callback] Session:", session ? `active (${session.user.id})` : "none", error?.message ?? "");
+
       if (session) {
         router.replace("/client");
       } else {
-        // Session might take a moment — listen for auth change
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+          console.log("[Auth Callback] Auth change:", event, s ? "session active" : "no session");
           if (s) {
             subscription.unsubscribe();
             router.replace("/client");
           }
         });
 
-        // Fallback: if nothing happens after 5s, send to login
         setTimeout(() => {
+          console.warn("[Auth Callback] Timeout — redirecting to login");
           subscription.unsubscribe();
           router.replace("/login");
         }, 5000);
