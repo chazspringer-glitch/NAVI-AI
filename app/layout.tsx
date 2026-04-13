@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -40,9 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased">
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        {children}
         <Analytics />
       </body>
     </html>
