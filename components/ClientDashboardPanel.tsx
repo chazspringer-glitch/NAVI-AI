@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { uploadContent, fetchUploads, type ContentUpload } from "@/lib/uploads";
 
 /* ── Static data ──────────────────────────────────────────────────────────── */
 
@@ -35,6 +36,57 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
   );
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload state
+  const [uploads, setUploads] = useState<ContentUpload[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get current user + load uploads
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+      }
+    });
+  }, []);
+
+  const loadUploads = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const data = await fetchUploads(userId);
+      setUploads(data);
+    } catch {
+      // silent
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadUploads();
+  }, [loadUploads]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !userId) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const result = await uploadContent(files[i], userId);
+        if (!result) {
+          setUploadError(`Failed to upload ${files[i].name}`);
+        }
+      }
+      await loadUploads();
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -175,15 +227,28 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
               <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Content Calendar</div>
               <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Apr 14 – Apr 20, 2026</div>
             </div>
-            <button style={{
-              padding: "5px 12px", borderRadius: 7,
-              background: "rgba(201,162,39,0.08)",
-              border: "1px solid rgba(201,162,39,0.22)",
-              color: "#C9A227", fontSize: 9, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-            }}>
-              <span style={{ fontSize: 11 }}>📤</span> Upload
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                padding: "5px 12px", borderRadius: 7,
+                background: "rgba(201,162,39,0.08)",
+                border: "1px solid rgba(201,162,39,0.22)",
+                color: "#C9A227", fontSize: 9, fontWeight: 600,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                opacity: uploading ? 0.5 : 1,
+              }}
+            >
+              <span style={{ fontSize: 11 }}>📤</span> {uploading ? "Uploading..." : "Upload"}
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={handleFileSelect}
+              style={{ display: "none" }}
+            />
           </div>
 
           {CALENDAR_ITEMS.map(({ day, date, items }) => (
@@ -221,6 +286,115 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ── My Content (uploads) ──────────────────────────────────────── */}
+        <div style={{
+          borderRadius: 12,
+          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+          border: "1px solid rgba(201,162,39,0.10)",
+          overflow: "hidden",
+        }}>
+          <div style={{
+            padding: "14px 16px 10px",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>My Content</div>
+              <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>
+                {uploads.length} file{uploads.length !== 1 ? "s" : ""} uploaded
+              </div>
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                padding: "5px 12px", borderRadius: 7,
+                background: "rgba(201,162,39,0.08)",
+                border: "1px solid rgba(201,162,39,0.22)",
+                color: "#C9A227", fontSize: 9, fontWeight: 600,
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                opacity: uploading ? 0.5 : 1,
+              }}
+            >
+              <span style={{ fontSize: 11 }}>➕</span> Add Files
+            </button>
+          </div>
+
+          {/* Upload error */}
+          {uploadError && (
+            <div style={{ padding: "8px 16px", fontSize: 9, color: "#f87171", background: "rgba(239,68,68,0.06)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              {uploadError}
+            </div>
+          )}
+
+          {/* Uploading state */}
+          {uploading && (
+            <div style={{ padding: "12px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "#C9A227" }}>Uploading...</div>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!uploading && uploads.length === 0 && (
+            <div style={{ padding: "20px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 16, marginBottom: 6 }}>📁</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4 }}>No content uploaded yet</div>
+              <div style={{ fontSize: 8, color: "#475569" }}>Upload images or videos to get started</div>
+            </div>
+          )}
+
+          {/* Content grid */}
+          {uploads.length > 0 && (
+            <div style={{ padding: "10px 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              {uploads.map((u) => {
+                const isVideo = u.file_type.startsWith("video/");
+                return (
+                  <div key={u.id} style={{
+                    borderRadius: 8, overflow: "hidden",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(0,0,0,0.3)",
+                    position: "relative",
+                  }}>
+                    {isVideo ? (
+                      <video
+                        src={u.public_url}
+                        style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={u.public_url}
+                        alt={u.file_name}
+                        style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
+                      />
+                    )}
+                    {/* Type badge */}
+                    <div style={{
+                      position: "absolute", top: 4, right: 4,
+                      padding: "1px 5px", borderRadius: 4,
+                      background: "rgba(0,0,0,0.6)",
+                      fontSize: 7, color: "#94a3b8", fontWeight: 600,
+                    }}>
+                      {isVideo ? "VIDEO" : "IMG"}
+                    </div>
+                    <div style={{ padding: "5px 6px" }}>
+                      <div style={{
+                        fontSize: 8, color: "#94a3b8", fontWeight: 500,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      }}>
+                        {u.file_name}
+                      </div>
+                      <div style={{ fontSize: 7, color: "#334155", marginTop: 1 }}>
+                        {(u.file_size / 1024).toFixed(0)} KB · {new Date(u.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── NAVI Assistant ────────────────────────────────────────────── */}
