@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchUploads } from "@/lib/uploads";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/uploads?user_id=xxx — return uploads for a user
  */

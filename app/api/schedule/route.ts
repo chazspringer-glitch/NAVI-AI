@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchScheduledPosts, createScheduledPost } from "@/lib/schedule";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/schedule?user_id=xxx
  */
