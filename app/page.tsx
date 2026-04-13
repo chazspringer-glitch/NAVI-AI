@@ -33,6 +33,7 @@ const LuckyModePanel          = dynamic(() => import("@/components/LuckyModePane
 const HandsFreeBar            = dynamic(() => import("@/components/HandsFreeBar"),            { ssr: false });
 const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboardPanel"),     { ssr: false });
 const MyBusinessIntro         = dynamic(() => import("@/components/MyBusinessIntro"),         { ssr: false });
+const AutoFinderPanel         = dynamic(() => import("@/components/AutoFinderPanel"),         { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -736,6 +737,7 @@ export default function HomePage() {
   const [showSystemHealth,  setShowSystemHealth]        = useState(false);
   const [showAdminDash,     setShowAdminDash]            = useState(false);
   const [showBusinessIntro, setShowBusinessIntro]       = useState(false);
+  const [showAutoFinder,    setShowAutoFinder]          = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2256,6 +2258,11 @@ export default function HomePage() {
       {/* Legal Rights Guide overlay */}
       {showLegalRights && (
         <LegalRightsPanel onClose={() => setShowLegalRights(false)} />
+      )}
+
+      {/* Auto Finder Panel */}
+      {showAutoFinder && (
+        <AutoFinderPanel onClose={() => setShowAutoFinder(false)} />
       )}
 
       {/* Lucky Mode Panel */}
@@ -4563,6 +4570,7 @@ export default function HomePage() {
                   { icon: "⚖️", label: "Legal Rights Guide", color: "#60a5fa", onClick: () => { setShowLegalRights(true); setMenuOpen(false); }, locked: false },
                   { icon: "💛", label: "Family Support Finder", color: "#f59e0b", onClick: () => { setShowFamilySupport(true); setMenuOpen(false); }, locked: false },
                   { icon: "📚", label: "Homework Helper", color: "#00d4ff", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+                  { icon: "🚗", label: "Affordable Auto Finder", color: "#4ade80", onClick: () => { setShowAutoFinder(true); setMenuOpen(false); }, locked: false },
                 ].map(({ icon, label, color, onClick, locked }) => (
                   <button key={label} onClick={onClick} style={{
                     width: "100%", display: "flex", alignItems: "center", gap: 10,
