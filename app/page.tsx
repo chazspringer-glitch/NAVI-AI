@@ -5558,26 +5558,33 @@ export default function HomePage() {
 
             {/* Unlock Adult STEM Program — Stripe Checkout */}
             <button
+              type="button"
               onClick={async () => {
                 try {
+                  console.log("[Stripe] Starting checkout...");
                   const res = await fetch("/api/create-checkout-session", { method: "POST" });
                   const data = await res.json();
+                  console.log("[Stripe] Response:", data);
                   if (data.url) {
                     window.location.href = data.url;
+                  } else {
+                    alert(data.error || "Could not start checkout. Please try again.");
                   }
                 } catch (err) {
                   console.error("[Stripe] Checkout error:", err);
+                  alert("Could not connect to payment. Please try again.");
                 }
               }}
               style={{
-                width: "100%", padding: "14px 18px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, rgba(201,162,39,0.18), rgba(245,200,66,0.10))",
-                border: "1px solid rgba(201,162,39,0.40)",
-                color: "#C9A227", fontFamily: "monospace", fontSize: 13,
+                width: "100%", padding: "16px 18px", borderRadius: 14, cursor: "pointer",
+                background: "linear-gradient(135deg, #C9A227, #a07818)",
+                border: "none",
+                color: "#08080f", fontFamily: "monospace", fontSize: 14,
                 fontWeight: "bold", letterSpacing: "0.06em",
-                boxShadow: "0 0 20px rgba(201,162,39,0.15)",
+                boxShadow: "0 0 20px rgba(201,162,39,0.25)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 transition: "all 0.2s ease",
+                position: "relative", zIndex: 10,
               }}
             >
               <span style={{ fontSize: 18 }}>⚡</span>
