@@ -38,6 +38,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [naviOpen, setNaviOpen] = useState(false);
 
   // Upload state
   const [uploads, setUploads] = useState<ContentUpload[]>([]);
@@ -299,7 +300,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
       {/* ── Content ──────────────────────────────────────────────────── */}
       <div style={{
         ...(asPage
-          ? { padding: "20px 20px 140px", display: "flex", flexDirection: "column" as const, gap: 20, maxWidth: 600, margin: "0 auto", width: "100%" }
+          ? { padding: "20px 20px 80px", display: "flex", flexDirection: "column" as const, gap: 20, maxWidth: 600, margin: "0 auto", width: "100%" }
           : { flex: 1, overflowY: "auto" as const, padding: "16px 16px 24px", display: "flex", flexDirection: "column" as const, gap: 20 }),
       }}>
 
@@ -837,50 +838,86 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
 
       </div>
 
-      {/* ── Floating NAVI (page mode only) ──────────────────────────── */}
-      {asPage && (
+      {/* ── Collapsible NAVI chat (page mode only) ──────────────────── */}
+      {asPage && !naviOpen && (
+        <button
+          onClick={() => setNaviOpen(true)}
+          style={{
+            position: "fixed", bottom: 20, right: 20, zIndex: 50,
+            width: 52, height: 52, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(0,212,255,0.20) 0%, rgba(0,212,255,0.06) 70%)",
+            border: "2px solid rgba(0,212,255,0.35)",
+            boxShadow: "0 0 20px rgba(0,212,255,0.20), 0 4px 16px rgba(0,0,0,0.4)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22,
+            transition: "all 0.25s ease",
+          }}
+          aria-label="Open NAVI chat"
+        >
+          🤖
+        </button>
+      )}
+
+      {asPage && naviOpen && (
         <div style={{
           position: "fixed",
-          bottom: 20, left: "50%", transform: "translateX(-50%)",
-          width: "90%", maxWidth: 500, zIndex: 50,
-          borderRadius: 16,
-          background: "rgba(10,10,18,0.95)",
+          bottom: 20, right: 20, zIndex: 50,
+          width: "90%", maxWidth: 400,
+          height: "60vh", maxHeight: 480,
+          borderRadius: 18,
+          background: "rgba(10,10,18,0.97)",
           border: "1px solid rgba(0,212,255,0.18)",
-          boxShadow: "0 -4px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0,212,255,0.08)",
+          boxShadow: "0 -4px 40px rgba(0,0,0,0.5), 0 0 24px rgba(0,212,255,0.10)",
           backdropFilter: "blur(16px)",
-          overflow: "hidden",
           display: "flex", flexDirection: "column",
+          overflow: "hidden",
         }}>
           {/* Header */}
           <div style={{
-            padding: "10px 14px 8px",
+            padding: "12px 14px 10px",
             borderBottom: "1px solid rgba(0,212,255,0.08)",
             display: "flex", alignItems: "center", gap: 8,
+            flexShrink: 0,
           }}>
             <div style={{
-              width: 22, height: 22, borderRadius: "50%",
+              width: 24, height: 24, borderRadius: "50%",
               background: "radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.05) 70%)",
               border: "1px solid rgba(0,212,255,0.30)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 10, boxShadow: "0 0 8px rgba(0,212,255,0.15)",
+              fontSize: 12, boxShadow: "0 0 8px rgba(0,212,255,0.15)",
             }}>🤖</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
-            <div style={{ marginLeft: "auto", width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 6px rgba(52,211,153,0.5)" }} />
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 6px rgba(52,211,153,0.5)" }} />
+            <button
+              onClick={() => setNaviOpen(false)}
+              style={{
+                marginLeft: "auto",
+                width: 26, height: 26, borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "transparent", color: "#64748b",
+                cursor: "pointer", fontSize: 12,
+              }}
+              aria-label="Close NAVI chat"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Messages */}
           <div style={{
-            maxHeight: 150, overflowY: "auto", padding: "8px 12px",
+            flex: 1, overflowY: "auto", padding: "10px 12px",
             display: "flex", flexDirection: "column", gap: 6,
           }}>
             {chatMessages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 <div style={{
-                  maxWidth: "85%", padding: "6px 10px",
-                  borderRadius: msg.role === "user" ? "10px 10px 3px 10px" : "10px 10px 10px 3px",
+                  maxWidth: "85%", padding: "7px 10px",
+                  borderRadius: msg.role === "user" ? "12px 12px 4px 12px" : "12px 12px 12px 4px",
                   background: msg.role === "user" ? "rgba(201,162,39,0.10)" : "rgba(0,212,255,0.06)",
                   border: msg.role === "user" ? "1px solid rgba(201,162,39,0.18)" : "1px solid rgba(0,212,255,0.10)",
-                  fontSize: 10, color: msg.role === "user" ? "#e2e8f0" : "#94a3b8", lineHeight: 1.5,
+                  fontSize: 11, color: msg.role === "user" ? "#e2e8f0" : "#94a3b8", lineHeight: 1.55,
                 }}>{msg.text}</div>
               </div>
             ))}
@@ -889,9 +926,10 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
 
           {/* Input */}
           <div style={{
-            padding: "8px 12px 10px",
+            padding: "10px 12px 12px",
             borderTop: "1px solid rgba(0,212,255,0.08)",
             display: "flex", gap: 6,
+            flexShrink: 0,
           }}>
             <input
               value={chatInput}
