@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadContent, fetchUploads, type ContentUpload } from "@/lib/uploads";
+import { fetchScheduledPosts, type ScheduledPost } from "@/lib/schedule";
 
 /* ── Static data ──────────────────────────────────────────────────────────── */
 
@@ -63,9 +64,50 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
     }
   }, [userId]);
 
+  const loadSchedule = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const data = await fetchScheduledPosts(userId);
+      setScheduledPosts(data);
+    } catch {
+      // silent
+    }
+  }, [userId]);
+
   useEffect(() => {
     loadUploads();
-  }, [loadUploads]);
+    loadSchedule();
+  }, [loadUploads, loadSchedule]);
+
+  const handleSchedulePost = async () => {
+    if (!userId || !schedDate || !schedTime) return;
+    setScheduling(true);
+    try {
+      const scheduledAt = new Date(`${schedDate}T${schedTime}:00`).toISOString();
+      const res = await fetch("/api/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          post_type: schedType,
+          platform: schedPlatform,
+          caption: schedCaption,
+          scheduled_at: scheduledAt,
+        }),
+      });
+      if (res.ok) {
+        setShowScheduleForm(false);
+        setSchedCaption("");
+        setSchedDate("");
+        setSchedTime("12:00");
+        await loadSchedule();
+      }
+    } catch {
+      // silent
+    } finally {
+      setScheduling(false);
+    }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -91,6 +133,16 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  // Schedule state
+  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [schedType, setSchedType] = useState("Image Post");
+  const [schedPlatform, setSchedPlatform] = useState("Instagram");
+  const [schedCaption, setSchedCaption] = useState("");
+  const [schedDate, setSchedDate] = useState("");
+  const [schedTime, setSchedTime] = useState("12:00");
+  const [scheduling, setScheduling] = useState(false);
 
   // AI content generator state
   const [genBusiness, setGenBusiness] = useState("");
@@ -243,81 +295,274 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
         </div>
 
         {/* ── Content Calendar ──────────────────────────────────────────── */}
-        <div style={{
-          borderRadius: 12,
-          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-          border: "1px solid rgba(201,162,39,0.10)",
-          overflow: "hidden",
-        }}>
-          <div style={{
-            padding: "14px 16px 10px",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Content Calendar</div>
-              <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Apr 14 – Apr 20, 2026</div>
-            </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              style={{
-                padding: "5px 12px", borderRadius: 7,
-                background: "rgba(201,162,39,0.08)",
-                border: "1px solid rgba(201,162,39,0.22)",
-                color: "#C9A227", fontSize: 9, fontWeight: 600,
-                cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-                opacity: uploading ? 0.5 : 1,
-              }}
-            >
-              <span style={{ fontSize: 11 }}>📤</span> {uploading ? "Uploading..." : "Upload"}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              onChange={handleFileSelect}
-              style={{ display: "none" }}
-            />
-          </div>
+        {(() => {
+          const PLAT_COLOR: Record<string, string> = { Instagram: "#C9A227", Facebook: "#00d4ff", TikTok: "#f472b6", LinkedIn: "#a855f7", Twitter: "#00d4ff" };
 
-          {CALENDAR_ITEMS.map(({ day, date, items }) => (
-            <div key={day} style={{
-              display: "flex", gap: 10, padding: "9px 16px",
-              borderBottom: "1px solid rgba(255,255,255,0.03)",
+          // Build merged calendar: static items + scheduled posts grouped by date
+          const calendarDays = CALENDAR_ITEMS.map(({ day, date, items }) => {
+            // Match scheduled posts that fall on this calendar day
+            const dateStr = `Apr ${date.split(" ")[1]}, 2026`;
+            const matched = scheduledPosts.filter((p) => {
+              const d = new Date(p.scheduled_at);
+              const m = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+              return m === dateStr;
+            }).map((p) => {
+              const d = new Date(p.scheduled_at);
+              return {
+                time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
+                type: p.post_type,
+                platform: p.platform,
+                color: PLAT_COLOR[p.platform] || "#C9A227",
+                isScheduled: true,
+              };
+            });
+            const staticItems = items.map((it) => ({ ...it, isScheduled: false }));
+            return { day, date, items: [...staticItems, ...matched] };
+          });
+
+          // Also show scheduled posts outside the static week
+          const extraPosts = scheduledPosts.filter((p) => {
+            const d = new Date(p.scheduled_at);
+            const day = d.getDate();
+            return day < 14 || day > 20;
+          });
+
+          return (
+            <div style={{
+              borderRadius: 12,
+              background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+              border: "1px solid rgba(201,162,39,0.10)",
+              overflow: "hidden",
             }}>
-              <div style={{ width: 36, flexShrink: 0, textAlign: "center" }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: "#64748b" }}>{day}</div>
-                <div style={{ fontSize: 8, color: "#334155", marginTop: 1 }}>{date.split(" ")[1]}</div>
+              <div style={{
+                padding: "14px 16px 10px",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Content Calendar</div>
+                  <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>
+                    Apr 14 – Apr 20, 2026{scheduledPosts.length > 0 ? ` · ${scheduledPosts.length} scheduled` : ""}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowScheduleForm(!showScheduleForm)}
+                  style={{
+                    padding: "5px 12px", borderRadius: 7,
+                    background: showScheduleForm ? "rgba(52,211,153,0.10)" : "rgba(168,85,247,0.08)",
+                    border: showScheduleForm ? "1px solid rgba(52,211,153,0.22)" : "1px solid rgba(168,85,247,0.22)",
+                    color: showScheduleForm ? "#34d399" : "#a855f7", fontSize: 9, fontWeight: 600,
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                  }}
+                >
+                  <span style={{ fontSize: 11 }}>{showScheduleForm ? "✕" : "📅"}</span>
+                  {showScheduleForm ? "Cancel" : "Schedule"}
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  style={{
+                    padding: "5px 12px", borderRadius: 7,
+                    background: "rgba(201,162,39,0.08)",
+                    border: "1px solid rgba(201,162,39,0.22)",
+                    color: "#C9A227", fontSize: 9, fontWeight: 600,
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                    opacity: uploading ? 0.5 : 1,
+                  }}
+                >
+                  <span style={{ fontSize: 11 }}>📤</span> {uploading ? "..." : "Upload"}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  style={{ display: "none" }}
+                />
               </div>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                {items.length === 0 ? (
-                  <div style={{ fontSize: 9, color: "#1e293b", fontStyle: "italic", padding: "3px 0" }}>No posts</div>
-                ) : (
-                  items.map((item, j) => (
-                    <div key={j} style={{
-                      display: "flex", alignItems: "center", gap: 7,
-                      padding: "5px 8px", borderRadius: 7,
-                      background: `${item.color}08`,
-                      border: `1px solid ${item.color}18`,
-                    }}>
-                      <div style={{
-                        width: 5, height: 5, borderRadius: "50%",
-                        background: item.color, flexShrink: 0,
-                        boxShadow: `0 0 6px ${item.color}55`,
-                      }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 9, color: "#e2e8f0", fontWeight: 600 }}>{item.type}</div>
-                        <div style={{ fontSize: 7, color: "#475569" }}>{item.platform} · {item.time}</div>
-                      </div>
+
+              {/* Schedule form */}
+              {showScheduleForm && (
+                <div style={{
+                  padding: "12px 16px",
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  background: "rgba(168,85,247,0.03)",
+                  display: "flex", flexDirection: "column", gap: 8,
+                }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 7, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Date</div>
+                      <input
+                        type="date"
+                        value={schedDate}
+                        onChange={(e) => setSchedDate(e.target.value)}
+                        style={{
+                          width: "100%", padding: "7px 8px", borderRadius: 6,
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                          outline: "none", colorScheme: "dark",
+                        }}
+                      />
                     </div>
-                  ))
-                )}
-              </div>
+                    <div>
+                      <div style={{ fontSize: 7, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Time</div>
+                      <input
+                        type="time"
+                        value={schedTime}
+                        onChange={(e) => setSchedTime(e.target.value)}
+                        style={{
+                          width: "100%", padding: "7px 8px", borderRadius: 6,
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                          outline: "none", colorScheme: "dark",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 7, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Post Type</div>
+                      <select
+                        value={schedType}
+                        onChange={(e) => setSchedType(e.target.value)}
+                        style={{
+                          width: "100%", padding: "7px 8px", borderRadius: 6,
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                          outline: "none",
+                        }}
+                      >
+                        {["Image Post", "Video Post", "Story", "Reel", "Carousel"].map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 7, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Platform</div>
+                      <select
+                        value={schedPlatform}
+                        onChange={(e) => setSchedPlatform(e.target.value)}
+                        style={{
+                          width: "100%", padding: "7px 8px", borderRadius: 6,
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                          outline: "none",
+                        }}
+                      >
+                        {["Instagram", "Facebook", "TikTok", "LinkedIn", "Twitter"].map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 7, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3 }}>Caption (optional)</div>
+                    <input
+                      value={schedCaption}
+                      onChange={(e) => setSchedCaption(e.target.value)}
+                      placeholder="Write your caption..."
+                      style={{
+                        width: "100%", padding: "7px 8px", borderRadius: 6,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSchedulePost}
+                    disabled={scheduling || !schedDate}
+                    style={{
+                      width: "100%", padding: "9px", borderRadius: 7,
+                      background: scheduling ? "rgba(168,85,247,0.06)" : "rgba(168,85,247,0.12)",
+                      border: "1px solid rgba(168,85,247,0.28)",
+                      color: "#a855f7", fontSize: 10, fontFamily: "monospace",
+                      fontWeight: 700, cursor: scheduling || !schedDate ? "default" : "pointer",
+                      opacity: !schedDate ? 0.4 : 1,
+                    }}
+                  >
+                    {scheduling ? "Scheduling..." : "Schedule Post"}
+                  </button>
+                </div>
+              )}
+
+              {/* Calendar rows */}
+              {calendarDays.map(({ day, date, items }) => (
+                <div key={day} style={{
+                  display: "flex", gap: 10, padding: "9px 16px",
+                  borderBottom: "1px solid rgba(255,255,255,0.03)",
+                }}>
+                  <div style={{ width: 36, flexShrink: 0, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#64748b" }}>{day}</div>
+                    <div style={{ fontSize: 8, color: "#334155", marginTop: 1 }}>{date.split(" ")[1]}</div>
+                  </div>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                    {items.length === 0 ? (
+                      <div style={{ fontSize: 9, color: "#1e293b", fontStyle: "italic", padding: "3px 0" }}>No posts</div>
+                    ) : (
+                      items.map((item, j) => (
+                        <div key={j} style={{
+                          display: "flex", alignItems: "center", gap: 7,
+                          padding: "5px 8px", borderRadius: 7,
+                          background: `${item.color}08`,
+                          border: `1px solid ${item.color}${item.isScheduled ? "28" : "18"}`,
+                        }}>
+                          <div style={{
+                            width: 5, height: 5, borderRadius: "50%",
+                            background: item.color, flexShrink: 0,
+                            boxShadow: `0 0 6px ${item.color}55`,
+                          }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 9, color: "#e2e8f0", fontWeight: 600 }}>{item.type}</div>
+                            <div style={{ fontSize: 7, color: "#475569" }}>{item.platform} · {item.time}</div>
+                          </div>
+                          {item.isScheduled && (
+                            <span style={{ fontSize: 7, color: "#a855f7", fontWeight: 600, flexShrink: 0 }}>SCHEDULED</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Extra scheduled posts outside the static week */}
+              {extraPosts.length > 0 && (
+                <>
+                  <div style={{ padding: "8px 16px 4px", fontSize: 8, color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                    Other Scheduled
+                  </div>
+                  {extraPosts.map((p) => {
+                    const d = new Date(p.scheduled_at);
+                    const col = PLAT_COLOR[p.platform] || "#C9A227";
+                    return (
+                      <div key={p.id} style={{
+                        display: "flex", alignItems: "center", gap: 7,
+                        padding: "6px 16px 6px 52px",
+                        borderBottom: "1px solid rgba(255,255,255,0.03)",
+                      }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: col, flexShrink: 0, boxShadow: `0 0 6px ${col}55` }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 9, color: "#e2e8f0", fontWeight: 600 }}>{p.post_type}</div>
+                          <div style={{ fontSize: 7, color: "#475569" }}>
+                            {p.platform} · {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · {d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 7, color: "#a855f7", fontWeight: 600, flexShrink: 0 }}>SCHEDULED</span>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* ── My Content (uploads) ──────────────────────────────────────── */}
         <div style={{
