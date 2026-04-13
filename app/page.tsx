@@ -41,6 +41,7 @@ import type { AgentAction, NavigateDestination } from "@/lib/actions";
 import { matchServiceRoute } from "@/lib/voiceNav";
 import { playTabSwitch, playConfirm, playNaviResponse } from "@/lib/sounds";
 import { EMAIL_RECEIVER } from "@/lib/emailConfig";
+import { supabase } from "@/lib/supabase";
 import { track } from "@vercel/analytics";
 import {
   Message,
@@ -736,6 +737,7 @@ export default function HomePage() {
   const [showAdminDash,     setShowAdminDash]            = useState(false);
   const [showClientDash,    setShowClientDash]           = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
+  const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [showHousingPanel,  setShowHousingPanel]   = useState(false);
   const [showHousingHub,    setShowHousingHub]     = useState(false);
   const [showStemPanel,     setShowStemPanel]      = useState(false);
@@ -1028,6 +1030,17 @@ export default function HomePage() {
 
     setMounted(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check Supabase auth for "My Business" tab visibility
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Persist to localStorage whenever key state changes
   useEffect(() => {
@@ -4015,6 +4028,30 @@ export default function HomePage() {
             🎥 Truth Room
           </button>
         </div>
+
+        {/* My Business — logged in only */}
+        {isLoggedIn && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <a
+              href="/client"
+              style={{
+                flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
+                fontFamily: "monospace", letterSpacing: "0.04em", cursor: "pointer",
+                background: "linear-gradient(135deg, rgba(52,211,153,0.12), rgba(0,212,255,0.08))",
+                border: "1px solid rgba(52,211,153,0.35)",
+                color: "#34d399",
+                boxShadow: "0 0 12px rgba(52,211,153,0.12)",
+                fontWeight: "bold",
+                textDecoration: "none",
+                textAlign: "center",
+                display: "block",
+                transition: "all 0.2s ease",
+              }}
+            >
+              💼 My Business
+            </a>
+          </div>
+        )}
 
         {/* Tab switcher — row 2 */}
         <div style={{ display: "flex", gap: 6 }}>

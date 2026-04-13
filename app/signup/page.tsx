@@ -15,7 +15,7 @@ export default function SignupPage() {
   // Redirect if already logged in
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/dashboard");
+      if (session) router.replace("/client");
     });
   }, [router]);
 

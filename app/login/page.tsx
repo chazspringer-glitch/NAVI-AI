@@ -14,7 +14,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/dashboard");
+      if (session) router.replace("/client");
     });
   }, [router]);
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
       if (authError) {
         setError(authError.message);
       } else {
-        router.push("/dashboard");
+        router.push("/client");
       }
     } catch {
       setError("Something went wrong. Please try again.");
