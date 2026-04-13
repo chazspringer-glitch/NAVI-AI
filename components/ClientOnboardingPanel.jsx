@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import NaviOrb from "./NaviOrb";
 import { EMAIL_RECEIVER } from "@/lib/emailConfig";
+import { supabase } from "@/lib/supabase";
 
 const GOLD      = "#C9A227";
 const GOLD_DIM  = "rgba(201,162,39,0.18)";
@@ -112,6 +113,13 @@ function buildIntro(serviceTitle) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function ClientOnboardingPanel({ service, onClose }) {
   const questions = buildQuestions(service?.title ?? "Consulting");
+  const [authUserId, setAuthUserId] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) setAuthUserId(session.user.id);
+    });
+  }, []);
 
   const [phase,      setPhase]      = useState("chat"); // "chat" | "processing" | "done" | "error"
   const [stepIndex,  setStepIndex]  = useState(-1);     // -1 = intro in progress
@@ -206,6 +214,7 @@ export default function ClientOnboardingPanel({ service, onClose }) {
           answers:      qa,
           businessName: safeAnswers[0] || "Client",
           email:        safeAnswers[1] || "",
+          user_id:      authUserId || undefined,
         }),
       });
 
@@ -534,11 +543,31 @@ export default function ClientOnboardingPanel({ service, onClose }) {
 
         {/* Work order output */}
         {phase === "done" && workOrder && strategy && (
-          <WorkOrderDisplay
-            workOrder={workOrder}
-            strategy={strategy}
-            mailtoHref={buildMailto()}
-          />
+          <>
+            <WorkOrderDisplay
+              workOrder={workOrder}
+              strategy={strategy}
+              mailtoHref={buildMailto()}
+            />
+            {authUserId && (
+              <a
+                href="/client"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  width: "100%", padding: "12px", borderRadius: 12,
+                  background: "linear-gradient(135deg, rgba(52,211,153,0.15), rgba(0,212,255,0.08))",
+                  border: "1px solid rgba(52,211,153,0.30)",
+                  color: "#34d399", fontSize: 12, fontFamily: "monospace",
+                  fontWeight: "bold", letterSpacing: "0.04em",
+                  textDecoration: "none",
+                  boxShadow: "0 0 12px rgba(52,211,153,0.12)",
+                  marginTop: 8,
+                }}
+              >
+                💼 Go to My Dashboard
+              </a>
+            )}
+          </>
         )}
 
         {/* Scroll anchor */}

@@ -1042,6 +1042,33 @@ export default function HomePage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Restore pending service after login redirect
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    try {
+      const pending = localStorage.getItem("navi-pending-service");
+      if (pending) {
+        localStorage.removeItem("navi-pending-service");
+        const svc = JSON.parse(pending);
+        if (svc?.title) {
+          setMenuOpen(true);
+          setHubTab("founders");
+          setTimeout(() => setOnboardingService(svc), 400);
+        }
+      }
+    } catch { /* ignore */ }
+  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auth-gated service selection — redirects to /login if not logged in
+  const openServiceWithAuth = useCallback((svc: { icon: string; title: string; desc: string; subject: string }) => {
+    if (isLoggedIn) {
+      setOnboardingService(svc);
+    } else {
+      try { localStorage.setItem("navi-pending-service", JSON.stringify(svc)); } catch { /* ignore */ }
+      window.location.href = "/login?redirect=onboarding";
+    }
+  }, [isLoggedIn]);
+
   // Persist to localStorage whenever key state changes
   useEffect(() => {
     if (!mounted) return;
@@ -5740,7 +5767,7 @@ export default function HomePage() {
                         transition: "border-color 0.2s, box-shadow 0.2s",
                         cursor: "pointer",
                       }}
-                      onClick={() => setOnboardingService({ icon, title, desc, subject })}
+                      onClick={() => openServiceWithAuth({ icon, title, desc, subject })}
                       onMouseEnter={(e) => {
                         const el = e.currentTarget as HTMLDivElement;
                         el.style.borderColor = "rgba(201,162,39,0.45)";
@@ -5864,7 +5891,7 @@ export default function HomePage() {
 
                   {/* CTA */}
                   <button
-                    onClick={() => setOnboardingService({ icon: "🎤", title: "Speaking Engagement", desc: "Book Chaz Springer for keynotes, workshops, and panels.", subject: "Speaking Engagement" })}
+                    onClick={() => openServiceWithAuth({ icon: "🎤", title: "Speaking Engagement", desc: "Book Chaz Springer for keynotes, workshops, and panels.", subject: "Speaking Engagement" })}
                     style={{
                       width: "100%", padding: "13px", borderRadius: 12, cursor: "pointer",
                       background: `linear-gradient(135deg, ${GOLD}, #d4a017)`,

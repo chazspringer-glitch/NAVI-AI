@@ -24,6 +24,7 @@ interface RequestBody {
   answers:      Answer[];
   businessName: string;
   email:        string;
+  user_id?:     string;
 }
 
 interface WorkOrder {
@@ -169,10 +170,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { service, answers, businessName, email } = body;
+  const { service, answers, businessName, email, user_id } = body;
 
   if (!service || !answers?.length) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+  }
+
+  if (user_id) {
+    console.log("[onboard] Authenticated user:", user_id, "| Service:", service);
   }
 
   const qaText = answers
