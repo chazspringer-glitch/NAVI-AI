@@ -4281,6 +4281,7 @@ export default function HomePage() {
                     switchMode(id);
                     openWithIntroRef.current(id);
                     track("mode_switch", { mode: id });
+                    setMenuOpen(false);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
