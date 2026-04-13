@@ -103,13 +103,18 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
     setDbLoading(true);
     setDbError(null);
     try {
+      console.log("[AdminDash] Fetching clients from /api/clients...");
       const res = await fetch("/api/clients");
       const json = await res.json();
       if (Array.isArray(json.clients)) {
+        console.log("[AdminDash] Received", json.clients.length, "clients from Supabase");
         setDbClients(json.clients);
+      } else {
+        console.warn("[AdminDash] Unexpected response:", json);
       }
-    } catch {
-      setDbError("Could not load clients");
+    } catch (err) {
+      console.error("[AdminDash] Fetch failed:", err);
+      setDbError("Could not connect to database");
     } finally {
       setDbLoading(false);
     }
@@ -134,21 +139,50 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
         }),
       });
       if (res.ok) {
+        const json = await res.json();
+        console.log("[AdminDash] Client created:", json.client?.id);
         setFormName(""); setFormEmail(""); setFormBusiness(""); setFormService("");
         setShowAddForm(false);
         await loadClients();
       }
-    } catch {
-      // silent — form stays open so user can retry
+    } catch (err) {
+      console.error("[AdminDash] Insert failed:", err);
     } finally {
       setFormSaving(false);
     }
   };
 
-  // Merge: show Supabase clients if available, fall back to static mock data
-  const displayClients = dbClients.length > 0
-    ? dbClients.map((c) => ({ name: c.name, service: c.service_type, status: "Active" as string, revenue: "—", email: c.email, businessName: c.business_name }))
-    : CLIENTS.map((c) => ({ ...c, email: "", businessName: "" }));
+  const handleTestInsert = async () => {
+    setFormSaving(true);
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Test Client",
+          email: "test@navi.com",
+          business_name: "Test Brand",
+          service_type: "Startup Package",
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        console.log("[AdminDash] Test client inserted:", json.client?.id);
+        await loadClients();
+      }
+    } catch (err) {
+      console.error("[AdminDash] Test insert failed:", err);
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  // Dynamic stats — update Total Clients from live data
+  const liveStats = STATS.map((s) =>
+    s.label === "Total Clients" && !dbLoading
+      ? { ...s, value: String(dbClients.length), change: dbClients.length > 0 ? "Live from Supabase" : "No clients yet" }
+      : s
+  );
 
   return (
     <div style={{
@@ -235,7 +269,7 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
         <>
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {STATS.map(({ label, value, change, icon, accent }) => (
+            {liveStats.map(({ label, value, change, icon, accent }) => (
               <div key={label} style={{
                 padding: "14px 14px 12px",
                 borderRadius: 12,
@@ -335,22 +369,42 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
       {/* ── Clients ────────────────────────────────────────────────────── */}
       {tab === "clients" && (
         <>
-          {/* Add Client button + form */}
-          {!showAddForm ? (
+          {/* Action buttons row */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {!showAddForm && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 10,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  background: "rgba(201,162,39,0.06)",
+                  border: "1px solid rgba(201,162,39,0.18)",
+                  color: "#C9A227", fontSize: 10, fontFamily: "monospace",
+                  cursor: "pointer", fontWeight: 600, transition: "all 0.18s ease",
+                }}
+              >
+                <span style={{ fontSize: 14 }}>➕</span> Add New Client
+              </button>
+            )}
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={handleTestInsert}
+              disabled={formSaving}
               style={{
-                width: "100%", padding: "10px 14px", borderRadius: 10,
+                flex: showAddForm ? 0 : 1, padding: "10px 14px", borderRadius: 10,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                background: "rgba(201,162,39,0.06)",
-                border: "1px solid rgba(201,162,39,0.18)",
-                color: "#C9A227", fontSize: 10, fontFamily: "monospace",
+                background: "rgba(0,212,255,0.06)",
+                border: "1px solid rgba(0,212,255,0.18)",
+                color: "#00d4ff", fontSize: 10, fontFamily: "monospace",
                 cursor: "pointer", fontWeight: 600, transition: "all 0.18s ease",
+                opacity: formSaving ? 0.5 : 1,
               }}
             >
-              <span style={{ fontSize: 14 }}>➕</span> Add New Client
+              <span style={{ fontSize: 14 }}>🧪</span> {formSaving ? "Inserting..." : "Test Insert"}
             </button>
-          ) : (
+          </div>
+
+          {/* Add Client form */}
+          {showAddForm && (
             <div style={{
               padding: "14px 16px", borderRadius: 12,
               background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
@@ -409,7 +463,7 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
             </div>
           )}
 
-          {/* Client list */}
+          {/* Client list — LIVE from Supabase */}
           <div style={{
             borderRadius: 12,
             background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
@@ -420,40 +474,72 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Client Roster</div>
                 <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>
-                  {displayClients.length} total{dbClients.length > 0 ? " (from database)" : " (sample data)"}
+                  {dbClients.length} total — Live from Supabase
                 </div>
               </div>
               {dbLoading && (
                 <div style={{ fontSize: 9, color: "#C9A227" }}>Loading...</div>
               )}
             </div>
+
+            {/* Error state */}
             {dbError && (
-              <div style={{ padding: "8px 16px", fontSize: 9, color: "#f59e0b", background: "rgba(245,158,11,0.06)" }}>
-                {dbError} — showing sample data
+              <div style={{ padding: "12px 16px", fontSize: 10, color: "#f87171", background: "rgba(239,68,68,0.06)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                {dbError}
               </div>
             )}
-            {displayClients.map(({ name, service, status, revenue }, i) => (
-              <div key={`${name}-${i}`} style={{
-                display: "flex", alignItems: "center", gap: 10,
+
+            {/* Loading state */}
+            {dbLoading && dbClients.length === 0 && (
+              <div style={{ padding: "24px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#C9A227", marginBottom: 4 }}>Loading clients...</div>
+                <div style={{ fontSize: 9, color: "#475569" }}>Connecting to Supabase</div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!dbLoading && !dbError && dbClients.length === 0 && (
+              <div style={{ padding: "24px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: 18, marginBottom: 8 }}>📋</div>
+                <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>No clients yet</div>
+                <div style={{ fontSize: 9, color: "#475569" }}>Use "Add New Client" or "Test Insert" above</div>
+              </div>
+            )}
+
+            {/* Client rows — all Supabase fields */}
+            {dbClients.map((c, i) => (
+              <div key={c.id} style={{
                 padding: "12px 16px",
-                borderBottom: i < displayClients.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                borderBottom: i < dbClients.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
               }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 }}>{name}</div>
-                  <div style={{ fontSize: 9, color: "#64748b" }}>{service}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{c.name}</div>
+                  <span style={{
+                    padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+                    color: "#34d399", background: "rgba(52,211,153,0.12)",
+                    border: "1px solid rgba(52,211,153,0.25)",
+                  }}>
+                    Active
+                  </span>
                 </div>
-                <span style={{
-                  padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
-                  color: STATUS_COLOR[status] || "#64748b",
-                  background: `${STATUS_COLOR[status] || "#64748b"}15`,
-                  border: `1px solid ${STATUS_COLOR[status] || "#64748b"}30`,
-                  flexShrink: 0,
-                }}>
-                  {status}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#34d399", flexShrink: 0, minWidth: 50, textAlign: "right" }}>
-                  {revenue}
-                </span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                  <div>
+                    <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase" }}>Email</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>{c.email}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase" }}>Business</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>{c.business_name}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase" }}>Service</div>
+                    <div style={{ fontSize: 10, color: "#C9A227", marginTop: 1 }}>{c.service_type}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase" }}>Created</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>{new Date(c.created_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -6,7 +6,9 @@ import { fetchClients, createClient } from "@/lib/clients";
  */
 export async function GET() {
   try {
+    console.log("[api/clients] GET — fetching all clients");
     const clients = await fetchClients();
+    console.log("[api/clients] GET — returning", clients.length, "clients");
     return NextResponse.json({ clients });
   } catch (err) {
     console.error("[api/clients] GET error:", err);
@@ -30,12 +32,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log("[api/clients] POST — creating client:", name);
     const client = await createClient({ name, email, business_name, service_type });
 
     if (!client) {
       return NextResponse.json({ error: "Failed to create client" }, { status: 500 });
     }
 
+    console.log("[api/clients] POST — client created:", client.id);
     return NextResponse.json({ client }, { status: 201 });
   } catch (err) {
     console.error("[api/clients] POST error:", err);
