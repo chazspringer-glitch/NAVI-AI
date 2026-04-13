@@ -118,6 +118,17 @@ export const SERVICE_VOICE_ROUTES: ServiceRoute[] = [
       "create content", "brand video", "ai commercial", "make content",
     ],
   },
+  {
+    title:   "Startup Launch Package",
+    icon:    "🚀",
+    desc:    "We help you launch your business the right way — brand setup, content & marketing — all done for you. $600/mo.",
+    subject: "Startup Launch Package",
+    patterns: [
+      "startup launch", "launch package", "startup package", "launch my business",
+      "start my business", "startup help", "business launch", "launch a business",
+      "new business package", "startup plan",
+    ],
+  },
 ];
 
 /**
