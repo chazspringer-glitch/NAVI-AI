@@ -31,6 +31,7 @@ const SystemHealthPanel       = dynamic(() => import("@/components/SystemHealthP
 const PodcastPanel            = dynamic(() => import("@/components/PodcastPanel"),            { ssr: false });
 const LuckyModePanel          = dynamic(() => import("@/components/LuckyModePanel"),          { ssr: false });
 const HandsFreeBar            = dynamic(() => import("@/components/HandsFreeBar"),            { ssr: false });
+const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboardPanel"),     { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -731,6 +732,7 @@ export default function HomePage() {
   const [showLegalRights,   setShowLegalRights]         = useState(false);
   const [legalRightsSeenRef] = useState(() => ({ current: false }));
   const [showSystemHealth,  setShowSystemHealth]        = useState(false);
+  const [showAdminDash,     setShowAdminDash]            = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [showHousingPanel,  setShowHousingPanel]   = useState(false);
   const [showHousingHub,    setShowHousingHub]     = useState(false);
@@ -2201,6 +2203,13 @@ export default function HomePage() {
           isAdmin={isAdmin}
           voiceEnabled={voiceEnabled}
           soundEnabled={soundEnabled}
+        />
+      )}
+
+      {/* Admin Dashboard — Founder/admin only */}
+      {showAdminDash && isAdmin && (
+        <AdminDashboardPanel
+          onClose={() => setShowAdminDash(false)}
         />
       )}
 
@@ -4633,6 +4642,33 @@ export default function HomePage() {
           >
             <span style={{ fontSize: 14 }}>🛡</span>
             <span style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>System Health</span>
+            <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.5 }}>→</span>
+          </button>
+        )}
+
+        {/* ── Admin Dashboard button — founder only ─────────────────────────── */}
+        {isAdmin && (
+          <button
+            onClick={() => { setShowAdminDash(true); setMenuOpen(false); }}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 10,
+              padding: "9px 12px", borderRadius: 10, cursor: "pointer",
+              background: "rgba(201,162,39,0.05)",
+              border: "1px solid rgba(201,162,39,0.18)",
+              color: "#C9A227", fontSize: 11, fontFamily: "monospace",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(201,162,39,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(201,162,39,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(201,162,39,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(201,162,39,0.18)";
+            }}
+          >
+            <span style={{ fontSize: 14 }}>📊</span>
+            <span style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Admin Dashboard</span>
             <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.5 }}>→</span>
           </button>
         )}
