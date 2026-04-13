@@ -151,6 +151,36 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
   const [schedTime, setSchedTime] = useState("12:00");
   const [scheduling, setScheduling] = useState(false);
 
+  // Access code state
+  const [accessCode, setAccessCode] = useState("");
+  const [codeStatus, setCodeStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [codeMessage, setCodeMessage] = useState("");
+
+  const handleRedeemCode = async () => {
+    if (!accessCode.trim() || !userId) return;
+    setCodeStatus("loading");
+    setCodeMessage("");
+    try {
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: accessCode.trim(), user_id: userId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setCodeStatus("success");
+        setCodeMessage("Access unlocked \uD83C\uDF89");
+        setAccessCode("");
+      } else {
+        setCodeStatus("error");
+        setCodeMessage(json.error || "Invalid or already used code");
+      }
+    } catch {
+      setCodeStatus("error");
+      setCodeMessage("Something went wrong. Try again.");
+    }
+  };
+
   // AI content generator state
   const [genBusiness, setGenBusiness] = useState("");
   const [genGoal, setGenGoal] = useState("");
@@ -326,6 +356,77 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
             ))}
           </div>
         </div>
+
+        {/* ── Access Code ──────────────────────────────────────────────── */}
+        {codeStatus !== "success" && (
+          <div style={{
+            borderRadius: 14,
+            padding: "16px 18px",
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(245,200,66,0.12)",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#f5c842", marginBottom: 4 }}>Access Code</div>
+            <div style={{ fontSize: 9, color: "#475569", marginBottom: 12 }}>Enter a one-time code to unlock premium content</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                value={accessCode}
+                onChange={(e) => { setAccessCode(e.target.value); if (codeStatus === "error") setCodeStatus("idle"); }}
+                placeholder="Enter code..."
+                onKeyDown={(e) => { if (e.key === "Enter") handleRedeemCode(); }}
+                style={{
+                  flex: 1, padding: "10px 12px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.04)",
+                  border: codeStatus === "error"
+                    ? "1px solid rgba(239,68,68,0.30)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                  color: "#e2e8f0", fontSize: 12, fontFamily: "monospace",
+                  outline: "none", position: "relative" as const, zIndex: 10,
+                  letterSpacing: "0.08em",
+                }}
+              />
+              <button
+                onClick={handleRedeemCode}
+                disabled={codeStatus === "loading" || !accessCode.trim()}
+                style={{
+                  padding: "10px 18px", borderRadius: 10,
+                  background: codeStatus === "loading"
+                    ? "rgba(245,200,66,0.06)"
+                    : "linear-gradient(135deg, rgba(245,200,66,0.15), rgba(201,162,39,0.08))",
+                  border: "1px solid rgba(245,200,66,0.28)",
+                  color: "#f5c842", fontSize: 11, fontFamily: "monospace",
+                  fontWeight: 700, cursor: codeStatus === "loading" || !accessCode.trim() ? "default" : "pointer",
+                  opacity: !accessCode.trim() ? 0.4 : 1,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {codeStatus === "loading" ? "..." : "Redeem"}
+              </button>
+            </div>
+            {codeStatus === "error" && codeMessage && (
+              <div style={{ marginTop: 8, fontSize: 10, color: "#f87171" }}>
+                {codeMessage}
+              </div>
+            )}
+          </div>
+        )}
+
+        {codeStatus === "success" && (
+          <div style={{
+            borderRadius: 14,
+            padding: "20px 18px",
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(52,211,153,0.25)",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 22, marginBottom: 6 }}>🎉</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#34d399", marginBottom: 4 }}>
+              {codeMessage}
+            </div>
+            <div style={{ fontSize: 10, color: "#475569" }}>
+              Premium content is now available on your account.
+            </div>
+          </div>
+        )}
 
         {/* ── Your Content (merged calendar + uploads) ──────────────────── */}
         {(() => {
