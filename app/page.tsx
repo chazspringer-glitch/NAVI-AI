@@ -5556,6 +5556,34 @@ export default function HomePage() {
               );
             })()}
 
+            {/* Unlock Adult STEM Program — Stripe Checkout */}
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/create-checkout-session", { method: "POST" });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  }
+                } catch (err) {
+                  console.error("[Stripe] Checkout error:", err);
+                }
+              }}
+              style={{
+                width: "100%", padding: "14px 18px", borderRadius: 14, cursor: "pointer",
+                background: "linear-gradient(135deg, rgba(201,162,39,0.18), rgba(245,200,66,0.10))",
+                border: "1px solid rgba(201,162,39,0.40)",
+                color: "#C9A227", fontFamily: "monospace", fontSize: 13,
+                fontWeight: "bold", letterSpacing: "0.06em",
+                boxShadow: "0 0 20px rgba(201,162,39,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                transition: "all 0.2s ease",
+              }}
+            >
+              <span style={{ fontSize: 18 }}>⚡</span>
+              Unlock Adult STEM Program
+            </button>
+
             {/* Access Code — logged-in users only */}
             {isLoggedIn && codeStatus !== "success" && (
               <div style={{
