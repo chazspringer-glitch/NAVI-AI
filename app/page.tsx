@@ -738,6 +738,10 @@ export default function HomePage() {
   const [showClientDash,    setShowClientDash]           = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
+  const [accessCode,        setAccessCode]              = useState("");
+  const [codeStatus,        setCodeStatus]              = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [codeMessage,       setCodeMessage]             = useState("");
+  const [authUserId,        setAuthUserId]              = useState<string | null>(null);
   const [showHousingPanel,  setShowHousingPanel]   = useState(false);
   const [showHousingHub,    setShowHousingHub]     = useState(false);
   const [showStemPanel,     setShowStemPanel]      = useState(false);
@@ -1035,9 +1039,11 @@ export default function HomePage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
+      setAuthUserId(session?.user?.id ?? null);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
+      setAuthUserId(session?.user?.id ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -1068,6 +1074,32 @@ export default function HomePage() {
       window.location.href = "/login?redirect=onboarding";
     }
   }, [isLoggedIn]);
+
+  // Redeem one-time access code
+  const handleRedeemCode = useCallback(async () => {
+    if (!accessCode.trim() || !authUserId) return;
+    setCodeStatus("loading");
+    setCodeMessage("");
+    try {
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: accessCode.trim(), user_id: authUserId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setCodeStatus("success");
+        setCodeMessage("Access unlocked \uD83C\uDF89");
+        setAccessCode("");
+      } else {
+        setCodeStatus("error");
+        setCodeMessage(json.error || "Invalid or already used code");
+      }
+    } catch {
+      setCodeStatus("error");
+      setCodeMessage("Something went wrong. Try again.");
+    }
+  }, [accessCode, authUserId]);
 
   // Persist to localStorage whenever key state changes
   useEffect(() => {
@@ -5672,6 +5704,88 @@ export default function HomePage() {
                 </div>
               );
             })()}
+
+            {/* Access Code — logged-in users only */}
+            {isLoggedIn && codeStatus !== "success" && (
+              <div style={{
+                position: "relative", overflow: "hidden",
+                borderRadius: 18, padding: "20px 18px",
+                background: "linear-gradient(160deg, rgba(245,200,66,0.06) 0%, rgba(201,162,39,0.03) 100%)",
+                border: "1px solid rgba(245,200,66,0.18)",
+              }}>
+                <div style={{
+                  fontSize: 14, fontFamily: "monospace", fontWeight: "bold",
+                  color: "#f5c842", marginBottom: 4,
+                }}>
+                  Access Code
+                </div>
+                <div style={{
+                  fontSize: 10, fontFamily: "monospace", color: "#64748b",
+                  lineHeight: 1.5, marginBottom: 14,
+                }}>
+                  Enter a one-time code to unlock premium content
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={accessCode}
+                    onChange={(e) => { setAccessCode(e.target.value); if (codeStatus === "error") setCodeStatus("idle"); }}
+                    placeholder="Enter code..."
+                    onKeyDown={(e) => { if (e.key === "Enter") handleRedeemCode(); }}
+                    style={{
+                      flex: 1, padding: "10px 12px", borderRadius: 10,
+                      background: "rgba(255,255,255,0.04)",
+                      border: codeStatus === "error"
+                        ? "1px solid rgba(239,68,68,0.30)"
+                        : "1px solid rgba(255,255,255,0.08)",
+                      color: "#e2e8f0", fontSize: 13, fontFamily: "monospace",
+                      outline: "none", letterSpacing: "0.08em",
+                    }}
+                  />
+                  <button
+                    onClick={handleRedeemCode}
+                    disabled={codeStatus === "loading" || !accessCode.trim()}
+                    style={{
+                      padding: "10px 18px", borderRadius: 10,
+                      background: codeStatus === "loading"
+                        ? "rgba(245,200,66,0.06)"
+                        : "linear-gradient(135deg, rgba(245,200,66,0.18), rgba(201,162,39,0.10))",
+                      border: "1px solid rgba(245,200,66,0.35)",
+                      color: "#f5c842", fontSize: 12, fontFamily: "monospace",
+                      fontWeight: 700, cursor: codeStatus === "loading" || !accessCode.trim() ? "default" : "pointer",
+                      opacity: !accessCode.trim() ? 0.4 : 1,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {codeStatus === "loading" ? "..." : "Redeem"}
+                  </button>
+                </div>
+                {codeStatus === "error" && codeMessage && (
+                  <div style={{ marginTop: 8, fontSize: 10, fontFamily: "monospace", color: "#f87171" }}>
+                    {codeMessage}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isLoggedIn && codeStatus === "success" && (
+              <div style={{
+                borderRadius: 18, padding: "24px 18px",
+                background: "linear-gradient(160deg, rgba(52,211,153,0.08) 0%, rgba(52,211,153,0.03) 100%)",
+                border: "1px solid rgba(52,211,153,0.25)",
+                textAlign: "center",
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
+                <div style={{
+                  fontSize: 16, fontFamily: "monospace", fontWeight: "bold",
+                  color: "#34d399", marginBottom: 4,
+                }}>
+                  {codeMessage}
+                </div>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "#475569" }}>
+                  Premium content is now available on your account.
+                </div>
+              </div>
+            )}
 
             {/* Upgrade nudge for free users */}
             {!isPro && !isAdmin && (
