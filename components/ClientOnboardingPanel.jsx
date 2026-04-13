@@ -80,6 +80,14 @@ const SERVICE_QUESTIONS = {
     "Which speaking topics interest you most? (AI literacy, entrepreneurship, tech for communities, digital economy)",
     "What's your target event date and is it virtual or in-person?",
   ],
+  "Startup Launch Package": [
+    "What's the name of your business or the business you're launching?",
+    "What type of business is it? (E-commerce, service-based, coaching, food, tech, etc.)",
+    "Who is your target audience? Describe your ideal customer.",
+    "What products or services will you be offering?",
+    "Describe your brand style — what look and feel do you want? (Bold, minimal, luxury, playful, professional, etc.)",
+    "What are your top goals for the first 90 days after launch?",
+  ],
 };
 
 const COMMON_INTRO   = [

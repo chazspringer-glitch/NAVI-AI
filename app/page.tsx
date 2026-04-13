@@ -5579,6 +5579,7 @@ export default function HomePage() {
             { icon: "🤖", title: "AI Agents", desc: "Intelligent agents working for your business 24/7 without breaks.", subject: "AI Agents" },
             { icon: "💎", title: "Brand Package", desc: "Identity, logos, color systems — a complete brand built for impact.", subject: "Brand Package" },
             { icon: "📊", title: "Consulting", desc: "Strategy sessions to grow your revenue and digital presence.", subject: "Marketing Consulting" },
+            { icon: "🚀", title: "Startup Launch Package", desc: "We help you launch your business the right way — brand setup, content & marketing — all done for you. $600/mo.", subject: "Startup Launch Package" },
           ];
 
           return (
