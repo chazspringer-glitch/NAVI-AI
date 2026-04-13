@@ -6,7 +6,7 @@ import NaviOrb from "./NaviOrb";
 const PAYMENT_LINK = "https://buy.stripe.com/test_cNi00cbVQ56L1LNaFGfUQ00";
 
 const BENEFITS = [
-  { icon: "🎤", text: "Talk to NAVI using your voice" },
+  { icon: "🎤", text: "Activate NAVI's voice to talk back and guide you" },
   { icon: "🧭", text: "Get step-by-step help with real-life situations" },
   { icon: "🏠", text: "Access powerful tools (housing, business, AI skills)" },
   { icon: "⚡", text: "Faster, smoother experience" },
