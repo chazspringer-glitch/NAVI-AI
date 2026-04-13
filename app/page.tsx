@@ -4062,41 +4062,45 @@ export default function HomePage() {
 
         {/* ── Main navigation — 4 tabs ── */}
         <div style={{ display: "flex", gap: 6 }}>
-          {([
-            { key: "home" as const,    label: "Home",        icon: "🏠", accent: "#00d4ff" },
-            { key: "explore" as const, label: "Explore",     icon: "🧭", accent: "#a855f7" },
-            { key: "home" as const,    label: "Settings",    icon: "⚙️", accent: "#64748b", realKey: "settings" as const },
-          ] as const).map(({ key, label, icon, accent, ...rest }) => {
-            const tabKey = (rest as { realKey?: string }).realKey === "settings" ? "home" : key;
-            const isSettings = (rest as { realKey?: string }).realKey === "settings";
-            const active = isSettings ? false : hubTab === tabKey;
-            return (
-              <button
-                key={label}
-                onClick={() => {
-                  if (isSettings) {
-                    // Settings scrolls to bottom of home tab
-                    if (hubTab !== "home") { showSwitching("Settings"); track("hub_tab_switch", { tab: "home" }); }
-                    setHubTab("home");
-                  } else {
-                    if (hubTab !== tabKey) { showSwitching(label); track("hub_tab_switch", { tab: tabKey }); }
-                    setHubTab(tabKey);
-                  }
-                }}
-                style={{
-                  flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
-                  fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-                  background: active ? `${accent}18` : "rgba(255,255,255,0.03)",
-                  border: active ? `1px solid ${accent}55` : "1px solid rgba(255,255,255,0.07)",
-                  color: active ? accent : "#64748b",
-                  fontWeight: active ? 700 : 400,
-                  transition: "all 0.18s ease",
-                }}
-              >
-                {icon} {label}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => { if (hubTab !== "home") { showSwitching("Home"); track("hub_tab_switch", { tab: "home" }); } setHubTab("home"); }}
+            style={{
+              flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
+              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
+              background: hubTab === "home" ? "rgba(0,212,255,0.12)" : "rgba(255,255,255,0.03)",
+              border: hubTab === "home" ? "1px solid rgba(0,212,255,0.35)" : "1px solid rgba(255,255,255,0.07)",
+              color: hubTab === "home" ? "#00d4ff" : "#64748b",
+              fontWeight: hubTab === "home" ? 700 : 400,
+            }}
+          >
+            🏠 Home
+          </button>
+          <button
+            onClick={() => { if (hubTab !== "explore") { showSwitching("Explore"); track("hub_tab_switch", { tab: "explore" }); } setHubTab("explore"); }}
+            style={{
+              flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
+              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
+              background: hubTab === "explore" ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
+              border: hubTab === "explore" ? "1px solid rgba(168,85,247,0.35)" : "1px solid rgba(255,255,255,0.07)",
+              color: hubTab === "explore" ? "#a855f7" : "#64748b",
+              fontWeight: hubTab === "explore" ? 700 : 400,
+            }}
+          >
+            🧭 Explore
+          </button>
+          <button
+            onClick={() => { if (hubTab !== "home") { showSwitching("Settings"); track("hub_tab_switch", { tab: "home" }); } setHubTab("home"); }}
+            style={{
+              flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
+              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              color: "#64748b",
+              fontWeight: 400,
+            }}
+          >
+            ⚙️ Settings
+          </button>
           {/* My Business — auth gated */}
           <button
             onClick={() => {
