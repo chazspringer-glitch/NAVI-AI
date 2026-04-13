@@ -67,9 +67,19 @@ interface CarListing {
   price: number;
   city: string;
   mileage: string;
+  searchUrl: string;
+}
+
+function buildCarsComUrl(make: string, model: string, budget: number, zip: string): string {
+  const maxPrice = Math.min(budget + 1000, 100000);
+  const z = zip.replace(/[^0-9a-zA-Z]/g, "") || "28401";
+  const mk = make.toLowerCase();
+  const md = model.toLowerCase().replace(/\s+/g, "_");
+  return `https://www.cars.com/shopping/results/?stock_type=used&makes[]=${mk}&models[]=${mk}-${md}&list_price_max=${maxPrice}&maximum_distance=75&zip=${encodeURIComponent(z)}`;
 }
 
 function generateListings(budget: number, carType: string, userLocation: string): CarListing[] {
+  const zip = userLocation.trim() || "28401";
   const loc = userLocation.trim() || "Your Area";
   const nearby = [loc, `Near ${loc}`, `${loc} Area`];
 
@@ -77,7 +87,7 @@ function generateListings(budget: number, carType: string, userLocation: string)
     { make: "Honda", model: "Civic" }, { make: "Toyota", model: "Corolla" },
     { make: "Nissan", model: "Altima" }, { make: "Hyundai", model: "Elantra" },
     { make: "Toyota", model: "Camry" }, { make: "Honda", model: "Accord" },
-    { make: "Mazda", model: "3" }, { make: "Kia", model: "Forte" },
+    { make: "Mazda", model: "Mazda3" }, { make: "Kia", model: "Forte" },
   ];
   const suvs = [
     { make: "Honda", model: "CR-V" }, { make: "Toyota", model: "RAV4" },
@@ -93,9 +103,8 @@ function generateListings(budget: number, carType: string, userLocation: string)
 
   const pool = carType === "SUV" ? suvs : carType === "Truck" ? trucks : carType === "Sedan" ? sedans : [...sedans, ...suvs];
 
-  // Shuffle and pick 4-6
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const count = 4 + Math.floor(Math.random() * 3); // 4–6
+  const count = 7;
 
   return shuffled.slice(0, count).map((car) => {
     const minPrice = Math.max(3000, budget * 0.55);
@@ -109,7 +118,8 @@ function generateListings(budget: number, carType: string, userLocation: string)
         ? `${45 + Math.floor(Math.random() * 50)}K mi`
         : `${20 + Math.floor(Math.random() * 40)}K mi`;
     const city = nearby[Math.floor(Math.random() * nearby.length)];
-    return { year, make: car.make, model: car.model, price, city, mileage: miles };
+    const searchUrl = buildCarsComUrl(car.make, car.model, budget, zip);
+    return { year, make: car.make, model: car.model, price, city, mileage: miles, searchUrl };
   });
 }
 
@@ -340,7 +350,7 @@ export default function AutoFinderPanel({ onClose }: { onClose: () => void }) {
               Available Cars Near You
             </div>
             <div style={{ fontSize: 9, color: "#475569", marginBottom: 14 }}>
-              {listings.length} vehicles found matching your criteria
+              {listings.length} vehicles · Click any to see real listings on Cars.com
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {listings.map((car, i) => (
@@ -348,7 +358,6 @@ export default function AutoFinderPanel({ onClose }: { onClose: () => void }) {
                   padding: "14px", borderRadius: 12,
                   background: "rgba(52,211,153,0.03)",
                   border: "1px solid rgba(52,211,153,0.12)",
-                  transition: "all 0.18s ease",
                 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
                     <div>
@@ -367,26 +376,45 @@ export default function AutoFinderPanel({ onClose }: { onClose: () => void }) {
                     <div style={{ fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
                       <span>📍</span> {car.city}
                     </div>
-                    <a
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
+                    <button
+                      onClick={() => window.open(car.searchUrl, "_blank")}
                       style={{
-                        padding: "5px 14px", borderRadius: 8,
+                        padding: "6px 14px", borderRadius: 8,
                         background: "rgba(52,211,153,0.10)",
                         border: "1px solid rgba(52,211,153,0.25)",
                         color: "#34d399", fontSize: 10, fontFamily: "monospace",
-                        fontWeight: 600, textDecoration: "none",
-                        cursor: "pointer",
+                        fontWeight: 600, cursor: "pointer",
                       }}
                     >
                       View Deal →
-                    </a>
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: 8, color: "#334155", marginTop: 12, lineHeight: 1.5 }}>
-              Listings are simulated examples based on your criteria. Always verify pricing and availability with the seller directly.
+
+            {/* Master search link */}
+            <button
+              onClick={() => {
+                const z = (location.trim() || "28401").replace(/[^0-9a-zA-Z]/g, "");
+                const maxP = parseInt(budget) + 1000;
+                const bodyType = carType === "SUV" ? "&body_style[]=suv" : carType === "Truck" ? "&body_style[]=pickup" : carType === "Sedan" ? "&body_style[]=sedan" : "";
+                window.open(`https://www.cars.com/shopping/results/?stock_type=used&list_price_max=${maxP}&maximum_distance=75&zip=${z}${bodyType}`, "_blank");
+              }}
+              style={{
+                width: "100%", marginTop: 12, padding: "10px", borderRadius: 10,
+                background: "rgba(52,211,153,0.08)",
+                border: "1px solid rgba(52,211,153,0.20)",
+                color: "#34d399", fontSize: 11, fontFamily: "monospace",
+                fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              🔍 Search All on Cars.com
+            </button>
+
+            <div style={{ fontSize: 8, color: "#334155", marginTop: 10, lineHeight: 1.5 }}>
+              Links open real Cars.com search results for each vehicle. Prices shown are estimates — actual listings may vary.
             </div>
           </div>
         )}
