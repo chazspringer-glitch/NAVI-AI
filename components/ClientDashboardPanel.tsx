@@ -92,6 +92,37 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  // AI content generator state
+  const [genBusiness, setGenBusiness] = useState("");
+  const [genGoal, setGenGoal] = useState("");
+  const [genResult, setGenResult] = useState<{ postIdea: string; caption: string; hashtags: string[] } | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    if (!genBusiness.trim() || !genGoal.trim()) return;
+    setGenerating(true);
+    setGenError(null);
+    setGenResult(null);
+    try {
+      const res = await fetch("/api/generate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessType: genBusiness, goal: genGoal }),
+      });
+      const json = await res.json();
+      if (json.result) {
+        setGenResult(json.result);
+      } else {
+        setGenError(json.error || "Failed to generate");
+      }
+    } catch {
+      setGenError("Could not connect. Try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleChatSend = () => {
     if (!chatInput.trim()) return;
     setChatMessages((prev) => [
@@ -395,6 +426,138 @@ export default function ClientDashboardPanel({ onClose, showLogout = false }: { 
               })}
             </div>
           )}
+        </div>
+
+        {/* ── AI Content Generator ──────────────────────────────────────── */}
+        <div style={{
+          borderRadius: 12,
+          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+          border: "1px solid rgba(168,85,247,0.12)",
+          overflow: "hidden",
+        }}>
+          <div style={{
+            padding: "14px 16px 10px",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#a855f7" }}>AI Content Generator</div>
+            <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Generate captions, hashtags, and post ideas</div>
+          </div>
+
+          <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Inputs */}
+            <div>
+              <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Business Type</div>
+              <input
+                value={genBusiness}
+                onChange={(e) => setGenBusiness(e.target.value)}
+                placeholder="e.g. Beauty salon, fitness coach, restaurant"
+                style={{
+                  width: "100%", padding: "8px 10px", borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                  outline: "none",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Goal</div>
+              <input
+                value={genGoal}
+                onChange={(e) => setGenGoal(e.target.value)}
+                placeholder="e.g. Get more followers, promote a sale, build trust"
+                style={{
+                  width: "100%", padding: "8px 10px", borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "#e2e8f0", fontSize: 10, fontFamily: "monospace",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            {/* Generate button */}
+            <button
+              onClick={handleGenerate}
+              disabled={generating || !genBusiness.trim() || !genGoal.trim()}
+              style={{
+                width: "100%", padding: "10px", borderRadius: 8,
+                background: generating
+                  ? "rgba(168,85,247,0.08)"
+                  : "linear-gradient(135deg, rgba(168,85,247,0.18), rgba(168,85,247,0.08))",
+                border: "1px solid rgba(168,85,247,0.28)",
+                color: "#a855f7", fontSize: 10, fontFamily: "monospace",
+                fontWeight: 700, letterSpacing: "0.04em",
+                cursor: (generating || !genBusiness.trim() || !genGoal.trim()) ? "default" : "pointer",
+                opacity: (!genBusiness.trim() || !genGoal.trim()) ? 0.4 : 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              <span style={{ fontSize: 13 }}>✨</span>
+              {generating ? "Generating..." : "Generate Post"}
+            </button>
+
+            {/* Error */}
+            {genError && (
+              <div style={{ fontSize: 9, color: "#f87171", padding: "6px 10px", borderRadius: 6, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                {genError}
+              </div>
+            )}
+
+            {/* Result card */}
+            {genResult && (
+              <div style={{
+                padding: "14px 14px 12px", borderRadius: 10,
+                background: "rgba(168,85,247,0.04)",
+                border: "1px solid rgba(168,85,247,0.15)",
+                display: "flex", flexDirection: "column", gap: 10,
+              }}>
+                {/* Post Idea */}
+                <div>
+                  <div style={{ fontSize: 8, color: "#a855f7", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, fontWeight: 700 }}>
+                    Post Idea
+                  </div>
+                  <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.55 }}>
+                    {genResult.postIdea}
+                  </div>
+                </div>
+
+                {/* Caption */}
+                <div>
+                  <div style={{ fontSize: 8, color: "#C9A227", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, fontWeight: 700 }}>
+                    Caption
+                  </div>
+                  <div style={{
+                    fontSize: 10, color: "#94a3b8", lineHeight: 1.6,
+                    padding: "8px 10px", borderRadius: 6,
+                    background: "rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(255,255,255,0.04)",
+                  }}>
+                    {genResult.caption}
+                  </div>
+                </div>
+
+                {/* Hashtags */}
+                <div>
+                  <div style={{ fontSize: 8, color: "#00d4ff", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, fontWeight: 700 }}>
+                    Hashtags
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {Array.isArray(genResult.hashtags) && genResult.hashtags.map((tag, i) => (
+                      <span key={i} style={{
+                        padding: "2px 8px", borderRadius: 5,
+                        background: "rgba(0,212,255,0.06)",
+                        border: "1px solid rgba(0,212,255,0.15)",
+                        fontSize: 9, color: "#00d4ff", fontWeight: 500,
+                      }}>
+                        #{tag.replace(/^#/, "")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── NAVI Assistant ────────────────────────────────────────────── */}
