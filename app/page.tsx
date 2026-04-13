@@ -762,7 +762,7 @@ export default function HomePage() {
   const transcriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [bannerVisible, setBannerVisible] = useState(true);
-  const [hubTab, setHubTab] = useState<"home" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
+  const [hubTab, setHubTab] = useState<"home" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
   const [isPro, setIsPro] = useState(false);
   const [proGateFeature, setProGateFeature] = useState<string | null>(null);
   const [showFoundersIntro, setShowFoundersIntro] = useState(false);
@@ -801,7 +801,7 @@ export default function HomePage() {
   const [switchingLabel, setSwitchingLabel] = useState<string | null>(null);
   const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 2-phase hub tab transition
-  const [displayedHubTab, setDisplayedHubTab] = useState<"home" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
+  const [displayedHubTab, setDisplayedHubTab] = useState<"home" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
   const [hubTabPhase, setHubTabPhase] = useState<"idle" | "out" | "in">("idle");
   const hubTabTransTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Mode label + NaviFace dim transition
@@ -4051,149 +4051,65 @@ export default function HomePage() {
         {/* Drag handle */}
         <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.14)", margin: "0 auto 2px" }} />
 
-        {/* Tab switcher — row 1 */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-          <button
-            onClick={() => { if (hubTab !== "home") { showSwitching("Settings"); track("hub_tab_switch", { tab: "home" }); } setHubTab("home"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "home" ? "rgba(0,212,255,0.1)" : "rgba(255,255,255,0.03)",
-              border: hubTab === "home" ? "1px solid rgba(0,212,255,0.3)" : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "home" ? "#00d4ff" : "#64748b",
-            }}
-          >
-            ⚙️ Settings
-          </button>
-          <button
-            onClick={() => { if (hubTab !== "partners") { showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); } setHubTab("partners"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "partners" ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.03)",
-              border: hubTab === "partners" ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "partners" ? "#C9A227" : "#64748b",
-            }}
-          >
-            🤝 Partners
-          </button>
-          <button
-            onClick={() => { if (hubTab !== "truth") { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); } setHubTab("truth"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "truth" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.03)",
-              border: hubTab === "truth" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "truth" ? "#f87171" : "#64748b",
-            }}
-          >
-            🎥 Truth Room
-          </button>
-        </div>
-
-        {/* Tab switcher — row 2 */}
+        {/* ── Main navigation — 4 tabs ── */}
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            onClick={() => { if (hubTab !== "programs") { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); } setHubTab("programs"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "programs" ? "rgba(0,212,255,0.1)" : "rgba(255,255,255,0.03)",
-              border: hubTab === "programs" ? "1px solid rgba(0,212,255,0.35)" : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "programs" ? "#00d4ff" : "#64748b",
-              boxShadow: hubTab === "programs" ? "0 0 10px rgba(0,212,255,0.12)" : "none",
-            }}
-          >
-            🎓 Academy
-          </button>
-          <button
-            onClick={() => { if (hubTab !== "rewards") { showSwitching("XP & Rewards"); track("hub_tab_switch", { tab: "rewards" }); } setHubTab("rewards"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "rewards" ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
-              border: hubTab === "rewards" ? "1px solid rgba(168,85,247,0.4)" : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "rewards" ? "#c084fc" : "#64748b",
-            }}
-          >
-            🎮 Rewards
-          </button>
-          <button
-            onClick={() => { if (hubTab !== "subscription") { showSwitching("NAVI PRO"); track("hub_tab_switch", { tab: "subscription" }); } setHubTab("subscription"); }}
-            style={{
-              flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: hubTab === "subscription"
-                ? "rgba(245,200,66,0.14)"
-                : isPro
-                  ? "rgba(245,200,66,0.06)"
-                  : "rgba(255,255,255,0.03)",
-              border: hubTab === "subscription"
-                ? "1px solid rgba(245,200,66,0.5)"
-                : isPro
-                  ? "1px solid rgba(245,200,66,0.25)"
-                  : "1px solid rgba(255,255,255,0.07)",
-              color: hubTab === "subscription"
-                ? "#f5c842"
-                : isPro
-                  ? "rgba(245,200,66,0.75)"
-                  : "#64748b",
-              boxShadow: hubTab === "subscription" ? "0 0 10px rgba(245,200,66,0.15)" : "none",
-            }}
-          >
-            {isPro ? "⭐ PRO" : "⭐ Sub"}
-          </button>
-        </div>
-
-        {/* Tab switcher — row 3 */}
-        <div style={{ display: "flex", gap: 6 }}>
+          {([
+            { key: "home" as const,    label: "Home",        icon: "🏠", accent: "#00d4ff" },
+            { key: "explore" as const, label: "Explore",     icon: "🧭", accent: "#a855f7" },
+            { key: "home" as const,    label: "Settings",    icon: "⚙️", accent: "#64748b", realKey: "settings" as const },
+          ] as const).map(({ key, label, icon, accent, ...rest }) => {
+            const tabKey = (rest as { realKey?: string }).realKey === "settings" ? "home" : key;
+            const isSettings = (rest as { realKey?: string }).realKey === "settings";
+            const active = isSettings ? false : hubTab === tabKey;
+            return (
+              <button
+                key={label}
+                onClick={() => {
+                  if (isSettings) {
+                    // Settings scrolls to bottom of home tab
+                    if (hubTab !== "home") { showSwitching("Settings"); track("hub_tab_switch", { tab: "home" }); }
+                    setHubTab("home");
+                  } else {
+                    if (hubTab !== tabKey) { showSwitching(label); track("hub_tab_switch", { tab: tabKey }); }
+                    setHubTab(tabKey);
+                  }
+                }}
+                style={{
+                  flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
+                  fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
+                  background: active ? `${accent}18` : "rgba(255,255,255,0.03)",
+                  border: active ? `1px solid ${accent}55` : "1px solid rgba(255,255,255,0.07)",
+                  color: active ? accent : "#64748b",
+                  fontWeight: active ? 700 : 400,
+                  transition: "all 0.18s ease",
+                }}
+              >
+                {icon} {label}
+              </button>
+            );
+          })}
+          {/* My Business — auth gated */}
           <button
             onClick={() => {
-              if (!foundersIntroSeen) {
-                setShowFoundersIntro(true);
-              } else {
-                if (hubTab !== "founders") { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); }
-                setHubTab("founders");
+              if (!isLoggedIn) {
+                window.location.href = "/login?redirect=onboarding";
+                return;
               }
+              setShowBusinessIntro(true);
+              setMenuOpen(false);
             }}
             style={{
               flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.04em", cursor: "pointer",
-              background: hubTab === "founders"
-                ? "linear-gradient(135deg, rgba(201,162,39,0.22), rgba(245,200,66,0.14))"
-                : "linear-gradient(135deg, rgba(201,162,39,0.06), rgba(245,200,66,0.03))",
-              border: hubTab === "founders" ? "1px solid rgba(201,162,39,0.55)" : "1px solid rgba(201,162,39,0.2)",
-              color: hubTab === "founders" ? "#C9A227" : "rgba(201,162,39,0.55)",
-              boxShadow: hubTab === "founders" ? "0 0 14px rgba(201,162,39,0.22)" : "none",
-              fontWeight: hubTab === "founders" ? "bold" : "normal",
+              fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
+              background: isLoggedIn ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.03)",
+              border: isLoggedIn ? "1px solid rgba(52,211,153,0.30)" : "1px solid rgba(255,255,255,0.07)",
+              color: isLoggedIn ? "#34d399" : "#475569",
+              fontWeight: 400,
+              opacity: isLoggedIn ? 1 : 0.55,
+              transition: "all 0.18s ease",
             }}
           >
-            💼 Founders — Work With Us
-          </button>
-        </div>
-
-        {/* Tab switcher — row 4 */}
-        <div style={{ display: "flex", gap: 6 }}>
-          <button
-            onClick={() => {
-              if (hubTab !== "podcast") { showSwitching("Podcast"); track("hub_tab_switch", { tab: "podcast" }); }
-              setHubTab("podcast");
-            }}
-            style={{
-              flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
-              fontFamily: "monospace", letterSpacing: "0.04em", cursor: "pointer",
-              background: hubTab === "podcast"
-                ? "linear-gradient(135deg, rgba(168,85,247,0.22), rgba(244,114,182,0.14))"
-                : "linear-gradient(135deg, rgba(168,85,247,0.06), rgba(244,114,182,0.03))",
-              border: hubTab === "podcast"
-                ? "1px solid rgba(168,85,247,0.55)"
-                : "1px solid rgba(168,85,247,0.2)",
-              color: hubTab === "podcast" ? "#a855f7" : "rgba(168,85,247,0.55)",
-              boxShadow: hubTab === "podcast" ? "0 0 14px rgba(168,85,247,0.22)" : "none",
-              fontWeight: hubTab === "podcast" ? "bold" : "normal",
-            }}
-          >
-            🎙️ Podcast — Creator Partnership
+            {isLoggedIn ? "💼" : "🔒"} Biz
           </button>
         </div>
 
@@ -4314,45 +4230,6 @@ export default function HomePage() {
               );
             })}
 
-            {/* My Business — in Mode grid */}
-            <button
-              onClick={() => {
-                if (!isLoggedIn) {
-                  window.location.href = "/login?redirect=onboarding";
-                  return;
-                }
-                setShowBusinessIntro(true);
-                setMenuOpen(false);
-              }}
-              style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "10px 12px", borderRadius: 12,
-                gridColumn: "1 / -1",
-                background: isLoggedIn
-                  ? "linear-gradient(135deg, rgba(52,211,153,0.10), rgba(0,212,255,0.06))"
-                  : "rgba(255,255,255,0.03)",
-                border: isLoggedIn
-                  ? "1px solid rgba(52,211,153,0.30)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                color: isLoggedIn ? "#34d399" : "#475569",
-                fontSize: 13, fontFamily: "monospace", cursor: "pointer",
-                boxShadow: isLoggedIn ? "0 0 10px rgba(52,211,153,0.10)" : "none",
-                opacity: isLoggedIn ? 1 : 0.6,
-              }}
-            >
-              <span>{isLoggedIn ? "💼" : "🔒"}</span>
-              <span>My Business</span>
-              {!isLoggedIn && (
-                <span style={{ fontSize: 7, fontFamily: "monospace", color: "#64748b", marginLeft: "auto", letterSpacing: "0.1em" }}>
-                  SIGN UP
-                </span>
-              )}
-              {isLoggedIn && (
-                <span style={{ fontSize: 7, fontFamily: "monospace", color: "rgba(52,211,153,0.5)", marginLeft: "auto", letterSpacing: "0.1em" }}>
-                  CLIENT
-                </span>
-              )}
-            </button>
           </div>
         </div>
 
@@ -4380,228 +4257,6 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Learn tools — only in Learn style */}
-        {mentorMode === "learning" && (
-          <div>
-            <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-              Learn Tools
-            </p>
-            <button
-              onClick={() => {
-                if (!isPro && !isAdmin) { setProGateFeature("Homework Helper"); return; }
-                setShowHomeworkHelper(true); setMenuOpen(false);
-              }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "11px 14px", borderRadius: 12, cursor: "pointer",
-                background: (!isPro && !isAdmin)
-                  ? "rgba(245,200,66,0.04)"
-                  : "linear-gradient(135deg, rgba(0,212,255,0.08), rgba(168,85,247,0.08))",
-                border: (!isPro && !isAdmin) ? "1px solid rgba(245,200,66,0.15)" : "1px solid rgba(0,212,255,0.25)",
-                color: (!isPro && !isAdmin) ? "rgba(245,200,66,0.5)" : "#00d4ff",
-                fontSize: 13, fontFamily: "monospace",
-                opacity: (!isPro && !isAdmin) ? 0.7 : 1,
-              }}
-            >
-              <span style={{ fontSize: 20 }}>{(!isPro && !isAdmin) ? "🔒" : "📚"}</span>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Homework Helper</div>
-                <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Step-by-step tutoring — no direct answers</div>
-              </div>
-              {(!isPro && !isAdmin) && (
-                <span style={{ marginLeft: "auto", fontSize: 8, fontFamily: "monospace", color: "rgba(245,200,66,0.5)", letterSpacing: "0.1em" }}>PRO</span>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Job Finder tools — only in job mode */}
-        {appMode === "job" && (
-          <div>
-            <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-              Tools
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => {
-                  if (!isPro && !isAdmin) { setProGateFeature("Resume Builder"); return; }
-                  setShowResumeBuilder(true); setMenuOpen(false);
-                }}
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 4px", borderRadius: 10, cursor: "pointer", fontSize: 12, fontFamily: "monospace",
-                  background: (!isPro && !isAdmin) ? "rgba(245,200,66,0.04)" : "rgba(74,222,128,0.1)",
-                  border: (!isPro && !isAdmin) ? "1px solid rgba(245,200,66,0.15)" : "1px solid rgba(74,222,128,0.35)",
-                  color: (!isPro && !isAdmin) ? "rgba(245,200,66,0.5)" : "#4ade80",
-                  opacity: (!isPro && !isAdmin) ? 0.7 : 1,
-                }}
-              >
-                <span>{(!isPro && !isAdmin) ? "🔒" : "📄"}</span><span>Resume</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (!isPro && !isAdmin) { setProGateFeature("Business Plan Builder"); return; }
-                  setShowBizPlanBuilder(true); setMenuOpen(false);
-                }}
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 4px", borderRadius: 10, cursor: "pointer", fontSize: 12, fontFamily: "monospace",
-                  background: (!isPro && !isAdmin) ? "rgba(245,200,66,0.04)" : "rgba(245,158,11,0.1)",
-                  border: (!isPro && !isAdmin) ? "1px solid rgba(245,200,66,0.15)" : "1px solid rgba(245,158,11,0.35)",
-                  color: (!isPro && !isAdmin) ? "rgba(245,200,66,0.5)" : "#f59e0b",
-                  opacity: (!isPro && !isAdmin) ? 0.7 : 1,
-                }}
-              >
-                <span>{(!isPro && !isAdmin) ? "🔒" : "🚀"}</span><span>Biz Plan</span>
-              </button>
-              <button
-                onClick={() => {
-                  if (!isPro && !isAdmin) { setProGateFeature("Local Help"); return; }
-                  setShowLocalResources(true); setMenuOpen(false);
-                }}
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 4px", borderRadius: 10, cursor: "pointer", fontSize: 12, fontFamily: "monospace",
-                  background: (!isPro && !isAdmin) ? "rgba(245,200,66,0.04)" : "rgba(74,222,128,0.08)",
-                  border: (!isPro && !isAdmin) ? "1px solid rgba(245,200,66,0.15)" : "1px solid rgba(74,222,128,0.28)",
-                  color: (!isPro && !isAdmin) ? "rgba(245,200,66,0.5)" : "#86efac",
-                  opacity: (!isPro && !isAdmin) ? 0.7 : 1,
-                }}
-              >
-                <span>{(!isPro && !isAdmin) ? "🔒" : "📍"}</span><span>Local Help</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Family Support Finder ── */}
-        <div>
-          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-            Community
-          </p>
-          <button
-            onClick={() => { setShowFamilySupport(true); setMenuOpen(false); }}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10,
-              padding: "11px 14px", borderRadius: 12, cursor: "pointer",
-              background: "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(251,146,60,0.06))",
-              border: "1px solid rgba(245,158,11,0.28)",
-              color: "#f59e0b", fontSize: 13, fontFamily: "monospace",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(245,158,11,0.18), rgba(251,146,60,0.10))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.50)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(251,146,60,0.06))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.28)";
-            }}
-          >
-            <span style={{ fontSize: 20 }}>💛</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Family Support Finder</div>
-              <div style={{ fontSize: 9, color: "#78716c", marginTop: 2 }}>Free &amp; low-cost programs for kids near you</div>
-            </div>
-            <span style={{ marginLeft: "auto", fontSize: 14 }}>→</span>
-          </button>
-        </div>
-
-        {/* ── Lucky Mode ── */}
-        <div>
-          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-            Premium
-          </p>
-          <button
-            onClick={() => { setShowLuckyMode(true); setMenuOpen(false); }}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10,
-              padding: "11px 14px", borderRadius: 12, cursor: "pointer",
-              background: "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(124,58,237,0.08))",
-              border: "1px solid rgba(245,158,11,0.32)",
-              color: "#f59e0b", fontSize: 13, fontFamily: "monospace",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.14))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.55)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 16px rgba(245,158,11,0.18), 0 0 30px rgba(124,58,237,0.10)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(124,58,237,0.08))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.32)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            <span style={{ fontSize: 20, filter: "drop-shadow(0 0 6px rgba(245,158,11,0.5))" }}>✦</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Lucky Mode</div>
-              <div style={{ fontSize: 9, color: "#6b5c2e", marginTop: 2 }}>Daily numbers · Lottery tools · Destiny awaits</div>
-            </div>
-            <span style={{ marginLeft: "auto", fontSize: 14, opacity: 0.7 }}>→</span>
-          </button>
-
-          {/* Hands-Free Mode toggle — voice must be on, PRO or Founder */}
-          {(isPro || isAdmin) && voiceEnabled && (
-            <button
-              onClick={toggleHandsFree}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "11px 14px", borderRadius: 12, cursor: "pointer",
-                marginTop: 8,
-                background: handsFreeMode
-                  ? "linear-gradient(135deg, rgba(0,212,255,0.14), rgba(0,212,255,0.07))"
-                  : "rgba(255,255,255,0.04)",
-                border: handsFreeMode
-                  ? "1px solid rgba(0,212,255,0.45)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                color: handsFreeMode ? "#00d4ff" : "#64748b",
-                fontSize: 13, fontFamily: "monospace",
-                transition: "all 0.2s ease",
-                boxShadow: handsFreeMode ? "0 0 14px rgba(0,212,255,0.14)" : "none",
-              }}
-            >
-              <span style={{ fontSize: 18 }}>🎤</span>
-              <div style={{ textAlign: "left", flex: 1 }}>
-                <div style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Hands-Free Mode</div>
-                <div style={{ fontSize: 9, color: handsFreeMode ? "rgba(0,212,255,0.6)" : "#475569", marginTop: 2 }}>
-                  {handsFreeMode ? "Active — speak to answer questions" : "Say 'create a logo', answer by voice"}
-                </div>
-              </div>
-              <span style={{ fontSize: 11, letterSpacing: "0.06em", fontWeight: "bold" }}>
-                {handsFreeMode ? "ON" : "OFF"}
-              </span>
-            </button>
-          )}
-        </div>
-
-        {/* ── Legal Rights Guide ── */}
-        <div>
-          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-            Legal
-          </p>
-          <button
-            onClick={() => { setShowLegalRights(true); setMenuOpen(false); }}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10,
-              padding: "11px 14px", borderRadius: 12, cursor: "pointer",
-              background: "linear-gradient(135deg, rgba(96,165,250,0.10), rgba(147,197,253,0.05))",
-              border: "1px solid rgba(96,165,250,0.28)",
-              color: "#60a5fa", fontSize: 13, fontFamily: "monospace",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(96,165,250,0.18), rgba(147,197,253,0.10))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(96,165,250,0.50)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(96,165,250,0.10), rgba(147,197,253,0.05))";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(96,165,250,0.28)";
-            }}
-          >
-            <span style={{ fontSize: 20 }}>⚖️</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontWeight: "bold", letterSpacing: "0.04em" }}>Legal Rights Guide</div>
-              <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Know your rights · Find free legal help near you</div>
-            </div>
-            <span style={{ marginLeft: "auto", fontSize: 14 }}>→</span>
-          </button>
         </div>
 
         {/* Settings row: sound + voice + auto-clear + chat toggle */}
@@ -4890,6 +4545,197 @@ export default function HomePage() {
         </div>
 
         </>}{/* end home tab */}
+
+        {/* ── Explore tab ── */}
+        {displayedHubTab === "explore" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 8 }}>
+
+            {/* Section: Tools & Resources */}
+            <div>
+              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+                Tools &amp; Resources
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  { icon: "📄", label: "Resume Builder", color: "#4ade80", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Resume Builder"); return; } setShowResumeBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+                  { icon: "🚀", label: "Business Plan Builder", color: "#f59e0b", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Business Plan Builder"); return; } setShowBizPlanBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+                  { icon: "📍", label: "Local Help", color: "#86efac", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+                  { icon: "⚖️", label: "Legal Rights Guide", color: "#60a5fa", onClick: () => { setShowLegalRights(true); setMenuOpen(false); }, locked: false },
+                  { icon: "💛", label: "Family Support Finder", color: "#f59e0b", onClick: () => { setShowFamilySupport(true); setMenuOpen(false); }, locked: false },
+                  { icon: "📚", label: "Homework Helper", color: "#00d4ff", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+                ].map(({ icon, label, color, onClick, locked }) => (
+                  <button key={label} onClick={onClick} style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: locked ? "rgba(245,200,66,0.04)" : `${color}0a`,
+                    border: locked ? "1px solid rgba(245,200,66,0.15)" : `1px solid ${color}30`,
+                    color: locked ? "rgba(245,200,66,0.5)" : color,
+                    fontSize: 12, fontFamily: "monospace",
+                    opacity: locked ? 0.65 : 1,
+                  }}>
+                    <span style={{ fontSize: 16 }}>{locked ? "🔒" : icon}</span>
+                    <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{label}</span>
+                    {locked && <span style={{ marginLeft: "auto", fontSize: 7, color: "rgba(245,200,66,0.5)", letterSpacing: "0.1em" }}>PRO</span>}
+                    {!locked && <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section: Opportunities */}
+            <div>
+              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+                Opportunities
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button
+                  onClick={() => {
+                    if (!foundersIntroSeen) { setShowFoundersIntro(true); }
+                    else { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); setHubTab("founders"); }
+                  }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "linear-gradient(135deg, rgba(201,162,39,0.08), rgba(245,200,66,0.04))",
+                    border: "1px solid rgba(201,162,39,0.25)",
+                    color: "#C9A227", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>💼</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Founders — Work With Us</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                <button
+                  onClick={() => { showSwitching("Podcast"); track("hub_tab_switch", { tab: "podcast" }); setHubTab("podcast"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "linear-gradient(135deg, rgba(168,85,247,0.08), rgba(244,114,182,0.04))",
+                    border: "1px solid rgba(168,85,247,0.25)",
+                    color: "#a855f7", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>🎙️</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Podcast — Creator Partnership</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                <button
+                  onClick={() => { showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); setHubTab("partners"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "rgba(201,162,39,0.04)",
+                    border: "1px solid rgba(201,162,39,0.15)",
+                    color: "#C9A227", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>🤝</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Partners</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section: Premium */}
+            <div>
+              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+                Premium
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button
+                  onClick={() => { setShowLuckyMode(true); setMenuOpen(false); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(124,58,237,0.06))",
+                    border: "1px solid rgba(245,158,11,0.28)",
+                    color: "#f59e0b", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16, filter: "drop-shadow(0 0 4px rgba(245,158,11,0.5))" }}>✦</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Lucky Mode</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                <button
+                  onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "rgba(0,212,255,0.04)",
+                    border: "1px solid rgba(0,212,255,0.18)",
+                    color: "#00d4ff", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>🎓</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Academy (STEM · AI Skills)</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                <button
+                  onClick={() => { showSwitching("XP & Rewards"); track("hub_tab_switch", { tab: "rewards" }); setHubTab("rewards"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: "rgba(168,85,247,0.04)",
+                    border: "1px solid rgba(168,85,247,0.18)",
+                    color: "#c084fc", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>🎮</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Rewards &amp; XP</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                <button
+                  onClick={() => { showSwitching("NAVI PRO"); track("hub_tab_switch", { tab: "subscription" }); setHubTab("subscription"); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: isPro ? "rgba(245,200,66,0.06)" : "rgba(255,255,255,0.03)",
+                    border: isPro ? "1px solid rgba(245,200,66,0.25)" : "1px solid rgba(245,200,66,0.15)",
+                    color: isPro ? "#f5c842" : "rgba(245,200,66,0.6)", fontSize: 12, fontFamily: "monospace",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>⭐</span>
+                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{isPro ? "NAVI PRO (Active)" : "Upgrade to PRO"}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                </button>
+                {(isPro || isAdmin) && voiceEnabled && (
+                  <button
+                    onClick={toggleHandsFree}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                      background: handsFreeMode ? "rgba(0,212,255,0.10)" : "rgba(255,255,255,0.04)",
+                      border: handsFreeMode ? "1px solid rgba(0,212,255,0.35)" : "1px solid rgba(255,255,255,0.08)",
+                      color: handsFreeMode ? "#00d4ff" : "#64748b", fontSize: 12, fontFamily: "monospace",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>🎤</span>
+                    <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Hands-Free Mode</span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, letterSpacing: "0.06em" }}>{handsFreeMode ? "ON" : "OFF"}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Truth Room link */}
+            <button
+              onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                background: "rgba(239,68,68,0.04)",
+                border: "1px solid rgba(239,68,68,0.18)",
+                color: "#f87171", fontSize: 12, fontFamily: "monospace",
+              }}
+            >
+              <span style={{ fontSize: 16 }}>🎥</span>
+              <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Truth Room</span>
+              <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+            </button>
+
+            <div className="safe-bottom" style={{ minHeight: 8 }} />
+          </div>
+        )}
 
         {/* ── Partners tab ── */}
         {displayedHubTab === "partners" && (
