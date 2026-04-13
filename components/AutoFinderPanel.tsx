@@ -60,16 +60,71 @@ function getRecommendations(budget: number, carType: string) {
   return { budgetRange, suggested, warnings, monthly: estimateMonthly(budget) };
 }
 
+interface CarListing {
+  year: number;
+  make: string;
+  model: string;
+  price: number;
+  city: string;
+  mileage: string;
+}
+
+function generateListings(budget: number, carType: string, userLocation: string): CarListing[] {
+  const loc = userLocation.trim() || "Your Area";
+  const nearby = [loc, `Near ${loc}`, `${loc} Area`];
+
+  const sedans = [
+    { make: "Honda", model: "Civic" }, { make: "Toyota", model: "Corolla" },
+    { make: "Nissan", model: "Altima" }, { make: "Hyundai", model: "Elantra" },
+    { make: "Toyota", model: "Camry" }, { make: "Honda", model: "Accord" },
+    { make: "Mazda", model: "3" }, { make: "Kia", model: "Forte" },
+  ];
+  const suvs = [
+    { make: "Honda", model: "CR-V" }, { make: "Toyota", model: "RAV4" },
+    { make: "Ford", model: "Escape" }, { make: "Hyundai", model: "Tucson" },
+    { make: "Mazda", model: "CX-5" }, { make: "Subaru", model: "Outback" },
+    { make: "Nissan", model: "Rogue" }, { make: "Chevrolet", model: "Equinox" },
+  ];
+  const trucks = [
+    { make: "Toyota", model: "Tacoma" }, { make: "Ford", model: "Ranger" },
+    { make: "Nissan", model: "Frontier" }, { make: "Chevrolet", model: "Colorado" },
+    { make: "Ford", model: "F-150" }, { make: "Ram", model: "1500" },
+  ];
+
+  const pool = carType === "SUV" ? suvs : carType === "Truck" ? trucks : carType === "Sedan" ? sedans : [...sedans, ...suvs];
+
+  // Shuffle and pick 4-6
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const count = 4 + Math.floor(Math.random() * 3); // 4–6
+
+  return shuffled.slice(0, count).map((car) => {
+    const minPrice = Math.max(3000, budget * 0.55);
+    const maxPrice = budget * 1.05;
+    const price = Math.round((minPrice + Math.random() * (maxPrice - minPrice)) / 100) * 100;
+    const baseYear = budget < 8000 ? 2010 : budget < 15000 ? 2014 : 2017;
+    const year = baseYear + Math.floor(Math.random() * 5);
+    const miles = budget < 8000
+      ? `${80 + Math.floor(Math.random() * 60)}K mi`
+      : budget < 15000
+        ? `${45 + Math.floor(Math.random() * 50)}K mi`
+        : `${20 + Math.floor(Math.random() * 40)}K mi`;
+    const city = nearby[Math.floor(Math.random() * nearby.length)];
+    return { year, make: car.make, model: car.model, price, city, mileage: miles };
+  });
+}
+
 export default function AutoFinderPanel({ onClose }: { onClose: () => void }) {
   const [budget, setBudget] = useState("");
   const [location, setLocation] = useState("");
   const [carType, setCarType] = useState("Any");
   const [result, setResult] = useState<ReturnType<typeof getRecommendations> | null>(null);
+  const [listings, setListings] = useState<CarListing[]>([]);
 
   const handleSearch = () => {
     const b = parseInt(budget.replace(/[^0-9]/g, ""), 10);
     if (!b || b < 1000) return;
     setResult(getRecommendations(b, carType));
+    setListings(generateListings(b, carType, location));
   };
 
   return (
@@ -272,6 +327,68 @@ export default function AutoFinderPanel({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </>
+        )}
+
+        {/* Available car listings */}
+        {listings.length > 0 && (
+          <div style={{
+            padding: "16px", borderRadius: 14,
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(52,211,153,0.12)",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#34d399", marginBottom: 4 }}>
+              Available Cars Near You
+            </div>
+            <div style={{ fontSize: 9, color: "#475569", marginBottom: 14 }}>
+              {listings.length} vehicles found matching your criteria
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {listings.map((car, i) => (
+                <div key={i} style={{
+                  padding: "14px", borderRadius: 12,
+                  background: "rgba(52,211,153,0.03)",
+                  border: "1px solid rgba(52,211,153,0.12)",
+                  transition: "all 0.18s ease",
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>
+                        {car.year} {car.make} {car.model}
+                      </div>
+                      <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>
+                        {car.mileage}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#34d399" }}>
+                      ${car.price.toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span>📍</span> {car.city}
+                    </div>
+                    <a
+                      href="#"
+                      onClick={(e) => e.preventDefault()}
+                      style={{
+                        padding: "5px 14px", borderRadius: 8,
+                        background: "rgba(52,211,153,0.10)",
+                        border: "1px solid rgba(52,211,153,0.25)",
+                        color: "#34d399", fontSize: 10, fontFamily: "monospace",
+                        fontWeight: 600, textDecoration: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      View Deal →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 8, color: "#334155", marginTop: 12, lineHeight: 1.5 }}>
+              Listings are simulated examples based on your criteria. Always verify pricing and availability with the seller directly.
+            </div>
+          </div>
         )}
 
         {/* Step-by-step guide (always visible) */}
