@@ -393,21 +393,8 @@ function useContinuousSpeech(
   // the mic button (toggleMic → startSession → new SpeechRecognition().start()).
   useEffect(() => {
     if (!SpeechRecognitionClass) return;
-    navigator.permissions
-      ?.query({ name: "microphone" as PermissionName })
-      .then((perm) => {
-        if (perm.state === "granted") {
-          // Permission already in hand — re-enable silently, no popup
-          micEnabledRef.current = true;
-          setMicEnabled(true);
-          restartTimer.current = setTimeout(() => startRef.current(), 500);
-        }
-        // "prompt" → stay off; user taps mic button to trigger the one popup
-        // "denied" → stay off permanently (onerror handler will catch it too)
-      })
-      .catch(() => {
-        // Permissions API unavailable (older browser) — stay off until user tap
-      });
+    // Mic stays OFF by default — user must tap the mic button to start listening.
+    // We no longer auto-enable even if permission was previously granted.
     return () => {
       clearTimeout(restartTimer.current!);
       try { recogRef.current?.stop(); } catch { /* ignore */ }
