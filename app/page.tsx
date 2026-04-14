@@ -735,6 +735,7 @@ export default function HomePage() {
   const [showLeaderboard,   setShowLeaderboard]         = useState(false);
   const [showFinancialIntro, setShowFinancialIntro]     = useState(false);
   const [showFreshFood,      setShowFreshFood]          = useState(false);
+  const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2365,6 +2366,80 @@ export default function HomePage() {
                 color: "#475569", fontSize: 10, fontFamily: "monospace",
                 cursor: "pointer",
               }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Fresh Food Cinematic Intro */}
+      {showFreshFoodIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          {/* Ambient glow */}
+          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "20%", right: "20%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(52,211,153,0.4))" }}>🥬</div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#34d399", marginBottom: 10 }}>
+              NAVI Community
+            </div>
+
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 8, textShadow: "0 0 24px rgba(52,211,153,0.25)" }}>
+              Fresh Food Market
+            </div>
+
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+              Affordable, farm-fresh produce delivered to your community. Because healthy food is a right, not a privilege.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 24 }}>
+              {["🥕", "🍎", "🌽", "🫐", "🍇"].map((e, i) => (
+                <span key={i} style={{ fontSize: 28, filter: "drop-shadow(0 0 8px rgba(52,211,153,0.3))" }}>{e}</span>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, textAlign: "left" }}>
+              {[
+                "Fresh bundles starting at $10",
+                "Local farms, supporting your community",
+                "Weekly pickup — no subscription needed",
+              ].map((t) => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)" }}>
+                  <span style={{ color: "#34d399", fontSize: 10, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>{t}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => { setShowFreshFoodIntro(false); setShowFreshFood(true); }}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 12,
+                background: "linear-gradient(135deg, #34d399, #10b981)",
+                border: "none", color: "#02020a",
+                fontSize: 14, fontFamily: "monospace", fontWeight: 700,
+                cursor: "pointer", letterSpacing: "0.06em",
+                boxShadow: "0 0 24px rgba(52,211,153,0.30)",
+                marginBottom: 12,
+              }}
+            >
+              Browse Bundles →
+            </button>
+
+            <button
+              onClick={() => setShowFreshFoodIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}
             >
               Maybe later
             </button>
@@ -4856,7 +4931,7 @@ export default function HomePage() {
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
-                  {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFood(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
