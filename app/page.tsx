@@ -38,6 +38,7 @@ const JobFinderPanel          = dynamic(() => import("@/components/JobFinderPane
 const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryPanel"),       { ssr: false });
 const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPanel"),        { ssr: false });
 const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
+const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -736,6 +737,8 @@ export default function HomePage() {
   const [showFinancialIntro, setShowFinancialIntro]     = useState(false);
   const [showFreshFood,      setShowFreshFood]          = useState(false);
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
+  const [showNaviTV,         setShowNaviTV]             = useState(false);
+  const [showNaviTVIntro,    setShowNaviTVIntro]        = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2371,6 +2374,47 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* NaviTV Cinematic Intro */}
+      {showNaviTVIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          <div style={{ position: "absolute", top: "25%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(168,85,247,0.4))" }}>📺</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#a855f7", marginBottom: 10 }}>NAVI Streaming</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 8, textShadow: "0 0 24px rgba(168,85,247,0.25)" }}>NaviTV</div>
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+              Educational content that empowers. Money, housing, AI, motivation, history — real knowledge for real life.
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
+              {["💰", "🏠", "🤖", "✊", "💪"].map((e, i) => (
+                <span key={i} style={{ fontSize: 24, filter: "drop-shadow(0 0 6px rgba(168,85,247,0.3))" }}>{e}</span>
+              ))}
+            </div>
+            <button onClick={() => { setShowNaviTVIntro(false); setShowNaviTV(true); }}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #a855f7, #7c3aed)", border: "none", color: "#fff", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(168,85,247,0.30)", marginBottom: 12 }}>
+              Start Watching →
+            </button>
+            <button onClick={() => setShowNaviTVIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NaviTV Panel */}
+      {showNaviTV && (
+        <NaviTVPanel onClose={() => setShowNaviTV(false)} />
       )}
 
       {/* Fresh Food Cinematic Intro */}
@@ -4964,6 +5008,7 @@ export default function HomePage() {
               <div>
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#00d4ff", textTransform: "uppercase", marginBottom: 10 }}>Learning</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {toolBtn("📺", "NaviTV", "#a855f7", () => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   {toolBtn("📚", "Homework Helper", "#00d4ff", () => { if (proLocked) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, proLocked)}
                   <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
