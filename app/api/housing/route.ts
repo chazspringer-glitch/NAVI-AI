@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { geocode, buildHousingLinks, NATIONAL_PROGRAMS } from "@/lib/housingData";
 
 export const runtime     = "nodejs";
 export const maxDuration = 30;
@@ -10,15 +11,15 @@ function getClient(key: string) {
   return _openai;
 }
 
-function buildPrompt(location: string, maxRent: number, bedrooms: string): string {
+function buildPrompt(location: string, city: string, maxRent: number, bedrooms: string): string {
   const bedroomLabel = bedrooms === "any" ? "any number of bedrooms" : `${bedrooms} bedroom(s)`;
-  return `You are an affordable housing resource assistant. Someone needs affordable rental housing in or near "${location}" with a budget of $${maxRent}/month and needs ${bedroomLabel}.
+  return `You are an affordable housing resource assistant. Someone needs affordable rental housing in or near "${location}" (${city}) with a budget of $${maxRent}/month and needs ${bedroomLabel}.
 
-Return a JSON array of 5–7 housing resources. Include a realistic mix:
-- 1–2 private owner rental opportunities (described at neighborhood level — never an exact private address)
-- 1–2 Section 8 / Housing Choice Voucher contacts (the local Public Housing Authority for ${location})
-- 1–2 nonprofit or income-restricted housing developments near ${location}
-- 1 emergency or transitional housing resource (211, local shelter, or ERAP program)
+Return a JSON array of 7–10 housing resources. Include a realistic mix:
+- 2–3 private owner rental opportunities (described at neighborhood level — never an exact private address)
+- 2 Section 8 / Housing Choice Voucher contacts (the local Public Housing Authority for ${city})
+- 2 nonprofit or income-restricted housing developments near ${city}
+- 1–2 emergency or transitional housing resources (211, local shelter, or ERAP program)
 
 Each item must use this exact JSON shape:
 {
@@ -53,16 +54,22 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       return NextResponse.json({ error: "Service not configured." }, { status: 500 });
     }
-    const client = getClient(apiKey);
 
+    // Geocode the location via OpenStreetMap (free, no key)
+    const geo = await geocode(location);
+    const cityName = geo?.city || location;
+    console.log("[housing] Geocoded:", location, "→", geo ? `${geo.city}, ${geo.state}` : "not found");
+
+    // Generate AI listings
+    const client = getClient(apiKey);
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: buildPrompt(location, maxRent, bedrooms) },
+        { role: "system", content: buildPrompt(location, cityName, maxRent, bedrooms) },
         { role: "user",   content: `Find affordable housing near: ${location}` },
       ],
       temperature: 0.28,
-      max_tokens: 1600,
+      max_tokens: 2000,
     });
 
     const raw   = (completion.choices[0]?.message?.content ?? "[]").trim();
@@ -76,7 +83,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not parse listing data. Try again." }, { status: 500 });
     }
 
-    return NextResponse.json({ listings });
+    // Build real search links
+    const links = buildHousingLinks(location, maxRent, bedrooms);
+
+    return NextResponse.json({
+      listings,
+      geo: geo ? { lat: geo.lat, lon: geo.lon, city: geo.city, state: geo.state, display: geo.displayName } : null,
+      links,
+      programs: NATIONAL_PROGRAMS,
+    });
   } catch (err) {
     console.error("[/api/housing]", err);
     return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 500 });

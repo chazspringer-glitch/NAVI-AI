@@ -185,6 +185,9 @@ export default function HousingPanel({ onClose }) {
   const [listings,  setListings]  = useState(null);
   const [error,     setError]     = useState(null);
   const [searchTag, setSearchTag] = useState("");
+  const [geoData,   setGeoData]   = useState(null);
+  const [links,     setLinks]     = useState(null);
+  const [programs,  setPrograms]  = useState([]);
   const inputRef = useRef(null);
 
   const handleSearch = async (e) => {
@@ -223,9 +226,12 @@ export default function HousingPanel({ onClose }) {
       }
 
       setSearchTag(
-        `${loc} · max $${maxRent.toLocaleString()}/mo · ${bedrooms === "any" ? "any size" : bedrooms + " BR"}`
+        `${data.geo?.city || loc}${data.geo?.state ? `, ${data.geo.state}` : ""} · max $${maxRent.toLocaleString()}/mo · ${bedrooms === "any" ? "any size" : bedrooms + " BR"}`
       );
       setListings(data.listings ?? []);
+      setGeoData(data.geo || null);
+      setLinks(data.links || null);
+      setPrograms(data.programs || []);
     } catch (err) {
       console.error("[Housing] Search error:", err);
       setError(err?.message ?? "Unable to load housing results. Try again.");
@@ -611,28 +617,64 @@ export default function HousingPanel({ onClose }) {
                 ⚠ Results are AI-generated suggestions based on real program types. Always verify availability and contact information directly with each resource before applying or sending any money.
               </p>
             </div>
-            {/* Real listing search links */}
-            <div style={{ background: `${ACCENT}08`, border: `1px solid ${ACCENT}20`, borderRadius: 14, padding: "14px 16px" }}>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: ACCENT, fontWeight: "bold", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                🔗 Search Real Listings
+            {/* ── Section 1: Search Real Listings ── */}
+            {links && (
+              <div style={{ background: `${ACCENT}08`, border: `1px solid ${ACCENT}20`, borderRadius: 14, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: ACCENT, fontWeight: "bold", marginBottom: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  🔗 Search Real Listings
+                </div>
+                {geoData && (
+                  <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", marginBottom: 10 }}>
+                    📍 {geoData.city}, {geoData.state}
+                  </div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {[
+                    { label: "🏘️ Craigslist Apartments", url: links.craigslist },
+                    { label: "🏠 Zillow Rentals", url: links.zillow },
+                    { label: "🏢 Apartments.com", url: links.apartmentsCom },
+                    { label: "💰 GoSection8", url: links.section8 },
+                    { label: "🤝 AffordableHousing.com", url: links.affordableHousing },
+                    { label: "📋 HUD Counseling", url: links.hudCounseling },
+                  ].map(({ label, url }) => (
+                    <button key={label} onClick={() => window.open(url, "_blank")} style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, cursor: "pointer",
+                      background: "rgba(255,255,255,0.03)", border: `1px solid ${ACCENT}18`, color: ACCENT, fontSize: 11, fontFamily: "monospace",
+                    }}>
+                      <span style={{ fontWeight: 600 }}>{label}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>↗</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {[
-                  { label: "Zillow Rentals", url: `https://www.zillow.com/homes/for_rent/${encodeURIComponent(location.trim())}_rb/0-${maxRent}_mp/` },
-                  { label: "Apartments.com", url: `https://www.apartments.com/${encodeURIComponent(location.trim().toLowerCase().replace(/\s+/g, "-"))}/max-${maxRent}-monthly/` },
-                  { label: "AffordableHousing.com", url: `https://affordablehousingonline.com/housing-search/${encodeURIComponent(location.trim())}` },
-                  { label: "HUD Resources", url: "https://www.hud.gov/topics/rental_assistance" },
-                ].map(({ label, url }) => (
-                  <button key={label} onClick={() => window.open(url, "_blank")} style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, cursor: "pointer",
-                    background: "rgba(255,255,255,0.03)", border: `1px solid ${ACCENT}18`, color: ACCENT, fontSize: 11, fontFamily: "monospace",
-                  }}>
-                    <span style={{ fontWeight: 600 }}>{label}</span>
-                    <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>↗</span>
-                  </button>
-                ))}
+            )}
+
+            {/* ── Section 2: Housing Assistance Programs ── */}
+            {programs.length > 0 && (
+              <div style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)", borderRadius: 14, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "#a855f7", fontWeight: "bold", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  🏛️ Housing Assistance Programs
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {programs.map((p) => (
+                    <button key={p.name} onClick={() => p.url && window.open(p.url, "_blank")} style={{
+                      width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 10, cursor: "pointer",
+                      background: "rgba(255,255,255,0.02)", border: "1px solid rgba(168,85,247,0.10)", textAlign: "left", fontFamily: "monospace",
+                    }}>
+                      <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
+                        {p.type === "section_8" ? "🏛️" : p.type === "emergency" ? "⚡" : "🤝"}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#c4b5fd", marginBottom: 2 }}>{p.name}</div>
+                        <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.5 }}>{p.desc}</div>
+                        <div style={{ fontSize: 9, color: "#a855f7", marginTop: 3, fontWeight: 600 }}>→ {p.action}</div>
+                      </div>
+                      <span style={{ fontSize: 10, color: "#64748b", flexShrink: 0 }}>↗</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Home Ownership Roadmap — only if buying */}
             {goalType === "buying" && (
