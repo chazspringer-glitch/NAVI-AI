@@ -82,7 +82,11 @@ function generateEntries(era: string, topic: string): HistoryEntry[] {
 
   if (filtered.length === 0) filtered = all;
   const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 7);
+
+  // Always return at least 7 — pad with random entries from the full set if needed
+  if (shuffled.length >= 7) return shuffled.slice(0, 7);
+  const remaining = all.filter((e) => !shuffled.some((s) => s.title === e.title)).sort(() => Math.random() - 0.5);
+  return [...shuffled, ...remaining].slice(0, 7);
 }
 
 export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) {
