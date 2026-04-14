@@ -4779,7 +4779,16 @@ export default function HomePage() {
               <div>
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#f59e0b", textTransform: "uppercase", marginBottom: 10 }}>Financial</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {toolBtn("🚗", "Affordable Auto Finder", "#4ade80", () => { setShowAutoFinder(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🚗", "Affordable Auto Finder", "#4ade80", () => { setShowAutoFinder(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  <button onClick={() => window.open("https://outlook.office.com/bookwithme/user/7098123dae93418b8557851eec10e88d@excitecu.org?anonymous&ep=bwmEmailSignature", "_blank")}
+                    style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(52,211,153,0.03))", border: "1px solid rgba(52,211,153,0.22)", color: "#34d399", fontSize: 12, fontFamily: "monospace", textAlign: "left" }}>
+                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>💰</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 3 }}>Free Financial Literacy Workshops</div>
+                      <div style={{ fontSize: 9, color: "#475569", lineHeight: 1.4 }}>Learn budgeting, credit, savings & financial planning through free community workshops</div>
+                    </div>
+                    <span style={{ fontSize: 10, opacity: 0.5, flexShrink: 0 }}>↗</span>
+                  </button>
                   <button onClick={() => { setShowLuckyMode(true); setMenuOpen(false); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.04))", border: "1px solid rgba(245,158,11,0.22)", color: "#f59e0b", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16, filter: "drop-shadow(0 0 4px rgba(245,158,11,0.5))" }}>✦</span><span style={{ fontWeight: 600 }}>Lucky Mode</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
