@@ -1,14 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+/**
+ * GET /api/work-orders          — returns ALL work orders (founder view)
+ * GET /api/work-orders?user_id= — returns only that user's orders (client view)
+ */
+export async function GET(req: NextRequest) {
   try {
-    const { data, error } = await supabase
+    const userId = req.nextUrl.searchParams.get("user_id");
+
+    let query = supabase
       .from("work_orders")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("[api/work-orders] Error:", error.message);

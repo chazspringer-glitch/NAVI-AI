@@ -82,10 +82,34 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
     }
   }, [userId]);
 
+  // Work orders state
+  interface UserWorkOrder {
+    id: string;
+    service: string;
+    client_name: string;
+    business_name: string;
+    status: string;
+    work_order: { summary?: string; objectives?: string[]; deliverables?: string[]; timeline?: string };
+    strategy: { winningAngle?: string; approach?: string; nextSteps?: string[] };
+    created_at: string;
+  }
+  const [myOrders, setMyOrders] = useState<UserWorkOrder[]>([]);
+  const [selectedMyOrder, setSelectedMyOrder] = useState<UserWorkOrder | null>(null);
+
+  const loadMyOrders = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(`/api/work-orders?user_id=${userId}`);
+      const json = await res.json();
+      if (Array.isArray(json.orders)) setMyOrders(json.orders);
+    } catch { /* silent */ }
+  }, [userId]);
+
   useEffect(() => {
     loadUploads();
     loadSchedule();
-  }, [loadUploads, loadSchedule]);
+    loadMyOrders();
+  }, [loadUploads, loadSchedule, loadMyOrders]);
 
   const handleSchedulePost = async () => {
     if (!userId || !schedDate || !schedTime) return;
@@ -327,6 +351,106 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
             ))}
           </div>
         </div>
+
+        {/* ── My Work Orders ──────────────────────────────────────────── */}
+        {myOrders.length > 0 && !selectedMyOrder && (
+          <div style={{
+            borderRadius: 14,
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(201,162,39,0.12)",
+            overflow: "hidden",
+          }}>
+            <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#C9A227" }}>My Strategies</div>
+              <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>{myOrders.length} work order{myOrders.length !== 1 ? "s" : ""}</div>
+            </div>
+            {myOrders.map((o) => (
+              <div key={o.id} onClick={() => setSelectedMyOrder(o)} style={{
+                padding: "12px 18px", cursor: "pointer",
+                borderBottom: "1px solid rgba(255,255,255,0.03)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{o.service}</div>
+                  <span style={{
+                    padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+                    color: o.status === "new" ? "#34d399" : "#C9A227",
+                    background: o.status === "new" ? "rgba(52,211,153,0.12)" : "rgba(201,162,39,0.12)",
+                    border: `1px solid ${o.status === "new" ? "rgba(52,211,153,0.25)" : "rgba(201,162,39,0.25)"}`,
+                  }}>{o.status.toUpperCase()}</span>
+                </div>
+                <div style={{ fontSize: 9, color: "#475569" }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Work Order Detail (user view) ────────────────────────────── */}
+        {selectedMyOrder && (
+          <div style={{
+            borderRadius: 14,
+            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+            border: "1px solid rgba(201,162,39,0.12)",
+            padding: "16px 18px",
+            display: "flex", flexDirection: "column", gap: 14,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A227" }}>{selectedMyOrder.service}</div>
+              <button onClick={() => setSelectedMyOrder(null)} style={{
+                padding: "4px 10px", borderRadius: 6, background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)", color: "#64748b", fontSize: 9,
+                fontFamily: "monospace", cursor: "pointer",
+              }}>← Back</button>
+            </div>
+
+            {selectedMyOrder.work_order?.summary && (
+              <div>
+                <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Summary</div>
+                <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>{selectedMyOrder.work_order.summary}</div>
+              </div>
+            )}
+
+            {Array.isArray(selectedMyOrder.work_order?.objectives) && selectedMyOrder.work_order.objectives.length > 0 && (
+              <div>
+                <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Objectives</div>
+                {selectedMyOrder.work_order.objectives.map((o, i) => (
+                  <div key={i} style={{ fontSize: 10, color: "#e2e8f0", padding: "2px 0" }}>{i + 1}. {o}</div>
+                ))}
+              </div>
+            )}
+
+            {Array.isArray(selectedMyOrder.work_order?.deliverables) && selectedMyOrder.work_order.deliverables.length > 0 && (
+              <div>
+                <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Deliverables</div>
+                {selectedMyOrder.work_order.deliverables.map((d, i) => (
+                  <div key={i} style={{ fontSize: 10, color: "#e2e8f0", padding: "2px 0" }}>• {d}</div>
+                ))}
+              </div>
+            )}
+
+            {selectedMyOrder.work_order?.timeline && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>Timeline: {selectedMyOrder.work_order.timeline}</div>
+            )}
+
+            {selectedMyOrder.strategy?.winningAngle && (
+              <div style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.12)" }}>
+                <div style={{ fontSize: 8, color: "#a855f7", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Strategy</div>
+                <div style={{ fontSize: 11, color: "#c4b5fd", lineHeight: 1.5, marginBottom: 6 }}>{selectedMyOrder.strategy.winningAngle}</div>
+                {selectedMyOrder.strategy.approach && (
+                  <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>{selectedMyOrder.strategy.approach}</div>
+                )}
+              </div>
+            )}
+
+            {Array.isArray(selectedMyOrder.strategy?.nextSteps) && selectedMyOrder.strategy.nextSteps.length > 0 && (
+              <div>
+                <div style={{ fontSize: 8, color: "#34d399", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Next Steps</div>
+                {selectedMyOrder.strategy.nextSteps.map((s, i) => (
+                  <div key={i} style={{ fontSize: 10, color: "#34d399", padding: "2px 0" }}>{i + 1}. {s}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Your Content (merged calendar + uploads) ──────────────────── */}
         {(() => {

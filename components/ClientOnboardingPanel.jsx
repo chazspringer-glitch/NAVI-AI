@@ -155,7 +155,7 @@ export default function ClientOnboardingPanel({ service, onClose }) {
     setTimeout(() => {
       setMessages((prev) => [...prev, {
         role: "navi",
-        text: "Your request has been submitted to our team. We'll be in touch shortly. ✅",
+        text: "✅ Your personalized strategy is ready. Access it anytime in your dashboard.",
         id:   "confirmation",
       }]);
     }, 500);
