@@ -2397,14 +2397,70 @@ export default function HomePage() {
         <HandsFreeBar onStop={toggleHandsFree} />
       )}
 
-      {/* ── My Business cinematic intro ── */}
+      {/* ── My Business — Coming Soon overlay ── */}
       {showBusinessIntro && (
-        <MyBusinessIntro
-          onComplete={() => {
-            setShowBusinessIntro(false);
-            window.location.href = "/client";
+        <div
+          onClick={() => setShowBusinessIntro(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 500,
+            background: "rgba(2,2,10,0.95)",
+            backdropFilter: "blur(16px)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            padding: 20,
           }}
-        />
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🚀</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.32em", textTransform: "uppercase", color: "#C9A227", marginBottom: 8 }}>
+              Springer Industries
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9", marginBottom: 6, textShadow: "0 0 20px rgba(201,162,39,0.20)" }}>
+              My Business
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#C9A227", marginBottom: 16 }}>
+              Coming Soon
+            </div>
+            <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+              Your personal dashboard is being built — real-time analytics, content scheduling, AI tools, and a direct line to your strategy team.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 24 }}>
+              {[
+                { icon: "📊", label: "Analytics" },
+                { icon: "📅", label: "Content Calendar" },
+                { icon: "✨", label: "AI Generator" },
+                { icon: "📋", label: "Work Orders" },
+              ].map(({ icon, label }) => (
+                <div key={label} style={{
+                  padding: "10px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(201,162,39,0.10)",
+                }}>
+                  <div style={{ fontSize: 16, marginBottom: 4 }}>{icon}</div>
+                  <div style={{ fontSize: 9, color: "#64748b" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowBusinessIntro(false)}
+              style={{
+                padding: "10px 28px", borderRadius: 10,
+                background: "linear-gradient(135deg, #C9A227, #a07818)",
+                border: "none", color: "#08080f",
+                fontSize: 12, fontFamily: "monospace", fontWeight: 700,
+                cursor: "pointer", letterSpacing: "0.04em",
+                boxShadow: "0 0 14px rgba(201,162,39,0.20)",
+              }}
+            >
+              Got It
+            </button>
+            <div style={{ marginTop: 12, fontSize: 9, color: "#334155" }}>
+              tap anywhere to close
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Springer Industries cinematic intro (Founders / Work With Us tab) ── */}
