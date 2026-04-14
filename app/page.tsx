@@ -5534,104 +5534,121 @@ export default function HomePage() {
               );
             })()}
 
-            {/* Unlock Adult STEM Program — Stripe Checkout */}
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  console.log("[Stripe] Starting checkout...");
-                  const res = await fetch("/api/create-checkout-session", { method: "POST" });
-                  const data = await res.json();
-                  console.log("[Stripe] Response:", data);
-                  if (data.url) {
-                    window.location.href = data.url;
-                  } else {
-                    alert(data.error || "Could not start checkout. Please try again.");
-                  }
-                } catch (err) {
-                  console.error("[Stripe] Checkout error:", err);
-                  alert("Could not connect to payment. Please try again.");
-                }
-              }}
-              style={{
-                width: "100%", padding: "16px 18px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, #C9A227, #a07818)",
-                border: "none",
-                color: "#08080f", fontFamily: "monospace", fontSize: 14,
-                fontWeight: "bold", letterSpacing: "0.06em",
-                boxShadow: "0 0 20px rgba(201,162,39,0.25)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                transition: "all 0.2s ease",
-                position: "relative", zIndex: 10,
-              }}
-            >
-              <span style={{ fontSize: 18 }}>⚡</span>
-              Unlock Adult STEM Program
-            </button>
-
-            {/* Access Code — logged-in users only */}
-            {isLoggedIn && codeStatus !== "success" && (
+            {/* Unlock Adult STEM Program — Pay or Enter Code */}
+            {codeStatus !== "success" && (
               <div style={{
-                position: "relative", overflow: "hidden",
-                borderRadius: 18, padding: "20px 18px",
-                background: "linear-gradient(160deg, rgba(245,200,66,0.06) 0%, rgba(201,162,39,0.03) 100%)",
-                border: "1px solid rgba(245,200,66,0.18)",
+                borderRadius: 18, overflow: "hidden",
+                background: "linear-gradient(160deg, rgba(201,162,39,0.06) 0%, rgba(16,12,6,0.95) 100%)",
+                border: "1px solid rgba(201,162,39,0.25)",
               }}>
-                <div style={{
-                  fontSize: 14, fontFamily: "monospace", fontWeight: "bold",
-                  color: "#f5c842", marginBottom: 4,
-                }}>
-                  Access Code
+                {/* Header */}
+                <div style={{ padding: "16px 18px 12px" }}>
+                  <div style={{ fontSize: 15, fontFamily: "monospace", fontWeight: "bold", color: "#f1f5f9", marginBottom: 4 }}>
+                    ⚡ Unlock Adult STEM Program
+                  </div>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#64748b", lineHeight: 1.5 }}>
+                    Choose how to get access:
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: 10, fontFamily: "monospace", color: "#64748b",
-                  lineHeight: 1.5, marginBottom: 14,
-                }}>
-                  Enter a one-time code to unlock premium content
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input
-                    value={accessCode}
-                    onChange={(e) => { setAccessCode(e.target.value); if (codeStatus === "error") setCodeStatus("idle"); }}
-                    placeholder="Enter code..."
-                    onKeyDown={(e) => { if (e.key === "Enter") handleRedeemCode(); }}
-                    style={{
-                      flex: 1, padding: "10px 12px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.04)",
-                      border: codeStatus === "error"
-                        ? "1px solid rgba(239,68,68,0.30)"
-                        : "1px solid rgba(255,255,255,0.08)",
-                      color: "#e2e8f0", fontSize: 13, fontFamily: "monospace",
-                      outline: "none", letterSpacing: "0.08em",
-                    }}
-                  />
+
+                {/* Option 1: Pay */}
+                <div style={{ padding: "0 18px 12px" }}>
                   <button
-                    onClick={handleRedeemCode}
-                    disabled={codeStatus === "loading" || !accessCode.trim()}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        console.log("[Stripe] Starting checkout...");
+                        const res = await fetch("/api/create-checkout-session", { method: "POST" });
+                        const data = await res.json();
+                        console.log("[Stripe] Response:", data);
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          alert(data.error || "Could not start checkout. Please try again.");
+                        }
+                      } catch (err) {
+                        console.error("[Stripe] Checkout error:", err);
+                        alert("Could not connect to payment. Please try again.");
+                      }
+                    }}
                     style={{
-                      padding: "10px 18px", borderRadius: 10,
-                      background: codeStatus === "loading"
-                        ? "rgba(245,200,66,0.06)"
-                        : "linear-gradient(135deg, rgba(245,200,66,0.18), rgba(201,162,39,0.10))",
-                      border: "1px solid rgba(245,200,66,0.35)",
-                      color: "#f5c842", fontSize: 12, fontFamily: "monospace",
-                      fontWeight: 700, cursor: codeStatus === "loading" || !accessCode.trim() ? "default" : "pointer",
-                      opacity: !accessCode.trim() ? 0.4 : 1,
-                      whiteSpace: "nowrap",
+                      width: "100%", padding: "14px 18px", borderRadius: 12, cursor: "pointer",
+                      background: "linear-gradient(135deg, #C9A227, #a07818)",
+                      border: "none",
+                      color: "#08080f", fontFamily: "monospace", fontSize: 13,
+                      fontWeight: "bold", letterSpacing: "0.06em",
+                      boxShadow: "0 0 16px rgba(201,162,39,0.20)",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      position: "relative", zIndex: 10,
                     }}
                   >
-                    {codeStatus === "loading" ? "..." : "Redeem"}
+                    💳 One-Time Payment
                   </button>
                 </div>
-                {codeStatus === "error" && codeMessage && (
-                  <div style={{ marginTop: 8, fontSize: 10, fontFamily: "monospace", color: "#f87171" }}>
-                    {codeMessage}
+
+                {/* Divider */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 18px 12px" }}>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                  <span style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", letterSpacing: "0.12em" }}>OR</span>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                </div>
+
+                {/* Option 2: Access Code */}
+                <div style={{ padding: "0 18px 16px" }}>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#64748b", marginBottom: 8 }}>
+                    Have an access code? Enter it below:
                   </div>
-                )}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      value={accessCode}
+                      onChange={(e) => { setAccessCode(e.target.value); if (codeStatus === "error") setCodeStatus("idle"); }}
+                      placeholder="Enter code..."
+                      onKeyDown={(e) => { if (e.key === "Enter") handleRedeemCode(); }}
+                      style={{
+                        flex: 1, padding: "10px 12px", borderRadius: 10,
+                        background: "rgba(255,255,255,0.04)",
+                        border: codeStatus === "error"
+                          ? "1px solid rgba(239,68,68,0.30)"
+                          : "1px solid rgba(255,255,255,0.08)",
+                        color: "#e2e8f0", fontSize: 13, fontFamily: "monospace",
+                        outline: "none", letterSpacing: "0.08em",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRedeemCode}
+                      disabled={codeStatus === "loading" || !accessCode.trim() || !isLoggedIn}
+                      style={{
+                        padding: "10px 18px", borderRadius: 10,
+                        background: codeStatus === "loading"
+                          ? "rgba(52,211,153,0.06)"
+                          : "rgba(52,211,153,0.12)",
+                        border: "1px solid rgba(52,211,153,0.30)",
+                        color: "#34d399", fontSize: 12, fontFamily: "monospace",
+                        fontWeight: 700, cursor: (codeStatus === "loading" || !accessCode.trim()) ? "default" : "pointer",
+                        opacity: !accessCode.trim() ? 0.4 : 1,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {codeStatus === "loading" ? "..." : "Redeem"}
+                    </button>
+                  </div>
+                  {!isLoggedIn && (
+                    <div style={{ marginTop: 6, fontSize: 9, fontFamily: "monospace", color: "#64748b" }}>
+                      You must be <a href="/login" style={{ color: "#C9A227", textDecoration: "none" }}>signed in</a> to use a code.
+                    </div>
+                  )}
+                  {codeStatus === "error" && codeMessage && (
+                    <div style={{ marginTop: 6, fontSize: 10, fontFamily: "monospace", color: "#f87171" }}>
+                      {codeMessage}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            {isLoggedIn && codeStatus === "success" && (
+            {/* Access unlocked success */}
+            {codeStatus === "success" && (
               <div style={{
                 borderRadius: 18, padding: "24px 18px",
                 background: "linear-gradient(160deg, rgba(52,211,153,0.08) 0%, rgba(52,211,153,0.03) 100%)",
@@ -5639,10 +5656,7 @@ export default function HomePage() {
                 textAlign: "center",
               }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
-                <div style={{
-                  fontSize: 16, fontFamily: "monospace", fontWeight: "bold",
-                  color: "#34d399", marginBottom: 4,
-                }}>
+                <div style={{ fontSize: 16, fontFamily: "monospace", fontWeight: "bold", color: "#34d399", marginBottom: 4 }}>
                   {codeMessage}
                 </div>
                 <div style={{ fontSize: 10, fontFamily: "monospace", color: "#475569" }}>
