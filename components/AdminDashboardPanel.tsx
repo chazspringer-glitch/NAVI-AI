@@ -40,11 +40,12 @@ const CONTENT_QUEUE = [
   { client: "UrbanRoots Co.",     type: "Video Post", platform: "TikTok",    due: "Apr 15",   status: "Draft"       },
 ];
 
-type AdminTab = "dashboard" | "clients" | "content" | "analytics" | "settings";
+type AdminTab = "dashboard" | "clients" | "orders" | "content" | "analytics" | "settings";
 
 const ADMIN_TABS: { key: AdminTab; label: string; icon: string }[] = [
   { key: "dashboard", label: "Dashboard", icon: "📊" },
   { key: "clients",   label: "Clients",   icon: "👥" },
+  { key: "orders",    label: "Orders",    icon: "📋" },
   { key: "content",   label: "Content",   icon: "📝" },
   { key: "analytics", label: "Analytics", icon: "📈" },
   { key: "settings",  label: "Settings",  icon: "⚙️" },
@@ -85,6 +86,36 @@ interface SupabaseClient {
 
 export default function AdminDashboardPanel({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<AdminTab>("dashboard");
+
+  // ── Work orders state ──────────────────────────────────────────────────
+  interface WorkOrderRow {
+    id: string;
+    user_id: string | null;
+    client_name: string;
+    client_email: string;
+    business_name: string;
+    service: string;
+    status: string;
+    answers: { question: string; answer: string }[];
+    work_order: { clientName: string; service: string; summary: string; objectives: string[]; deliverables: string[]; timeline: string; notes: string };
+    strategy: { winningAngle: string; approach: string; contentIdeas: string[]; growthDirection: string; nextSteps: string[] };
+    created_at: string;
+  }
+  const [workOrders, setWorkOrders] = useState<WorkOrderRow[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<WorkOrderRow | null>(null);
+
+  const loadWorkOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const res = await fetch("/api/work-orders");
+      const json = await res.json();
+      if (Array.isArray(json.orders)) setWorkOrders(json.orders);
+    } catch { /* silent */ }
+    finally { setOrdersLoading(false); }
+  }, []);
+
+  useEffect(() => { loadWorkOrders(); }, [loadWorkOrders]);
 
   // ── Supabase clients state ──────────────────────────────────────────────
   const [dbClients, setDbClients] = useState<SupabaseClient[]>([]);
@@ -547,6 +578,156 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
       )}
 
       {/* ── Content ────────────────────────────────────────────────────── */}
+      {/* ── Work Orders ──────────────────────────────────────────────── */}
+      {tab === "orders" && !selectedOrder && (
+        <div style={{
+          borderRadius: 12,
+          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+          border: "1px solid rgba(201,162,39,0.10)",
+          overflow: "hidden",
+        }}>
+          <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Work Orders</div>
+              <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>{workOrders.length} total</div>
+            </div>
+            {ordersLoading && <div style={{ fontSize: 9, color: "#C9A227" }}>Loading...</div>}
+          </div>
+          {workOrders.length === 0 && !ordersLoading && (
+            <div style={{ padding: "20px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 16, marginBottom: 6 }}>📋</div>
+              <div style={{ fontSize: 10, color: "#94a3b8" }}>No work orders yet</div>
+            </div>
+          )}
+          {workOrders.map((o) => (
+            <div
+              key={o.id}
+              onClick={() => setSelectedOrder(o)}
+              style={{
+                padding: "12px 16px", cursor: "pointer",
+                borderBottom: "1px solid rgba(255,255,255,0.03)",
+                transition: "background 0.15s",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{o.client_name || o.business_name}</div>
+                <span style={{
+                  padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+                  color: o.status === "new" ? "#34d399" : "#C9A227",
+                  background: o.status === "new" ? "rgba(52,211,153,0.12)" : "rgba(201,162,39,0.12)",
+                  border: `1px solid ${o.status === "new" ? "rgba(52,211,153,0.25)" : "rgba(201,162,39,0.25)"}`,
+                }}>
+                  {o.status.toUpperCase()}
+                </span>
+              </div>
+              <div style={{ fontSize: 9, color: "#C9A227" }}>{o.service}</div>
+              <div style={{ fontSize: 8, color: "#475569", marginTop: 2 }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Work Order Detail View ─────────────────────────────────────── */}
+      {tab === "orders" && selectedOrder && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button
+            onClick={() => setSelectedOrder(null)}
+            style={{
+              alignSelf: "flex-start", padding: "6px 12px", borderRadius: 8,
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+              color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer",
+            }}
+          >
+            ← Back to Orders
+          </button>
+
+          {/* Client Info */}
+          <div style={{ padding: "14px 16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(201,162,39,0.10)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 10 }}>Client Info</div>
+            {[
+              { label: "Name", value: selectedOrder.client_name },
+              { label: "Email", value: selectedOrder.client_email },
+              { label: "Business", value: selectedOrder.business_name },
+              { label: "Service", value: selectedOrder.service },
+              { label: "Status", value: selectedOrder.status.toUpperCase() },
+              { label: "Date", value: new Date(selectedOrder.created_at).toLocaleDateString() },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                <span style={{ fontSize: 9, color: "#475569" }}>{label}</span>
+                <span style={{ fontSize: 9, color: "#e2e8f0", fontWeight: 500 }}>{value || "—"}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Intake Answers */}
+          <div style={{ padding: "14px 16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(0,212,255,0.10)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff", marginBottom: 10 }}>Intake Answers</div>
+            {Array.isArray(selectedOrder.answers) && selectedOrder.answers.map((a, i) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 8, color: "#475569", marginBottom: 2 }}>{a.question}</div>
+                <div style={{ fontSize: 10, color: "#e2e8f0", lineHeight: 1.5 }}>{a.answer || "(no answer)"}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Work Order */}
+          {selectedOrder.work_order && (
+            <div style={{ padding: "14px 16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(201,162,39,0.10)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 10 }}>Work Order</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6, marginBottom: 10 }}>{selectedOrder.work_order.summary}</div>
+              {Array.isArray(selectedOrder.work_order.objectives) && selectedOrder.work_order.objectives.length > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 8, color: "#475569", marginBottom: 4 }}>OBJECTIVES</div>
+                  {selectedOrder.work_order.objectives.map((o, i) => (
+                    <div key={i} style={{ fontSize: 9, color: "#e2e8f0", padding: "2px 0" }}>{i + 1}. {o}</div>
+                  ))}
+                </div>
+              )}
+              {Array.isArray(selectedOrder.work_order.deliverables) && selectedOrder.work_order.deliverables.length > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 8, color: "#475569", marginBottom: 4 }}>DELIVERABLES</div>
+                  {selectedOrder.work_order.deliverables.map((d, i) => (
+                    <div key={i} style={{ fontSize: 9, color: "#e2e8f0", padding: "2px 0" }}>• {d}</div>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 9, color: "#64748b" }}>Timeline: {selectedOrder.work_order.timeline || "TBD"}</div>
+            </div>
+          )}
+
+          {/* AI Strategy */}
+          {selectedOrder.strategy && (
+            <div style={{ padding: "14px 16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(168,85,247,0.10)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#a855f7", marginBottom: 10 }}>AI Strategy</div>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 8, color: "#475569", marginBottom: 2 }}>WINNING ANGLE</div>
+                <div style={{ fontSize: 10, color: "#e2e8f0", lineHeight: 1.5 }}>{selectedOrder.strategy.winningAngle}</div>
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 8, color: "#475569", marginBottom: 2 }}>APPROACH</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>{selectedOrder.strategy.approach}</div>
+              </div>
+              {Array.isArray(selectedOrder.strategy.contentIdeas) && selectedOrder.strategy.contentIdeas.length > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 8, color: "#475569", marginBottom: 4 }}>CONTENT IDEAS</div>
+                  {selectedOrder.strategy.contentIdeas.map((c, i) => (
+                    <div key={i} style={{ fontSize: 9, color: "#e2e8f0", padding: "2px 0" }}>{i + 1}. {c}</div>
+                  ))}
+                </div>
+              )}
+              {Array.isArray(selectedOrder.strategy.nextSteps) && selectedOrder.strategy.nextSteps.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 8, color: "#475569", marginBottom: 4 }}>NEXT STEPS</div>
+                  {selectedOrder.strategy.nextSteps.map((s, i) => (
+                    <div key={i} style={{ fontSize: 9, color: "#34d399", padding: "2px 0" }}>{i + 1}. {s}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {tab === "content" && (
         <div style={{
           borderRadius: 12,
