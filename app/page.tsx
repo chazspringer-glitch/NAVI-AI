@@ -2403,7 +2403,7 @@ export default function HomePage() {
               Educational content that empowers. Money, housing, AI, motivation, history — real knowledge for real life.
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
-              {["💰", "🏠", "🤖", "✊", "💪"].map((e, i) => (
+              {["💰", "🏠", "🧠", "✊", "💪"].map((e, i) => (
                 <span key={i} style={{ fontSize: 24, filter: "drop-shadow(0 0 6px rgba(168,85,247,0.3))" }}>{e}</span>
               ))}
             </div>
@@ -4963,7 +4963,7 @@ export default function HomePage() {
                   display: "flex", alignItems: "center", gap: 12,
                   textAlign: "left",
                 }}>
-                <span style={{ fontSize: 24, filter: "drop-shadow(0 0 8px rgba(201,162,39,0.3))" }}>🤖</span>
+                <NaviOrb size={24} />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A227", marginBottom: 2, fontFamily: "monospace" }}>Why NAVI Exists</div>
                   <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.4, fontFamily: "monospace" }}>The story, the mission, and the movement</div>

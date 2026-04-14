@@ -67,7 +67,7 @@ export default function ClientPage() {
             { icon: "✨", label: "AI Content Generator", desc: "Captions, hashtags & post ideas" },
             { icon: "📤", label: "Content Uploads", desc: "Upload images & videos directly" },
             { icon: "📋", label: "Work Orders", desc: "View your strategy & deliverables" },
-            { icon: "🤖", label: "NAVI Assistant", desc: "Your AI marketing advisor" },
+            { icon: "🧠", label: "NAVI Assistant", desc: "Your AI marketing advisor" },
           ].map(({ icon, label, desc }) => (
             <div key={label} style={{
               padding: "14px 12px", borderRadius: 14,

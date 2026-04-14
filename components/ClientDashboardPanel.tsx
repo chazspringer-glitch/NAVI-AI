@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import NaviOrb from "./NaviOrb";
 import { supabase } from "@/lib/supabase";
 import { uploadContent, fetchUploads, type ContentUpload } from "@/lib/uploads";
 import { fetchScheduledPosts, type ScheduledPost } from "@/lib/schedule";
@@ -928,7 +929,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
                 border: "1px solid rgba(0,212,255,0.30)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, boxShadow: "0 0 10px rgba(0,212,255,0.15)",
-              }}>🤖</div>
+              }}><NaviOrb size={14} /></div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
                 <div style={{ fontSize: 8, color: "#334155" }}>AI Marketing Assistant</div>
@@ -979,7 +980,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
           }}
           aria-label="Open NAVI chat"
         >
-          🤖
+          <NaviOrb size={24} />
         </button>
       )}
 
@@ -1010,7 +1011,7 @@ export default function ClientDashboardPanel({ onClose, showLogout = false, asPa
               border: "1px solid rgba(0,212,255,0.30)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 12, boxShadow: "0 0 8px rgba(0,212,255,0.15)",
-            }}>🤖</div>
+            }}><NaviOrb size={14} /></div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#00d4ff" }}>NAVI</div>
             <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 6px rgba(52,211,153,0.5)" }} />
             <button
