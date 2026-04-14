@@ -34,6 +34,7 @@ const HandsFreeBar            = dynamic(() => import("@/components/HandsFreeBar"
 const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboardPanel"),     { ssr: false });
 const MyBusinessIntro         = dynamic(() => import("@/components/MyBusinessIntro"),         { ssr: false });
 const AutoFinderPanel         = dynamic(() => import("@/components/AutoFinderPanel"),         { ssr: false });
+const JobFinderPanel          = dynamic(() => import("@/components/JobFinderPanel"),          { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -726,6 +727,7 @@ export default function HomePage() {
   const [showBusinessIntro, setShowBusinessIntro]       = useState(false);
   const [showAutoFinder,    setShowAutoFinder]          = useState(false);
   const [showMissionsOpen,  setShowMissionsOpen]        = useState(false);
+  const [showJobFinder,     setShowJobFinder]           = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2253,6 +2255,11 @@ export default function HomePage() {
       {/* Auto Finder Panel */}
       {showAutoFinder && (
         <AutoFinderPanel onClose={() => setShowAutoFinder(false)} />
+      )}
+
+      {/* Job Finder Panel */}
+      {showJobFinder && (
+        <JobFinderPanel onClose={() => setShowJobFinder(false)} />
       )}
 
       {/* Lucky Mode Panel */}
@@ -4148,6 +4155,7 @@ export default function HomePage() {
                     openWithIntroRef.current(id);
                     track("mode_switch", { mode: id });
                     setMenuOpen(false);
+                    if (id === "job") setShowJobFinder(true);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,

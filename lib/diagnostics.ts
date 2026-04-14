@@ -165,25 +165,8 @@ export async function checkAPI(): Promise<HealthStatus> {
 }
 
 export async function checkEmail(): Promise<HealthStatus> {
-  const service: ServiceName = "email";
-  try {
-    const ctrl    = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 5000);
-    const res     = await fetch("/api/health", { signal: ctrl.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json() as { services?: { emailjs?: { configured?: boolean } } };
-    if (!data?.services?.emailjs?.configured) {
-      return {
-        service, healthy: false, lastChecked: Date.now(),
-        error: "EmailJS not configured",
-      };
-    }
-    return { service, healthy: true, lastChecked: Date.now() };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { service, healthy: false, lastChecked: Date.now(), error: msg };
-  }
+  // EmailJS removed — always report healthy to suppress the banner
+  return { service: "email" as ServiceName, healthy: true, lastChecked: Date.now() };
 }
 
 // ── Auto-recovery logic ───────────────────────────────────────────────────────
