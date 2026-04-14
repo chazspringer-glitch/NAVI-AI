@@ -732,6 +732,7 @@ export default function HomePage() {
   const [showJobFinder,     setShowJobFinder]           = useState(false);
   const [showBlackHistory,  setShowBlackHistory]        = useState(false);
   const [showLeaderboard,   setShowLeaderboard]         = useState(false);
+  const [showFinancialIntro, setShowFinancialIntro]     = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2287,6 +2288,86 @@ export default function HomePage() {
       {/* Black History Panel */}
       {showBlackHistory && (
         <BlackHistoryPanel onClose={() => setShowBlackHistory(false)} />
+      )}
+
+      {/* Financial Literacy Cinematic Intro */}
+      {showFinancialIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          {/* Ambient glow */}
+          <div style={{ position: "absolute", top: "25%", left: "50%", transform: "translate(-50%, -50%)", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "25%", left: "50%", transform: "translateX(-50%)", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,162,39,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 52, marginBottom: 16, filter: "drop-shadow(0 0 20px rgba(52,211,153,0.4))" }}>💰</div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#34d399", marginBottom: 10 }}>
+              NAVI Partner Resource
+            </div>
+
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9", marginBottom: 8, textShadow: "0 0 24px rgba(52,211,153,0.25)" }}>
+              Financial Literacy
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#34d399", marginBottom: 16 }}>
+              Free Community Workshops
+            </div>
+
+            <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+              Learn how to build credit, manage debt, create a budget that works, and plan for your financial future — all completely free through our partner, Excite Credit Union.
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, textAlign: "left" }}>
+              {[
+                { icon: "📊", text: "Budgeting fundamentals" },
+                { icon: "💳", text: "Credit building strategies" },
+                { icon: "🏦", text: "Savings & emergency funds" },
+                { icon: "📈", text: "Financial planning basics" },
+                { icon: "🏠", text: "Home ownership preparation" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)" }}>
+                  <span style={{ fontSize: 14 }}>{icon}</span>
+                  <span style={{ fontSize: 11, color: "#94a3b8" }}>{text}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                window.open("https://outlook.office.com/bookwithme/user/7098123dae93418b8557851eec10e88d@excitecu.org?anonymous&ep=bwmEmailSignature", "_blank");
+                setShowFinancialIntro(false);
+              }}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 12,
+                background: "linear-gradient(135deg, #34d399, #10b981)",
+                border: "none", color: "#02020a",
+                fontSize: 14, fontFamily: "monospace", fontWeight: 700,
+                cursor: "pointer", letterSpacing: "0.06em",
+                boxShadow: "0 0 24px rgba(52,211,153,0.30)",
+                marginBottom: 12,
+              }}
+            >
+              Join Free Workshop →
+            </button>
+
+            <button
+              onClick={() => setShowFinancialIntro(false)}
+              style={{
+                background: "none", border: "none",
+                color: "#475569", fontSize: 10, fontFamily: "monospace",
+                cursor: "pointer",
+              }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Leaderboard Panel */}
@@ -4780,7 +4861,7 @@ export default function HomePage() {
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#f59e0b", textTransform: "uppercase", marginBottom: 10 }}>Financial</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("🚗", "Affordable Auto Finder", "#4ade80", () => { setShowAutoFinder(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
-                  <button onClick={() => window.open("https://outlook.office.com/bookwithme/user/7098123dae93418b8557851eec10e88d@excitecu.org?anonymous&ep=bwmEmailSignature", "_blank")}
+                  <button onClick={() => { setShowFinancialIntro(true); setMenuOpen(false); }}
                     style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(52,211,153,0.03))", border: "1px solid rgba(52,211,153,0.22)", color: "#34d399", fontSize: 12, fontFamily: "monospace", textAlign: "left" }}>
                     <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>💰</span>
                     <div style={{ flex: 1 }}>
