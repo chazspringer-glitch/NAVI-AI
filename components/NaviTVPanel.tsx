@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const CATEGORIES = ["All", "Money", "Housing", "AI", "Motivation", "Business", "Health", "History"];
+const CATEGORIES = ["All", "Truth Room", "Money", "Housing", "AI", "Motivation", "Business", "Health", "History"];
 
 // Starter content — shown when DB is empty or as defaults
 const STARTER_VIDEOS = [
@@ -23,6 +23,7 @@ const STARTER_VIDEOS = [
 const CAT_COLORS: Record<string, string> = {
   Money: "#34d399", Housing: "#00d4ff", AI: "#a855f7", Motivation: "#f59e0b",
   Business: "#C9A227", Health: "#f472b6", History: "#f87171", All: "#64748b",
+  "Truth Room": "#f87171",
 };
 
 interface Video {
@@ -167,6 +168,59 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
         {loading && (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ fontSize: 10, color: "#a855f7" }}>Loading videos...</div>
+          </div>
+        )}
+
+        {/* Truth Room — Featured */}
+        {!loading && (category === "All" || category === "Truth Room") && (
+          <div style={{
+            borderRadius: 14,
+            background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(168,85,247,0.04))",
+            border: "1px solid rgba(239,68,68,0.18)",
+            overflow: "hidden",
+          }}>
+            <div style={{ padding: "12px 14px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f87171" }}>🎥 The Truth Room</div>
+                <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>by QuantumPen</div>
+              </div>
+              <a href="https://youtube.com/@thequantumpen" target="_blank" rel="noopener noreferrer"
+                style={{ padding: "4px 10px", borderRadius: 6, background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.22)", color: "#f87171", fontSize: 9, fontFamily: "monospace", fontWeight: 600, textDecoration: "none" }}>
+                Full Channel ↗
+              </a>
+            </div>
+            <div style={{ padding: "0 14px 14px" }}>
+              <div style={{ borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                <iframe
+                  width="100%" height="200"
+                  src="https://www.youtube.com/embed/Q8mE1aq4GMo"
+                  title="The Truth Room — Featured"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ display: "block" }}
+                />
+              </div>
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+                {[
+                  { label: "QuantumPen — Latest Drop", note: "New content added regularly" },
+                  { label: "Deep History Series", note: "Truth-based education" },
+                ].map((v) => (
+                  <a key={v.label} href="https://youtube.com/@thequantumpen" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(239,68,68,0.10)" }}>
+                      <div style={{ width: 36, height: 26, borderRadius: 4, background: "linear-gradient(135deg, rgba(239,68,68,0.20), rgba(168,85,247,0.20))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, color: "#f87171" }}>▶</span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: "#e2e8f0" }}>{v.label}</div>
+                        <div style={{ fontSize: 8, color: "#475569" }}>{v.note}</div>
+                      </div>
+                      <span style={{ marginLeft: "auto", fontSize: 10, color: "#475569" }}>↗</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

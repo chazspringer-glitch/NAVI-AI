@@ -4976,9 +4976,9 @@ export default function HomePage() {
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
                   {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
-                  <button onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
+                  <button onClick={() => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
-                    <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                    <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>NaviTV + Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
                 </div>
               </div>
@@ -5237,129 +5237,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Truth Room tab ── */}
-        {displayedHubTab === "truth" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-            {/* Section header */}
-            <div style={{
-              padding: "14px 16px", borderRadius: 14,
-              background: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(168,85,247,0.08))",
-              border: "1px solid rgba(239,68,68,0.2)",
-            }}>
-              <div style={{
-                fontSize: 16, fontFamily: "monospace", fontWeight: "bold",
-                color: "#f87171", letterSpacing: "0.04em", marginBottom: 6,
-              }}>
-                The Truth Room 🎥
-              </div>
-              <p style={{
-                fontSize: 11, fontFamily: "monospace", color: "#94a3b8",
-                lineHeight: 1.65, margin: 0,
-              }}>
-                Learn the truth. Understand the history. Elevate your mind.
-              </p>
-            </div>
-
-            {/* Featured video */}
-            <div>
-              <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em",
-                color: "#475569", textTransform: "uppercase", margin: "0 0 8px 0" }}>
-                Featured
-              </p>
-              <div style={{
-                borderRadius: 12, overflow: "hidden",
-                border: "1px solid rgba(239,68,68,0.2)",
-                background: "#000",
-              }}>
-                <iframe
-                  width="100%"
-                  height="300"
-                  src="https://www.youtube.com/embed/Q8mE1aq4GMo"
-                  title="The Truth Room — Featured Video"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ display: "block" }}
-                />
-              </div>
-            </div>
-
-            {/* More from QuantumPen */}
-            <div>
-              <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em",
-                color: "#475569", textTransform: "uppercase", margin: "0 0 8px 0" }}>
-                More from QuantumPen
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { label: "QuantumPen — Latest Drop", note: "New content added regularly" },
-                  { label: "Deep History Series",       note: "Truth-based education series" },
-                ].map((v) => (
-                  <a
-                    key={v.label}
-                    href="https://youtube.com/@thequantumpen"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "11px 14px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                    }}>
-                      {/* Thumbnail placeholder */}
-                      <div style={{
-                        width: 52, height: 38, borderRadius: 6, flexShrink: 0,
-                        background: "linear-gradient(135deg, rgba(239,68,68,0.2), rgba(168,85,247,0.2))",
-                        border: "1px solid rgba(239,68,68,0.2)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
-                          <circle cx="12" cy="12" r="10" fill="rgba(239,68,68,0.3)" />
-                          <polygon points="10,8 16,12 10,16" fill="#f87171" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 11, fontFamily: "monospace", color: "#e2e8f0", marginBottom: 2 }}>
-                          {v.label}
-                        </div>
-                        <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569" }}>
-                          {v.note}
-                        </div>
-                      </div>
-                      <div style={{ marginLeft: "auto", fontSize: 11, color: "#475569" }}>↗</div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Visit Full Channel button */}
-            <a
-              href="https://youtube.com/@thequantumpen"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: "none" }}
-            >
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "12px", borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(239,68,68,0.15), rgba(168,85,247,0.15))",
-                border: "1px solid rgba(239,68,68,0.35)",
-                color: "#f87171", fontSize: 12, fontFamily: "monospace", fontWeight: "bold",
-                letterSpacing: "0.06em",
-              }}>
-                <span style={{ fontSize: 16 }}>▶</span>
-                Visit Full Channel
-              </div>
-            </a>
-
-            {/* Safe area spacer — truth tab */}
-            <div className="safe-bottom" style={{ minHeight: 8 }} />
-          </div>
-        )}
+        {/* ── Truth Room → redirects to NaviTV ── */}
+        {displayedHubTab === "truth" && (() => {
+          setShowNaviTV(true);
+          setHubTab("home");
+          return null;
+        })()}
 
         {/* ── XP & Rewards tab ── */}
         {displayedHubTab === "rewards" && (
