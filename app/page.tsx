@@ -36,6 +36,7 @@ const MyBusinessIntro         = dynamic(() => import("@/components/MyBusinessInt
 const AutoFinderPanel         = dynamic(() => import("@/components/AutoFinderPanel"),         { ssr: false });
 const JobFinderPanel          = dynamic(() => import("@/components/JobFinderPanel"),          { ssr: false });
 const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryPanel"),       { ssr: false });
+const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPanel"),        { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -730,6 +731,7 @@ export default function HomePage() {
   const [showMissionsOpen,  setShowMissionsOpen]        = useState(false);
   const [showJobFinder,     setShowJobFinder]           = useState(false);
   const [showBlackHistory,  setShowBlackHistory]        = useState(false);
+  const [showLeaderboard,   setShowLeaderboard]         = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -1062,6 +1064,16 @@ export default function HomePage() {
   }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auth-gated service selection — redirects to /login if not logged in
+  // XP tracking helper (fire-and-forget)
+  const trackXP = useCallback((action: "chat_message" | "voice_used" | "tool_used" | "onboarding_complete") => {
+    if (!authUserId) return;
+    fetch("/api/xp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: authUserId, display_name: userName || "NAVI User", action }),
+    }).catch(() => {});
+  }, [authUserId, userName]);
+
   const openServiceWithAuth = useCallback((svc: { icon: string; title: string; desc: string; subject: string }) => {
     if (isLoggedIn) {
       setOnboardingService(svc);
@@ -1628,6 +1640,14 @@ export default function HomePage() {
       };
 
       setMessages((prev) => [...prev, petMsg]);
+      // Track XP for chat message
+      if (authUserId) {
+        fetch("/api/xp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: authUserId, display_name: userName || "NAVI User", action: "chat_message" }),
+        }).catch(() => {});
+      }
       if (soundEnabledRef.current) playNaviResponse();
       setMood(currentMood);
 
@@ -2267,6 +2287,11 @@ export default function HomePage() {
       {/* Black History Panel */}
       {showBlackHistory && (
         <BlackHistoryPanel onClose={() => setShowBlackHistory(false)} />
+      )}
+
+      {/* Leaderboard Panel */}
+      {showLeaderboard && (
+        <LeaderboardPanel onClose={() => setShowLeaderboard(false)} />
       )}
 
       {/* Lucky Mode Panel */}
@@ -4218,8 +4243,8 @@ export default function HomePage() {
                     openWithIntroRef.current(id);
                     track("mode_switch", { mode: id });
                     setMenuOpen(false);
-                    if (id === "job") setShowJobFinder(true);
-                    if (id === "history") setShowBlackHistory(true);
+                    if (id === "job") { setShowJobFinder(true); trackXP("tool_used"); }
+                    if (id === "history") { setShowBlackHistory(true); trackXP("tool_used"); }
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
@@ -4770,6 +4795,10 @@ export default function HomePage() {
                   <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🎓</span><span style={{ fontWeight: 600 }}>Academy (STEM · AI Skills)</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                  <button onClick={() => { setShowLeaderboard(true); setMenuOpen(false); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.15)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🏆</span><span style={{ fontWeight: 600 }}>Leaderboard</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
                   <button onClick={() => { showSwitching("XP & Rewards"); track("hub_tab_switch", { tab: "rewards" }); setHubTab("rewards"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)", color: "#c084fc", fontSize: 12, fontFamily: "monospace" }}>
