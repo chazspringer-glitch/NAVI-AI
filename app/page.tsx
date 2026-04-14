@@ -35,6 +35,7 @@ const AdminDashboardPanel     = dynamic(() => import("@/components/AdminDashboar
 const MyBusinessIntro         = dynamic(() => import("@/components/MyBusinessIntro"),         { ssr: false });
 const AutoFinderPanel         = dynamic(() => import("@/components/AutoFinderPanel"),         { ssr: false });
 const JobFinderPanel          = dynamic(() => import("@/components/JobFinderPanel"),          { ssr: false });
+const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryPanel"),       { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -728,6 +729,7 @@ export default function HomePage() {
   const [showAutoFinder,    setShowAutoFinder]          = useState(false);
   const [showMissionsOpen,  setShowMissionsOpen]        = useState(false);
   const [showJobFinder,     setShowJobFinder]           = useState(false);
+  const [showBlackHistory,  setShowBlackHistory]        = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2260,6 +2262,11 @@ export default function HomePage() {
       {/* Job Finder Panel */}
       {showJobFinder && (
         <JobFinderPanel onClose={() => setShowJobFinder(false)} />
+      )}
+
+      {/* Black History Panel */}
+      {showBlackHistory && (
+        <BlackHistoryPanel onClose={() => setShowBlackHistory(false)} />
       )}
 
       {/* Lucky Mode Panel */}
@@ -4156,6 +4163,7 @@ export default function HomePage() {
                     track("mode_switch", { mode: id });
                     setMenuOpen(false);
                     if (id === "job") setShowJobFinder(true);
+                    if (id === "history") setShowBlackHistory(true);
                   }}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
