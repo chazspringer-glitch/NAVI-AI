@@ -40,12 +40,13 @@ const CONTENT_QUEUE = [
   { client: "UrbanRoots Co.",     type: "Video Post", platform: "TikTok",    due: "Apr 15",   status: "Draft"       },
 ];
 
-type AdminTab = "dashboard" | "clients" | "orders" | "content" | "analytics" | "settings";
+type AdminTab = "dashboard" | "clients" | "orders" | "food" | "content" | "analytics" | "settings";
 
 const ADMIN_TABS: { key: AdminTab; label: string; icon: string }[] = [
   { key: "dashboard", label: "Dashboard", icon: "📊" },
   { key: "clients",   label: "Clients",   icon: "👥" },
   { key: "orders",    label: "Orders",    icon: "📋" },
+  { key: "food",      label: "Food",      icon: "🥬" },
   { key: "content",   label: "Content",   icon: "📝" },
   { key: "analytics", label: "Analytics", icon: "📈" },
   { key: "settings",  label: "Settings",  icon: "⚙️" },
@@ -116,6 +117,23 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
   }, []);
 
   useEffect(() => { loadWorkOrders(); }, [loadWorkOrders]);
+
+  // ── Food orders state ──────────────────────────────────────────────────
+  interface FoodOrderRow { id: string; name: string; phone: string; bundle_name: string; quantity: number; notes: string; status: string; created_at: string; }
+  const [foodOrders, setFoodOrders] = useState<FoodOrderRow[]>([]);
+  const [foodLoading, setFoodLoading] = useState(false);
+
+  const loadFoodOrders = useCallback(async () => {
+    setFoodLoading(true);
+    try {
+      const res = await fetch("/api/food-orders");
+      const json = await res.json();
+      if (Array.isArray(json.orders)) setFoodOrders(json.orders);
+    } catch { /* silent */ }
+    finally { setFoodLoading(false); }
+  }, []);
+
+  useEffect(() => { loadFoodOrders(); }, [loadFoodOrders]);
 
   // ── Supabase clients state ──────────────────────────────────────────────
   const [dbClients, setDbClients] = useState<SupabaseClient[]>([]);
@@ -725,6 +743,50 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Food Orders ──────────────────────────────────────────────── */}
+      {tab === "food" && (
+        <div style={{
+          borderRadius: 12,
+          background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+          border: "1px solid rgba(52,211,153,0.10)",
+          overflow: "hidden",
+        }}>
+          <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#34d399" }}>Food Orders</div>
+              <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>{foodOrders.length} total</div>
+            </div>
+            {foodLoading && <div style={{ fontSize: 9, color: "#34d399" }}>Loading...</div>}
+          </div>
+          {foodOrders.length === 0 && !foodLoading && (
+            <div style={{ padding: "20px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 16, marginBottom: 6 }}>🥬</div>
+              <div style={{ fontSize: 10, color: "#94a3b8" }}>No food orders yet</div>
+            </div>
+          )}
+          {foodOrders.map((o, i) => (
+            <div key={o.id} style={{
+              padding: "12px 16px",
+              borderBottom: i < foodOrders.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{o.name}</div>
+                <span style={{
+                  padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+                  color: o.status === "new" ? "#34d399" : o.status === "confirmed" ? "#C9A227" : "#a855f7",
+                  background: o.status === "new" ? "rgba(52,211,153,0.12)" : o.status === "confirmed" ? "rgba(201,162,39,0.12)" : "rgba(168,85,247,0.12)",
+                  border: `1px solid ${o.status === "new" ? "rgba(52,211,153,0.25)" : o.status === "confirmed" ? "rgba(201,162,39,0.25)" : "rgba(168,85,247,0.25)"}`,
+                }}>{o.status.toUpperCase()}</span>
+              </div>
+              <div style={{ fontSize: 10, color: "#34d399", fontWeight: 600, marginBottom: 2 }}>{o.bundle_name} x{o.quantity}</div>
+              <div style={{ fontSize: 9, color: "#64748b" }}>📞 {o.phone}</div>
+              {o.notes && <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Notes: {o.notes}</div>}
+              <div style={{ fontSize: 8, color: "#334155", marginTop: 3 }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+            </div>
+          ))}
         </div>
       )}
 

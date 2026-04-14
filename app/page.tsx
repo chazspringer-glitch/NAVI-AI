@@ -37,6 +37,7 @@ const AutoFinderPanel         = dynamic(() => import("@/components/AutoFinderPan
 const JobFinderPanel          = dynamic(() => import("@/components/JobFinderPanel"),          { ssr: false });
 const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryPanel"),       { ssr: false });
 const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPanel"),        { ssr: false });
+const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -733,6 +734,7 @@ export default function HomePage() {
   const [showBlackHistory,  setShowBlackHistory]        = useState(false);
   const [showLeaderboard,   setShowLeaderboard]         = useState(false);
   const [showFinancialIntro, setShowFinancialIntro]     = useState(false);
+  const [showFreshFood,      setShowFreshFood]          = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -2368,6 +2370,11 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Fresh Food Panel */}
+      {showFreshFood && (
+        <FreshFoodPanel onClose={() => setShowFreshFood(false)} />
       )}
 
       {/* Leaderboard Panel */}
@@ -4849,6 +4856,7 @@ export default function HomePage() {
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFood(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
