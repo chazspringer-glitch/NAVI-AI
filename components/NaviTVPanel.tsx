@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const CATEGORIES = ["All", "Truth Room", "Money", "Housing", "AI", "Motivation", "Business", "Health", "History"];
+const CATEGORIES = ["All", "Money", "Housing", "AI", "Motivation", "Business", "Health", "History"];
 
 // Starter content — shown when DB is empty or as defaults
 const STARTER_VIDEOS = [
@@ -23,7 +23,6 @@ const STARTER_VIDEOS = [
 const CAT_COLORS: Record<string, string> = {
   Money: "#34d399", Housing: "#00d4ff", AI: "#a855f7", Motivation: "#f59e0b",
   Business: "#C9A227", Health: "#f472b6", History: "#f87171", All: "#64748b",
-  "Truth Room": "#f87171",
 };
 
 interface Video {
@@ -172,7 +171,7 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
         )}
 
         {/* Truth Room — Featured */}
-        {!loading && (category === "All" || category === "Truth Room") && (
+        {!loading && category === "All" && (
           <div style={{
             borderRadius: 14,
             background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(168,85,247,0.04))",

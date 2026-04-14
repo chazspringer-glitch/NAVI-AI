@@ -4978,7 +4978,7 @@ export default function HomePage() {
                   {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
-                    <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>NaviTV + Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                    <span style={{ fontSize: 16 }}>📺</span><span style={{ fontWeight: 600 }}>NaviTV</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
                 </div>
               </div>
