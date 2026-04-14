@@ -39,6 +39,7 @@ const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryP
 const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPanel"),        { ssr: false });
 const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
+const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -738,6 +739,7 @@ export default function HomePage() {
   const [showFreshFood,      setShowFreshFood]          = useState(false);
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
+  const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showNaviTVIntro,    setShowNaviTVIntro]        = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
@@ -2374,6 +2376,11 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Why NAVI Exists */}
+      {showWhyNavi && (
+        <WhyNaviPanel onClose={() => setShowWhyNavi(false)} />
       )}
 
       {/* NaviTV Cinematic Intro */}
@@ -4946,6 +4953,23 @@ export default function HomePage() {
           const proLocked = !isPro && !isAdmin;
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
+
+              {/* Why NAVI Exists */}
+              <button onClick={() => { setShowWhyNavi(true); setMenuOpen(false); }}
+                style={{
+                  width: "100%", padding: "16px", borderRadius: 14, cursor: "pointer",
+                  background: "linear-gradient(135deg, rgba(201,162,39,0.08), rgba(168,85,247,0.04))",
+                  border: "1px solid rgba(201,162,39,0.22)",
+                  display: "flex", alignItems: "center", gap: 12,
+                  textAlign: "left",
+                }}>
+                <span style={{ fontSize: 24, filter: "drop-shadow(0 0 8px rgba(201,162,39,0.3))" }}>🤖</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A227", marginBottom: 2, fontFamily: "monospace" }}>Why NAVI Exists</div>
+                  <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.4, fontFamily: "monospace" }}>The story, the mission, and the movement</div>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 12, color: "#475569", opacity: 0.5 }}>→</span>
+              </button>
 
               {/* Business */}
               <div>
