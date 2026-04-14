@@ -176,6 +176,11 @@ export default function HousingPanel({ onClose }) {
   const [location,  setLocation]  = useState("");
   const [maxRent,   setMaxRent]   = useState(1200);
   const [bedrooms,  setBedrooms]  = useState("any");
+  const [creditScore, setCreditScore] = useState("fair");
+  const [income,    setIncome]    = useState("");
+  const [goalType,  setGoalType]  = useState("renting");
+  const [timeline,  setTimeline]  = useState("asap");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [listings,  setListings]  = useState(null);
   const [error,     setError]     = useState(null);
@@ -392,6 +397,62 @@ export default function HousingPanel({ onClose }) {
           </div>
         </div>
 
+        {/* Advanced toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: 10, fontFamily: "monospace", color: "#475569",
+            padding: "2px 0", textAlign: "left",
+          }}
+        >
+          {showAdvanced ? "▼" : "▸"} {showAdvanced ? "Less options" : "More options (credit, income, buy vs rent)"}
+        </button>
+
+        {showAdvanced && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", marginBottom: 5, letterSpacing: "0.07em", textTransform: "uppercase" }}>Credit Score</div>
+                <select value={creditScore} onChange={(e) => setCreditScore(e.target.value)} disabled={loading}
+                  style={{ background: "transparent", border: "none", outline: "none", color: "#e2e8f0", fontFamily: "monospace", fontSize: 12, cursor: "pointer", width: "100%" }}>
+                  <option value="poor">Poor (below 580)</option>
+                  <option value="fair">Fair (580–669)</option>
+                  <option value="good">Good (670–739)</option>
+                  <option value="excellent">Excellent (740+)</option>
+                  <option value="unknown">Not sure</option>
+                </select>
+              </div>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", marginBottom: 5, letterSpacing: "0.07em", textTransform: "uppercase" }}>Monthly Income</div>
+                <input value={income} onChange={(e) => setIncome(e.target.value)} placeholder="e.g. 3000" disabled={loading}
+                  style={{ background: "transparent", border: "none", outline: "none", fontFamily: "monospace", fontSize: 12, color: "#e2e8f0", width: "100%" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", marginBottom: 5, letterSpacing: "0.07em", textTransform: "uppercase" }}>Goal</div>
+                <select value={goalType} onChange={(e) => setGoalType(e.target.value)} disabled={loading}
+                  style={{ background: "transparent", border: "none", outline: "none", color: "#e2e8f0", fontFamily: "monospace", fontSize: 12, cursor: "pointer", width: "100%" }}>
+                  <option value="renting">Renting</option>
+                  <option value="buying">Buying a home</option>
+                  <option value="exploring">Just exploring</option>
+                </select>
+              </div>
+              <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: "#475569", marginBottom: 5, letterSpacing: "0.07em", textTransform: "uppercase" }}>Timeline</div>
+                <select value={timeline} onChange={(e) => setTimeline(e.target.value)} disabled={loading}
+                  style={{ background: "transparent", border: "none", outline: "none", color: "#e2e8f0", fontFamily: "monospace", fontSize: 12, cursor: "pointer", width: "100%" }}>
+                  <option value="asap">ASAP</option>
+                  <option value="3months">Within 3 months</option>
+                  <option value="exploring">Just exploring</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Submit */}
         <button
           type="submit"
@@ -550,6 +611,99 @@ export default function HousingPanel({ onClose }) {
                 ⚠ Results are AI-generated suggestions based on real program types. Always verify availability and contact information directly with each resource before applying or sending any money.
               </p>
             </div>
+            {/* Real listing search links */}
+            <div style={{ background: `${ACCENT}08`, border: `1px solid ${ACCENT}20`, borderRadius: 14, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: ACCENT, fontWeight: "bold", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                🔗 Search Real Listings
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  { label: "Zillow Rentals", url: `https://www.zillow.com/homes/for_rent/${encodeURIComponent(location.trim())}_rb/0-${maxRent}_mp/` },
+                  { label: "Apartments.com", url: `https://www.apartments.com/${encodeURIComponent(location.trim().toLowerCase().replace(/\s+/g, "-"))}/max-${maxRent}-monthly/` },
+                  { label: "AffordableHousing.com", url: `https://affordablehousingonline.com/housing-search/${encodeURIComponent(location.trim())}` },
+                  { label: "HUD Resources", url: "https://www.hud.gov/topics/rental_assistance" },
+                ].map(({ label, url }) => (
+                  <button key={label} onClick={() => window.open(url, "_blank")} style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, cursor: "pointer",
+                    background: "rgba(255,255,255,0.03)", border: `1px solid ${ACCENT}18`, color: ACCENT, fontSize: 11, fontFamily: "monospace",
+                  }}>
+                    <span style={{ fontWeight: 600 }}>{label}</span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>↗</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Home Ownership Roadmap — only if buying */}
+            {goalType === "buying" && (
+              <div style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", borderRadius: 14, padding: "14px 16px" }}>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "#00d4ff", fontWeight: "bold", marginBottom: 12, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  🏡 Your Home Ownership Roadmap
+                </div>
+                {[
+                  { step: "1", title: "Improve Your Credit", desc: creditScore === "poor" || creditScore === "fair" ? "Focus on paying down debt and disputing errors. Aim for 620+ for FHA loans." : "Your credit is solid. Keep utilization below 30%.", color: "#f59e0b" },
+                  { step: "2", title: "Save for Down Payment", desc: income ? `With $${income}/mo income, aim to save $${Math.round(parseInt(income) * 3.5).toLocaleString()} (3.5% FHA). That's ~${Math.round((parseInt(income) * 3.5) / parseInt(income))} months of saving.` : "Save 3.5% for FHA or 5-20% for conventional. Every dollar counts.", color: "#34d399" },
+                  { step: "3", title: "Get Pre-Approved", desc: "Talk to a lender BEFORE looking at homes. This shows sellers you're serious and locks your rate.", color: "#00d4ff" },
+                  { step: "4", title: "Know Your Loan Options", desc: creditScore === "poor" || creditScore === "fair" ? "FHA loans accept 580+ credit. USDA loans have no down payment for rural areas." : "You may qualify for conventional loans with better rates. Also check VA if eligible.", color: "#a855f7" },
+                  { step: "5", title: "Find & Inspect", desc: "Never skip the home inspection ($300-500). It can save you from $10K+ in hidden problems.", color: "#10b981" },
+                ].map(({ step, title, desc, color }) => (
+                  <div key={step} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${color}18`, border: `1px solid ${color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color, flexShrink: 0 }}>{step}</div>
+                    <div>
+                      <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: "#e2e8f0", marginBottom: 2 }}>{title}</div>
+                      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94a3b8", lineHeight: 1.55 }}>{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* What to Avoid */}
+            <div style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 14, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#f87171", fontWeight: "bold", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                ⚠️ What to Avoid
+              </div>
+              {[
+                "Never pay a deposit or application fee without seeing the unit in person",
+                "Avoid listings that ask for payment via Cash App, Zelle, or wire transfer only",
+                "If the rent is way below market rate with no explanation — it's likely a scam",
+                "Don't sign a lease without reading every page, especially early termination clauses",
+                goalType === "buying" ? "Never waive the home inspection to 'speed up' the process" : "Be cautious of landlords who won't provide a written lease agreement",
+              ].map((w, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 10, fontFamily: "monospace", color: "#fca5a5", lineHeight: 1.55 }}>
+                  <span style={{ color: "#f87171", flexShrink: 0 }}>✕</span>
+                  <span>{w}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Local Support Resources */}
+            <div style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)", borderRadius: 14, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#a855f7", fontWeight: "bold", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                🤝 Local Support
+              </div>
+              {[
+                { icon: "📞", label: "Call 211", desc: "Free helpline for emergency housing, shelter, and rental assistance", action: "tel:211" },
+                { icon: "🏛️", label: "Find Your Local PHA", desc: "Public Housing Authority — apply for Section 8 vouchers", action: "https://www.hud.gov/program_offices/public_indian_housing/pha/contacts" },
+                { icon: "💰", label: "Emergency Rental Assistance", desc: "Federal funds to help cover rent if you're behind", action: "https://home.treasury.gov/policy-issues/coronavirus/assistance-for-state-local-and-tribal-governments/emergency-rental-assistance-program" },
+                { icon: "🏠", label: "Habitat for Humanity", desc: "Affordable home ownership programs for qualifying families", action: "https://www.habitat.org/housing-help" },
+                { icon: "📋", label: "HUD Counseling", desc: "Free housing counselors near you — no strings attached", action: "https://www.hud.gov/findacounselor" },
+              ].map(({ icon, label, desc, action }) => (
+                <button key={label} onClick={() => window.open(action, "_blank")} style={{
+                  width: "100%", display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: 10, cursor: "pointer",
+                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(168,85,247,0.10)", marginBottom: 4,
+                  textAlign: "left", color: "#e2e8f0", fontFamily: "monospace",
+                }}>
+                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#c4b5fd" }}>{label}</div>
+                    <div style={{ fontSize: 9, color: "#64748b", marginTop: 1, lineHeight: 1.4 }}>{desc}</div>
+                  </div>
+                  <span style={{ marginLeft: "auto", fontSize: 10, color: "#64748b", flexShrink: 0 }}>↗</span>
+                </button>
+              ))}
+            </div>
+
             <div style={{ height: 24 }} />
           </div>
         )}
