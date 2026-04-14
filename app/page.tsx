@@ -725,6 +725,7 @@ export default function HomePage() {
   const [showAdminDash,     setShowAdminDash]            = useState(false);
   const [showBusinessIntro, setShowBusinessIntro]       = useState(false);
   const [showAutoFinder,    setShowAutoFinder]          = useState(false);
+  const [showMissionsOpen,  setShowMissionsOpen]        = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
   const [accessCode,        setAccessCode]              = useState("");
@@ -4130,69 +4131,18 @@ export default function HomePage() {
         {/* ── Home tab (settings / modes) ── */}
         {displayedHubTab === "home" && <>
 
-        {/* Daily Missions */}
-        {missions.length > 0 && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", margin: 0 }}>
-                Daily Missions
-              </p>
-              {streak >= 2 && (
-                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f97316" }}>🔥 {streak}-day streak</span>
-              )}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {missions.map((m) => (
-                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 10,
-                  background: m.completed ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.03)",
-                  border: m.completed ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(255,255,255,0.06)" }}>
-                  <span style={{ fontSize: 15, flexShrink: 0 }}>{m.emoji}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: m.completed ? 0 : 3 }}>
-                      <span style={{ fontSize: 11, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#94a3b8",
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {m.label}
-                      </span>
-                      {m.completed && <span style={{ fontSize: 10, color: "#4ade80", flexShrink: 0 }}>✓</span>}
-                    </div>
-                    {!m.completed && (
-                      <div style={{ width: "100%", height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                        <div style={{ width: `${Math.min(100, Math.round((m.progress / m.target) * 100))}%`,
-                          height: "100%", borderRadius: 2,
-                          background: "linear-gradient(90deg, #00d4ff80, #a855f780)",
-                          transition: "width 0.4s ease" }} />
-                      </div>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 9, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#334155",
-                    flexShrink: 0 }}>
-                    +{m.xpReward}xp
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* App mode selection */}
+        {/* ── 1. What do you need help with? ────────────────────────────── */}
         <div>
-          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-            Mode
+          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+            What do you need help with?
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {APP_MODES.map(({ id, label, icon }) => {
+            {APP_MODES.filter(({ id }) => !PRO_GATE_MODES[id]).map(({ id, label, icon }) => {
               const active = appMode === id;
-              const suggested = !active && AREA_MODE_SUGGESTION[worldAreaIdx] === id;
-              const locked = !!PRO_GATE_MODES[id] && !isPro && !isAdmin;
               return (
                 <button
                   key={id}
                   onClick={() => {
-                    if (locked) {
-                      setProGateFeature(PRO_GATE_MODES[id]!);
-                      return;
-                    }
-                    console.log(`[NAVI] ${label} mode clicked`);
                     showSwitching(label);
                     switchMode(id);
                     openWithIntroRef.current(id);
@@ -4202,41 +4152,162 @@ export default function HomePage() {
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
                     padding: "10px 12px", borderRadius: 12,
-                    background: active
-                      ? "rgba(168,85,247,0.15)"
-                      : suggested
-                        ? "rgba(168,85,247,0.07)"
-                        : locked
-                          ? "rgba(245,200,66,0.04)"
-                          : "rgba(255,255,255,0.04)",
-                    border: active
-                      ? "1px solid rgba(168,85,247,0.45)"
-                      : suggested
-                        ? "1px solid rgba(168,85,247,0.3)"
-                        : locked
-                          ? "1px solid rgba(245,200,66,0.15)"
-                          : "1px solid rgba(255,255,255,0.08)",
-                    color: active ? "#c084fc" : locked ? "rgba(245,200,66,0.45)" : suggested ? "rgba(192,132,252,0.8)" : "#94a3b8",
+                    background: active ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.04)",
+                    border: active ? "1px solid rgba(168,85,247,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                    color: active ? "#c084fc" : "#94a3b8",
                     fontSize: 13, fontFamily: "monospace", cursor: "pointer",
-                    boxShadow: suggested ? "0 0 10px rgba(168,85,247,0.12)" : "none",
-                    opacity: locked ? 0.65 : 1,
                   }}
                 >
-                  <span>{locked ? "🔒" : icon}</span>
+                  <span>{icon}</span>
                   <span>{label}</span>
-                  {suggested && !locked && <span style={{ fontSize: 7, opacity: 0.6, marginLeft: "auto" }}>●</span>}
-                  {locked && <span style={{ fontSize: 7, fontFamily: "monospace", color: "rgba(245,200,66,0.5)", marginLeft: "auto", letterSpacing: "0.1em" }}>PRO</span>}
                 </button>
               );
             })}
-
           </div>
         </div>
 
-        {/* Mentor style */}
+        {/* ── 2. Programs ───────────────────────────────────────────────── */}
         <div>
-          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-            Style
+          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+            Programs
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {APP_MODES.filter(({ id }) => !!PRO_GATE_MODES[id]).map(({ id, label, icon }) => {
+              const locked = !isPro && !isAdmin;
+              return (
+                <button
+                  key={id}
+                  onClick={() => {
+                    if (locked) { setProGateFeature(PRO_GATE_MODES[id]!); return; }
+                    showSwitching(label);
+                    switchMode(id);
+                    openWithIntroRef.current(id);
+                    track("mode_switch", { mode: id });
+                    setMenuOpen(false);
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                    background: locked ? "rgba(245,200,66,0.04)" : "rgba(168,85,247,0.06)",
+                    border: locked ? "1px solid rgba(245,200,66,0.15)" : "1px solid rgba(168,85,247,0.22)",
+                    color: locked ? "rgba(245,200,66,0.5)" : "#a78bfa",
+                    fontSize: 12, fontFamily: "monospace",
+                    opacity: locked ? 0.65 : 1,
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{locked ? "🔒" : icon}</span>
+                  <span style={{ fontWeight: 600 }}>{label}</span>
+                  {locked && <span style={{ marginLeft: "auto", fontSize: 7, color: "rgba(245,200,66,0.5)", letterSpacing: "0.1em" }}>PRO</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── 3. Quick Tools ────────────────────────────────────────────── */}
+        <div>
+          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+            Quick Tools
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {[
+              { icon: "📄", label: "Resume", color: "#4ade80", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Resume Builder"); return; } setShowResumeBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+              { icon: "🚀", label: "Biz Plan", color: "#f59e0b", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Business Plan Builder"); return; } setShowBizPlanBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+              { icon: "📍", label: "Local Help", color: "#86efac", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
+              { icon: "🚗", label: "Auto Finder", color: "#4ade80", onClick: () => { setShowAutoFinder(true); setMenuOpen(false); }, locked: false },
+            ].map(({ icon, label, color, onClick, locked }) => (
+              <button key={label} onClick={onClick} style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "9px 4px", borderRadius: 10, cursor: "pointer",
+                fontSize: 11, fontFamily: "monospace",
+                background: locked ? "rgba(245,200,66,0.04)" : `${color}0a`,
+                border: locked ? "1px solid rgba(245,200,66,0.15)" : `1px solid ${color}30`,
+                color: locked ? "rgba(245,200,66,0.5)" : color,
+                opacity: locked ? 0.65 : 1,
+              }}>
+                <span>{locked ? "🔒" : icon}</span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { showSwitching("Explore"); track("hub_tab_switch", { tab: "explore" }); setHubTab("explore"); }}
+            style={{
+              width: "100%", marginTop: 8, padding: "8px", borderRadius: 8,
+              background: "rgba(168,85,247,0.04)",
+              border: "1px solid rgba(168,85,247,0.15)",
+              color: "#a855f7", fontSize: 10, fontFamily: "monospace",
+              fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}
+          >
+            🧭 View All Tools
+          </button>
+        </div>
+
+        {/* ── 4. Daily Missions (collapsible) ───────────────────────────── */}
+        {missions.length > 0 && (() => {
+          const [missionsOpen, setMissionsOpen] = [showMissionsOpen, setShowMissionsOpen];
+          return (
+            <div>
+              <button
+                onClick={() => setMissionsOpen(!missionsOpen)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", padding: 0, marginBottom: missionsOpen ? 8 : 0,
+                  background: "none", border: "none", cursor: "pointer",
+                }}
+              >
+                <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", margin: 0 }}>
+                  Daily Missions
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {streak >= 2 && (
+                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f97316" }}>🔥 {streak}</span>
+                  )}
+                  <span style={{ fontSize: 10, color: "#475569", transition: "transform 0.2s", transform: missionsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+                </div>
+              </button>
+              {missionsOpen && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {missions.map((m) => (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 10,
+                      background: m.completed ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.03)",
+                      border: m.completed ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(255,255,255,0.06)" }}>
+                      <span style={{ fontSize: 15, flexShrink: 0 }}>{m.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: m.completed ? 0 : 3 }}>
+                          <span style={{ fontSize: 11, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#94a3b8",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {m.label}
+                          </span>
+                          {m.completed && <span style={{ fontSize: 10, color: "#4ade80", flexShrink: 0 }}>✓</span>}
+                        </div>
+                        {!m.completed && (
+                          <div style={{ width: "100%", height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                            <div style={{ width: `${Math.min(100, Math.round((m.progress / m.target) * 100))}%`,
+                              height: "100%", borderRadius: 2,
+                              background: "linear-gradient(90deg, #00d4ff80, #a855f780)",
+                              transition: "width 0.4s ease" }} />
+                          </div>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 9, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#334155",
+                        flexShrink: 0 }}>
+                        +{m.xpReward}xp
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── 5. How NAVI responds ──────────────────────────────────────── */}
+        <div>
+          <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
+            How NAVI responds
           </p>
           <div style={{ display: "flex", gap: 8 }}>
             {MODES.map(({ id, label, icon }) => (
@@ -4552,196 +4623,107 @@ export default function HomePage() {
         </>}{/* end settings tab */}
 
         {/* ── Explore tab ── */}
-        {displayedHubTab === "explore" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 8 }}>
+        {displayedHubTab === "explore" && (() => {
+          const toolBtn = (icon: string, label: string, color: string, onClick: () => void, locked: boolean) => (
+            <button key={label} onClick={onClick} style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+              background: locked ? "rgba(245,200,66,0.04)" : `${color}0a`,
+              border: locked ? "1px solid rgba(245,200,66,0.15)" : `1px solid ${color}30`,
+              color: locked ? "rgba(245,200,66,0.5)" : color,
+              fontSize: 12, fontFamily: "monospace", opacity: locked ? 0.65 : 1,
+            }}>
+              <span style={{ fontSize: 16 }}>{locked ? "🔒" : icon}</span>
+              <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{label}</span>
+              {locked ? <span style={{ marginLeft: "auto", fontSize: 7, color: "rgba(245,200,66,0.5)", letterSpacing: "0.1em" }}>PRO</span>
+                      : <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>}
+            </button>
+          );
+          const proLocked = !isPro && !isAdmin;
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
 
-            {/* Section: Tools & Resources */}
-            <div>
-              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-                Tools &amp; Resources
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {[
-                  { icon: "📄", label: "Resume Builder", color: "#4ade80", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Resume Builder"); return; } setShowResumeBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
-                  { icon: "🚀", label: "Business Plan Builder", color: "#f59e0b", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Business Plan Builder"); return; } setShowBizPlanBuilder(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
-                  { icon: "📍", label: "Local Help", color: "#86efac", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
-                  { icon: "⚖️", label: "Legal Rights Guide", color: "#60a5fa", onClick: () => { setShowLegalRights(true); setMenuOpen(false); }, locked: false },
-                  { icon: "💛", label: "Family Support Finder", color: "#f59e0b", onClick: () => { setShowFamilySupport(true); setMenuOpen(false); }, locked: false },
-                  { icon: "📚", label: "Homework Helper", color: "#00d4ff", onClick: () => { if (!isPro && !isAdmin) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, locked: !isPro && !isAdmin },
-                  { icon: "🚗", label: "Affordable Auto Finder", color: "#4ade80", onClick: () => { setShowAutoFinder(true); setMenuOpen(false); }, locked: false },
-                ].map(({ icon, label, color, onClick, locked }) => (
-                  <button key={label} onClick={onClick} style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: locked ? "rgba(245,200,66,0.04)" : `${color}0a`,
-                    border: locked ? "1px solid rgba(245,200,66,0.15)" : `1px solid ${color}30`,
-                    color: locked ? "rgba(245,200,66,0.5)" : color,
-                    fontSize: 12, fontFamily: "monospace",
-                    opacity: locked ? 0.65 : 1,
-                  }}>
-                    <span style={{ fontSize: 16 }}>{locked ? "🔒" : icon}</span>
-                    <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{label}</span>
-                    {locked && <span style={{ marginLeft: "auto", fontSize: 7, color: "rgba(245,200,66,0.5)", letterSpacing: "0.1em" }}>PRO</span>}
-                    {!locked && <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>}
+              {/* Business */}
+              <div>
+                <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#C9A227", textTransform: "uppercase", marginBottom: 10 }}>Business</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {toolBtn("📄", "Resume Builder", "#4ade80", () => { if (proLocked) { setProGateFeature("Resume Builder"); return; } setShowResumeBuilder(true); setMenuOpen(false); }, proLocked)}
+                  {toolBtn("🚀", "Business Plan Builder", "#f59e0b", () => { if (proLocked) { setProGateFeature("Business Plan Builder"); return; } setShowBizPlanBuilder(true); setMenuOpen(false); }, proLocked)}
+                  <button onClick={() => { if (!foundersIntroSeen) { setShowFoundersIntro(true); } else { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); setHubTab("founders"); } }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.22)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>💼</span><span style={{ fontWeight: 600 }}>Founders — Work With Us</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
-                ))}
+                  <button onClick={() => { showSwitching("Podcast"); track("hub_tab_switch", { tab: "podcast" }); setHubTab("podcast"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.18)", color: "#a855f7", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🎙️</span><span style={{ fontWeight: 600 }}>Podcast Partnership</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                  <button onClick={() => { showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); setHubTab("partners"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.03)", border: "1px solid rgba(201,162,39,0.12)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🤝</span><span style={{ fontWeight: 600 }}>Partners</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Section: Opportunities */}
-            <div>
-              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-                Opportunities
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <button
-                  onClick={() => {
-                    if (!foundersIntroSeen) { setShowFoundersIntro(true); }
-                    else { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); setHubTab("founders"); }
-                  }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "linear-gradient(135deg, rgba(201,162,39,0.08), rgba(245,200,66,0.04))",
-                    border: "1px solid rgba(201,162,39,0.25)",
-                    color: "#C9A227", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>💼</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Founders — Work With Us</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
-                <button
-                  onClick={() => { showSwitching("Podcast"); track("hub_tab_switch", { tab: "podcast" }); setHubTab("podcast"); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "linear-gradient(135deg, rgba(168,85,247,0.08), rgba(244,114,182,0.04))",
-                    border: "1px solid rgba(168,85,247,0.25)",
-                    color: "#a855f7", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>🎙️</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Podcast — Creator Partnership</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
-                <button
-                  onClick={() => { showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); setHubTab("partners"); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "rgba(201,162,39,0.04)",
-                    border: "1px solid rgba(201,162,39,0.15)",
-                    color: "#C9A227", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>🤝</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Partners</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
+              {/* Life */}
+              <div>
+                <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#34d399", textTransform: "uppercase", marginBottom: 10 }}>Life</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
+                  {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
+                  {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
+                  <button onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🎥</span><span style={{ fontWeight: 600 }}>Truth Room</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Section: Premium */}
-            <div>
-              <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.28em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
-                Premium
-              </p>
+              {/* Financial */}
+              <div>
+                <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#f59e0b", textTransform: "uppercase", marginBottom: 10 }}>Financial</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {toolBtn("🚗", "Affordable Auto Finder", "#4ade80", () => { setShowAutoFinder(true); setMenuOpen(false); }, false)}
+                  <button onClick={() => { setShowLuckyMode(true); setMenuOpen(false); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.04))", border: "1px solid rgba(245,158,11,0.22)", color: "#f59e0b", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16, filter: "drop-shadow(0 0 4px rgba(245,158,11,0.5))" }}>✦</span><span style={{ fontWeight: 600 }}>Lucky Mode</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Learning */}
+              <div>
+                <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#00d4ff", textTransform: "uppercase", marginBottom: 10 }}>Learning</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {toolBtn("📚", "Homework Helper", "#00d4ff", () => { if (proLocked) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, proLocked)}
+                  <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🎓</span><span style={{ fontWeight: 600 }}>Academy (STEM · AI Skills)</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                  <button onClick={() => { showSwitching("XP & Rewards"); track("hub_tab_switch", { tab: "rewards" }); setHubTab("rewards"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)", color: "#c084fc", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🎮</span><span style={{ fontWeight: 600 }}>Rewards &amp; XP</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* PRO + Hands-Free */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <button
-                  onClick={() => { setShowLuckyMode(true); setMenuOpen(false); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(124,58,237,0.06))",
-                    border: "1px solid rgba(245,158,11,0.28)",
-                    color: "#f59e0b", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16, filter: "drop-shadow(0 0 4px rgba(245,158,11,0.5))" }}>✦</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Lucky Mode</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
-                <button
-                  onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "rgba(0,212,255,0.04)",
-                    border: "1px solid rgba(0,212,255,0.18)",
-                    color: "#00d4ff", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>🎓</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Academy (STEM · AI Skills)</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
-                <button
-                  onClick={() => { showSwitching("XP & Rewards"); track("hub_tab_switch", { tab: "rewards" }); setHubTab("rewards"); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: "rgba(168,85,247,0.04)",
-                    border: "1px solid rgba(168,85,247,0.18)",
-                    color: "#c084fc", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>🎮</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Rewards &amp; XP</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                </button>
-                <button
-                  onClick={() => { showSwitching("NAVI PRO"); track("hub_tab_switch", { tab: "subscription" }); setHubTab("subscription"); }}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10,
-                    padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                    background: isPro ? "rgba(245,200,66,0.06)" : "rgba(255,255,255,0.03)",
-                    border: isPro ? "1px solid rgba(245,200,66,0.25)" : "1px solid rgba(245,200,66,0.15)",
-                    color: isPro ? "#f5c842" : "rgba(245,200,66,0.6)", fontSize: 12, fontFamily: "monospace",
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>⭐</span>
-                  <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{isPro ? "NAVI PRO (Active)" : "Upgrade to PRO"}</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                <button onClick={() => { showSwitching("NAVI PRO"); track("hub_tab_switch", { tab: "subscription" }); setHubTab("subscription"); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: isPro ? "rgba(245,200,66,0.06)" : "rgba(255,255,255,0.03)", border: isPro ? "1px solid rgba(245,200,66,0.25)" : "1px solid rgba(245,200,66,0.15)", color: isPro ? "#f5c842" : "rgba(245,200,66,0.6)", fontSize: 12, fontFamily: "monospace" }}>
+                  <span style={{ fontSize: 16 }}>⭐</span><span style={{ fontWeight: 600 }}>{isPro ? "NAVI PRO (Active)" : "Upgrade to PRO"}</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                 </button>
                 {(isPro || isAdmin) && voiceEnabled && (
-                  <button
-                    onClick={toggleHandsFree}
-                    style={{
-                      width: "100%", display: "flex", alignItems: "center", gap: 10,
-                      padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                      background: handsFreeMode ? "rgba(0,212,255,0.10)" : "rgba(255,255,255,0.04)",
-                      border: handsFreeMode ? "1px solid rgba(0,212,255,0.35)" : "1px solid rgba(255,255,255,0.08)",
-                      color: handsFreeMode ? "#00d4ff" : "#64748b", fontSize: 12, fontFamily: "monospace",
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>🎤</span>
-                    <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Hands-Free Mode</span>
-                    <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, letterSpacing: "0.06em" }}>{handsFreeMode ? "ON" : "OFF"}</span>
+                  <button onClick={toggleHandsFree}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: handsFreeMode ? "rgba(0,212,255,0.10)" : "rgba(255,255,255,0.04)", border: handsFreeMode ? "1px solid rgba(0,212,255,0.35)" : "1px solid rgba(255,255,255,0.08)", color: handsFreeMode ? "#00d4ff" : "#64748b", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>🎤</span><span style={{ fontWeight: 600 }}>Hands-Free Mode</span><span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700 }}>{handsFreeMode ? "ON" : "OFF"}</span>
                   </button>
                 )}
               </div>
+
+              <div className="safe-bottom" style={{ minHeight: 8 }} />
             </div>
-
-            {/* Truth Room link */}
-            <button
-              onClick={() => { showSwitching("Truth Room"); track("hub_tab_switch", { tab: "truth" }); setHubTab("truth"); }}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 14px", borderRadius: 12, cursor: "pointer",
-                background: "rgba(239,68,68,0.04)",
-                border: "1px solid rgba(239,68,68,0.18)",
-                color: "#f87171", fontSize: 12, fontFamily: "monospace",
-              }}
-            >
-              <span style={{ fontSize: 16 }}>🎥</span>
-              <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>Truth Room</span>
-              <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-            </button>
-
-            <div className="safe-bottom" style={{ minHeight: 8 }} />
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── Partners tab ── */}
         {displayedHubTab === "partners" && (
