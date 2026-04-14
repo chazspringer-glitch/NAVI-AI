@@ -764,7 +764,7 @@ export default function HomePage() {
   const transcriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [bannerVisible, setBannerVisible] = useState(true);
-  const [hubTab, setHubTab] = useState<"home" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
+  const [hubTab, setHubTab] = useState<"home" | "settings" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
   const [isPro, setIsPro] = useState(false);
   const [proGateFeature, setProGateFeature] = useState<string | null>(null);
   const [showFoundersIntro, setShowFoundersIntro] = useState(false);
@@ -803,7 +803,7 @@ export default function HomePage() {
   const [switchingLabel, setSwitchingLabel] = useState<string | null>(null);
   const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 2-phase hub tab transition
-  const [displayedHubTab, setDisplayedHubTab] = useState<"home" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
+  const [displayedHubTab, setDisplayedHubTab] = useState<"home" | "settings" | "explore" | "partners" | "truth" | "rewards" | "subscription" | "programs" | "founders" | "podcast">("home");
   const [hubTabPhase, setHubTabPhase] = useState<"idle" | "out" | "in">("idle");
   const hubTabTransTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Mode label + NaviFace dim transition
@@ -4089,14 +4089,14 @@ export default function HomePage() {
             🧭 Explore
           </button>
           <button
-            onClick={() => { if (hubTab !== "home") { showSwitching("Settings"); track("hub_tab_switch", { tab: "home" }); } setHubTab("home"); }}
+            onClick={() => { if (hubTab !== "settings") { showSwitching("Settings"); track("hub_tab_switch", { tab: "settings" }); } setHubTab("settings"); }}
             style={{
               flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 10,
               fontFamily: "monospace", letterSpacing: "0.03em", cursor: "pointer",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              color: "#64748b",
-              fontWeight: 400,
+              background: hubTab === "settings" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+              border: hubTab === "settings" ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.07)",
+              color: hubTab === "settings" ? "#e2e8f0" : "#64748b",
+              fontWeight: hubTab === "settings" ? 700 : 400,
             }}
           >
             ⚙️ Settings
@@ -4271,6 +4271,11 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+
+        </>}{/* end home tab */}
+
+        {/* ── Settings tab ── */}
+        {displayedHubTab === "settings" && <>
 
         {/* Settings row: sound + voice + auto-clear + chat toggle */}
         <div style={{ display: "flex", gap: 8 }}>
@@ -4557,7 +4562,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        </>}{/* end home tab */}
+        </>}{/* end settings tab */}
 
         {/* ── Explore tab ── */}
         {displayedHubTab === "explore" && (
