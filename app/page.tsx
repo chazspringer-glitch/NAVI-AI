@@ -4667,7 +4667,7 @@ export default function HomePage() {
             <span style={{ fontSize: 16 }}>{soundEnabled ? "🔔" : "🔕"}</span>
             <span>Sound {soundEnabled ? "On" : "Off"}</span>
           </button>
-          {ttsSupported && isAdmin && (
+          {ttsSupported && (isPro || isAdmin) && (
             <button
               onClick={toggleVoice}
               style={{
