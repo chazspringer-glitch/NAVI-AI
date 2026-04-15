@@ -4440,6 +4440,54 @@ export default function HomePage() {
         {/* ── Home tab (settings / modes) ── */}
         {displayedHubTab === "home" && <>
 
+        {/* ── Daily Missions — always visible at top ─────────────────────── */}
+        {missions.length > 0 && (
+          <div style={{
+            borderRadius: 14,
+            padding: "14px 16px",
+            background: "linear-gradient(160deg, rgba(0,212,255,0.04) 0%, rgba(168,85,247,0.04) 100%)",
+            border: "1px solid rgba(0,212,255,0.12)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: "#00d4ff", letterSpacing: "0.04em" }}>
+                🎯 Daily Missions
+              </div>
+              {streak >= 2 && (
+                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f97316", fontWeight: 600 }}>🔥 {streak}-day streak</span>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {missions.map((m) => (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10,
+                  background: m.completed ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.03)",
+                  border: m.completed ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(255,255,255,0.06)" }}>
+                  <span style={{ fontSize: 15, flexShrink: 0 }}>{m.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: m.completed ? 0 : 3 }}>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#94a3b8",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {m.label}
+                      </span>
+                      {m.completed && <span style={{ fontSize: 10, color: "#4ade80", flexShrink: 0 }}>✓</span>}
+                    </div>
+                    {!m.completed && (
+                      <div style={{ width: "100%", height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                        <div style={{ width: `${Math.min(100, Math.round((m.progress / m.target) * 100))}%`,
+                          height: "100%", borderRadius: 2,
+                          background: "linear-gradient(90deg, #00d4ff80, #a855f780)",
+                          transition: "width 0.4s ease" }} />
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 9, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#334155", flexShrink: 0 }}>
+                    +{m.xpReward}xp
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── 1. What do you need help with? ────────────────────────────── */}
         <div>
           <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", marginBottom: 10 }}>
@@ -4555,65 +4603,6 @@ export default function HomePage() {
             🧭 View All Tools
           </button>
         </div>
-
-        {/* ── 4. Daily Missions (collapsible) ───────────────────────────── */}
-        {missions.length > 0 && (() => {
-          const [missionsOpen, setMissionsOpen] = [showMissionsOpen, setShowMissionsOpen];
-          return (
-            <div>
-              <button
-                onClick={() => setMissionsOpen(!missionsOpen)}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  width: "100%", padding: 0, marginBottom: missionsOpen ? 8 : 0,
-                  background: "none", border: "none", cursor: "pointer",
-                }}
-              >
-                <p style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "#475569", textTransform: "uppercase", margin: 0 }}>
-                  Daily Missions
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {streak >= 2 && (
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#f97316" }}>🔥 {streak}</span>
-                  )}
-                  <span style={{ fontSize: 10, color: "#475569", transition: "transform 0.2s", transform: missionsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-                </div>
-              </button>
-              {missionsOpen && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {missions.map((m) => (
-                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 10,
-                      background: m.completed ? "rgba(74,222,128,0.06)" : "rgba(255,255,255,0.03)",
-                      border: m.completed ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(255,255,255,0.06)" }}>
-                      <span style={{ fontSize: 15, flexShrink: 0 }}>{m.emoji}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: m.completed ? 0 : 3 }}>
-                          <span style={{ fontSize: 11, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#94a3b8",
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {m.label}
-                          </span>
-                          {m.completed && <span style={{ fontSize: 10, color: "#4ade80", flexShrink: 0 }}>✓</span>}
-                        </div>
-                        {!m.completed && (
-                          <div style={{ width: "100%", height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                            <div style={{ width: `${Math.min(100, Math.round((m.progress / m.target) * 100))}%`,
-                              height: "100%", borderRadius: 2,
-                              background: "linear-gradient(90deg, #00d4ff80, #a855f780)",
-                              transition: "width 0.4s ease" }} />
-                          </div>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 9, fontFamily: "monospace", color: m.completed ? "#4ade80" : "#334155",
-                        flexShrink: 0 }}>
-                        +{m.xpReward}xp
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })()}
 
         {/* ── 5. How NAVI responds ──────────────────────────────────────── */}
         <div>
