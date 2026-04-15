@@ -14,11 +14,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
+    console.log("[api/xp] Adding", amount, "XP for", user_id, display_name || "NAVI User", action);
     const result = await addXP(user_id, display_name || "NAVI User", amount);
     if (!result) {
+      console.error("[api/xp] addXP returned null for", user_id);
       return NextResponse.json({ error: "Failed to add XP" }, { status: 500 });
     }
 
+    console.log("[api/xp] Success:", result);
     return NextResponse.json({ ...result, added: amount });
   } catch (err) {
     console.error("[api/xp] Error:", err);

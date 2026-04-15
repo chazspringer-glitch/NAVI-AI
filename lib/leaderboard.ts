@@ -40,11 +40,15 @@ export function xpForNextLevel(currentXP: number): { current: number; next: numb
 export async function addXP(userId: string, displayName: string, amount: number): Promise<{ xp: number; level: number } | null> {
   try {
     // Try to get existing entry
-    const { data: existing } = await supabase
+    const { data: existing, error: fetchErr } = await supabase
       .from("leaderboard")
       .select("id, xp")
       .eq("user_id", userId)
       .single();
+
+    if (fetchErr && fetchErr.code !== "PGRST116") {
+      console.error("[leaderboard] fetch error:", fetchErr.message);
+    }
 
     if (existing) {
       const newXP = (existing.xp || 0) + amount;
@@ -54,6 +58,7 @@ export async function addXP(userId: string, displayName: string, amount: number)
         .update({ xp: newXP, level: newLevel, display_name: displayName, updated_at: new Date().toISOString() })
         .eq("id", existing.id);
       if (error) { console.error("[leaderboard] update error:", error.message); return null; }
+      console.log("[leaderboard] Updated:", displayName, "+", amount, "→", newXP, "XP");
       return { xp: newXP, level: newLevel };
     } else {
       const newXP = amount;
@@ -62,6 +67,7 @@ export async function addXP(userId: string, displayName: string, amount: number)
         .from("leaderboard")
         .insert({ user_id: userId, display_name: displayName, xp: newXP, level: newLevel, streak: 0, achievements: 0 });
       if (error) { console.error("[leaderboard] insert error:", error.message); return null; }
+      console.log("[leaderboard] Created:", displayName, "with", newXP, "XP");
       return { xp: newXP, level: newLevel };
     }
   } catch (err) {
