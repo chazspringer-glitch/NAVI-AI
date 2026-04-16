@@ -3051,19 +3051,6 @@ export default function HomePage() {
           wakeActive={wakeActive}
           onTap={handleNaviOrbTap}
         />
-        {/* Particle face overlay */}
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          transform: "translate(-50%, -60%)",
-          pointerEvents: "none", zIndex: 25,
-          opacity: 0.35,
-          mixBlendMode: "screen",
-        }}>
-          <NaviParticleFace
-            size={180}
-            state={isLoading ? "thinking" : isSpeaking ? "responding" : "idle"}
-          />
-        </div>
 
         {/* Triple-tap founder glow pulse — brief radial bloom on the orb */}
         {founderOrbPulse && (
