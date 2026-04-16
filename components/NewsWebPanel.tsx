@@ -116,6 +116,15 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const clusterGeomRef    = useRef<ClusterGeom[]>([]);
   const frameRef          = useRef<number>(0);
   const timeRef           = useRef<number>(0);
+  // Slow continuous rotation (radians) — increments per frame in animate()
+  const rotationRef       = useRef<number>(0);
+  // Pinch-to-zoom: current zoom factor (1 = default), in-flight pinch state,
+  // and the timestamp of the last pinch end so we can suppress the click that
+  // mobile browsers fire after a multi-touch gesture.
+  const zoomRef           = useRef<number>(1);
+  const pinchStartRef     = useRef<{ dist: number; zoom: number } | null>(null);
+  const lastPinchEndRef   = useRef<number>(0);
+  const [zoom, setZoom]   = useState<number>(1);
 
   const [items,    setItems]    = useState<NewsItem[]>([]);
   const [clusters, setClusters] = useState<NewsCluster[]>([]);
@@ -283,6 +292,10 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       if (!running) return;
       timeRef.current += 0.016;
       const t = timeRef.current;
+      // Slow global rotation: ~one revolution every ~3 minutes
+      rotationRef.current += 0.0006;
+      const rot  = rotationRef.current;
+      const zoomNow = zoomRef.current;
       const cx = size.w / 2;
       const cy = size.h / 2;
 
@@ -299,12 +312,14 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
 
       const nodes = nodesRef.current;
 
-      // Update node positions (smooth drift toward orbital target)
+      // Update node positions (smooth drift toward rotated, zoomed target)
       for (const n of nodes) {
         const driftX = Math.sin(t * n.driftSpeed + n.driftPhase) * 6;
         const driftY = Math.cos(t * n.driftSpeed * 0.7 + n.driftPhase) * 6;
-        const targetX = cx + Math.cos(n.baseAngle) * n.baseRadius + driftX;
-        const targetY = cy + Math.sin(n.baseAngle) * n.baseRadius + driftY;
+        const angleNow = n.baseAngle + rot;
+        const r = n.baseRadius * zoomNow;
+        const targetX = cx + Math.cos(angleNow) * r + driftX;
+        const targetY = cy + Math.sin(angleNow) * r + driftY;
         n.x += (targetX - n.x) * 0.06;
         n.y += (targetY - n.y) * 0.06;
         if (n.age < 1) n.age = Math.min(1, n.age + 0.018);
@@ -563,6 +578,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   }, [selectedCluster, items, userContext]);
 
   const handlePointer = useCallback((clientX: number, clientY: number) => {
+    // Suppress taps that arrive right after a pinch — mobile fires onClick
+    // after a multi-touch gesture and we don't want to open random nodes
+    if (Date.now() - lastPinchEndRef.current < 350) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -641,16 +659,75 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       </div>
 
       {/* Canvas container */}
-      <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", touchAction: "manipulation" }}>
+      <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", touchAction: "none" }}>
         <canvas
           ref={canvasRef}
           onClick={(e) => handlePointer(e.clientX, e.clientY)}
+          // ── Pinch-to-zoom (two-finger touch) ─────────────────────────────
           onTouchStart={(e) => {
-            const t = e.touches[0];
-            if (t) handlePointer(t.clientX, t.clientY);
+            if (e.touches.length === 2) {
+              const t1 = e.touches[0];
+              const t2 = e.touches[1];
+              const dx = t1.clientX - t2.clientX;
+              const dy = t1.clientY - t2.clientY;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              pinchStartRef.current = { dist, zoom: zoomRef.current };
+              e.preventDefault();
+            }
+          }}
+          onTouchMove={(e) => {
+            if (e.touches.length === 2 && pinchStartRef.current) {
+              const t1 = e.touches[0];
+              const t2 = e.touches[1];
+              const dx = t1.clientX - t2.clientX;
+              const dy = t1.clientY - t2.clientY;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              const ratio = dist / pinchStartRef.current.dist;
+              const next = Math.max(0.55, Math.min(2.5, pinchStartRef.current.zoom * ratio));
+              zoomRef.current = next;
+              setZoom(next);
+              e.preventDefault();
+            }
+          }}
+          onTouchEnd={(e) => {
+            if (e.touches.length < 2 && pinchStartRef.current) {
+              pinchStartRef.current = null;
+              lastPinchEndRef.current = Date.now();
+            }
+          }}
+          // ── Desktop: ctrl/⌘ + wheel zooms (matches browser convention) ───
+          onWheel={(e) => {
+            // Only zoom when modifier is held — otherwise let the page scroll
+            if (!e.ctrlKey && !e.metaKey) return;
+            e.preventDefault();
+            const delta = -e.deltaY * 0.0015;
+            const next = Math.max(0.55, Math.min(2.5, zoomRef.current * (1 + delta)));
+            zoomRef.current = next;
+            setZoom(next);
           }}
           style={{ width: size.w, height: size.h, display: "block", cursor: "pointer" }}
         />
+
+        {/* Zoom indicator + reset (only visible when zoom != 1) */}
+        {Math.abs(zoom - 1) > 0.02 && (
+          <button
+            onClick={() => { zoomRef.current = 1; setZoom(1); }}
+            style={{
+              position: "absolute", top: 12, left: 12, zIndex: 2,
+              padding: "6px 10px", borderRadius: 8,
+              background: "rgba(8,8,16,0.7)",
+              border: "1px solid rgba(0,212,255,0.25)",
+              color: "#00d4ff", fontSize: 9, fontFamily: "monospace",
+              fontWeight: 700, letterSpacing: "0.08em",
+              cursor: "pointer", backdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", gap: 6,
+            }}
+            aria-label="Reset zoom"
+          >
+            <span>{Math.round(zoom * 100)}%</span>
+            <span style={{ opacity: 0.6 }}>· RESET</span>
+          </button>
+        )}
 
         {/* Loading overlay */}
         {loading && (
