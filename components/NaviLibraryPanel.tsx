@@ -24,40 +24,40 @@ type Book = {
 const BOOKS: Book[] = [
   {
     cover: "", // TODO: paste cover image URL from the Amazon listing
-    title: "Volume 01", // TODO: real title
-    description: "Coming soon — tap View Book to see this title on Amazon.",
-    price: "View on Amazon", // TODO: real price (e.g., "$19.99")
+    title: "Paper Slavery: How Black Americans Were Tricked Out of Freedom",
+    description: "A blueprint exposing the systems and contracts designed to keep Black Americans economically bound long after legal freedom. Required reading for anyone serious about generational wealth and liberation.",
+    price: "View on Amazon",
     url: "https://a.co/d/09jJlKiB",
     accent: "#C9A227",
   },
   {
     cover: "",
-    title: "Volume 02",
-    description: "Coming soon — tap View Book to see this title on Amazon.",
+    title: "Kids Love to Count Numbers",
+    description: "A bright, playful counting book that turns numbers into an adventure. Perfect for early learners building their first math foundation at home.",
     price: "View on Amazon",
     url: "https://a.co/d/03H0iMhl",
-    accent: "#a855f7",
-  },
-  {
-    cover: "",
-    title: "Volume 03",
-    description: "Coming soon — tap View Book to see this title on Amazon.",
-    price: "View on Amazon",
-    url: "https://a.co/d/00xKmIMp",
-    accent: "#00d4ff",
-  },
-  {
-    cover: "",
-    title: "Volume 04",
-    description: "Coming soon — tap View Book to see this title on Amazon.",
-    price: "View on Amazon",
-    url: "https://a.co/d/0eFPH3HL",
     accent: "#34d399",
   },
   {
     cover: "",
-    title: "Volume 05",
-    description: "Coming soon — tap View Book to see this title on Amazon.",
+    title: "The Friendly Monster in My Room",
+    description: "A bedtime story that flips fear on its head — turning the thing under the bed into a kid's bravest friend. A gentle lesson in courage, imagination, and self-trust.",
+    price: "View on Amazon",
+    url: "https://a.co/d/00xKmIMp",
+    accent: "#a855f7",
+  },
+  {
+    cover: "",
+    title: "Stand On Your Square: A Man's Code in Modern Times",
+    description: "A modern code of honor for men navigating relationships, business, and identity in a world that constantly tests them. Plain-spoken principles for standing firm on what's yours.",
+    price: "View on Amazon",
+    url: "https://a.co/d/0eFPH3HL",
+    accent: "#00d4ff",
+  },
+  {
+    cover: "",
+    title: "The Unbound",
+    description: "A meditation on breaking free — from limits, from labels, from the chains we don't realize we're carrying. For the reader ready to step into their next evolution.",
     price: "View on Amazon",
     url: "https://a.co/d/01vvgV50",
     accent: "#f472b6",
