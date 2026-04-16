@@ -39,6 +39,7 @@ const BlackHistoryPanel       = dynamic(() => import("@/components/BlackHistoryP
 const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPanel"),        { ssr: false });
 const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
+const NaviLibraryPanel        = dynamic(() => import("@/components/NaviLibraryPanel"),        { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -800,6 +801,7 @@ export default function HomePage() {
   const [showFinancialIntro, setShowFinancialIntro]     = useState(false);
   const [showFreshFood,      setShowFreshFood]          = useState(false);
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
+  const [showNaviLibrary,    setShowNaviLibrary]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -2615,6 +2617,11 @@ export default function HomePage() {
           opens the full panel. Flip FRESH_FOOD_LOCKED to false to re-enable. */}
       {showFreshFood && !FRESH_FOOD_LOCKED && (
         <FreshFoodPanel onClose={() => setShowFreshFood(false)} />
+      )}
+
+      {/* NAVI Library */}
+      {showNaviLibrary && (
+        <NaviLibraryPanel onClose={() => setShowNaviLibrary(false)} />
       )}
 
       {/* Leaderboard Panel */}
@@ -5107,6 +5114,10 @@ export default function HomePage() {
                   <button onClick={() => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>📺</span><span style={{ fontWeight: 600 }}>NaviTV</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                  </button>
+                  <button onClick={() => { setShowNaviLibrary(true); setMenuOpen(false); trackXP("tool_used"); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.18)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
+                    <span style={{ fontSize: 16 }}>📚</span><span style={{ fontWeight: 600 }}>NAVI Library</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
                 </div>
               </div>
