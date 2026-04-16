@@ -101,6 +101,15 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+// ── Safety keyword detection ────────────────────────────────────────────────
+const SAFETY_KEYWORDS = /\b(crime|shoot|shot|police|arrest|crash|accident|emergency|fire|storm|flood|hurricane|tornado|death|dead|killed|kill|attack|assault|robbery|theft|stolen|injury|missing|alert|warning|suspect|violence|homicide|investigation|stabbing|carjack|evacuat|arson|hostage|kidnap|overdose|fentanyl|gun|weapon|victim|fatally|manhunt|fugitive|danger|disaster)\b/i;
+
+function isSafetyItem(item: NewsItem): boolean {
+  return SAFETY_KEYWORDS.test(item.title) || SAFETY_KEYWORDS.test(item.summary ?? "");
+}
+
+type PulseTab = "web" | "insights" | "safety";
+
 interface NewsWebPanelProps {
   onClose:   () => void;
   /** Open another NAVI feature when an insight action button is tapped. */
@@ -118,6 +127,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const timeRef           = useRef<number>(0);
   // Slow continuous rotation (radians) — increments per frame in animate()
   const rotationRef       = useRef<number>(0);
+  const activeTabRef      = useRef<PulseTab>("web");
   // Pinch-to-zoom: current zoom factor (1 = default), in-flight pinch state,
   // and the timestamp of the last pinch end so we can suppress the click that
   // mobile browsers fire after a multi-touch gesture.
@@ -125,6 +135,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const pinchStartRef     = useRef<{ dist: number; zoom: number } | null>(null);
   const lastPinchEndRef   = useRef<number>(0);
   const [zoom, setZoom]   = useState<number>(1);
+
+  const [activeTab, setActiveTab] = useState<PulseTab>("web");
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   const [items,    setItems]    = useState<NewsItem[]>([]);
   const [clusters, setClusters] = useState<NewsCluster[]>([]);
@@ -134,6 +147,11 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [error,    setError]    = useState<string | null>(null);
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+
+  // Safety overview insight
+  const [safetyInsight,        setSafetyInsight]        = useState<Insight | null>(null);
+  const [safetyInsightLoading, setSafetyInsightLoading] = useState(false);
+  const [safetyInsightError,   setSafetyInsightError]   = useState<string | null>(null);
 
   // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
@@ -184,13 +202,29 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // ── Build/refresh nodes when items, clusters, or size change ──────────────
+  // ── Build/refresh nodes when items, clusters, tab, or size change ────────
   // Layout: each cluster gets its own arc segment; items inside a cluster
   // sit close together so the bubble drawn around them stays compact.
   // Singletons (items not in any cluster) are gathered in their own arc
   // segment after the clusters.
+  //
+  // Safety tab: filter to safety-related items, override node colors to red.
   useEffect(() => {
     if (size.w === 0 || size.h === 0) return;
+
+    // Filter items + clusters based on active tab
+    const filteredItems = activeTab === "safety"
+      ? items.filter(isSafetyItem)
+      : items;
+    const filteredClusterIds = new Set(
+      activeTab === "safety"
+        ? clusters
+            .filter((c) => c.itemIds.some((id) => filteredItems.some((it) => it.id === id)))
+            .map((c) => c.id)
+        : clusters.map((c) => c.id),
+    );
+    const filteredClusters = clusters.filter((c) => filteredClusterIds.has(c.id));
+
     const cx = size.w / 2;
     const cy = size.h / 2;
     const minR = Math.min(110, Math.min(size.w, size.h) * 0.22);
@@ -198,9 +232,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
 
     // Build a map of clusterId → member NewsItems (preserving server order)
     const clusterMap = new Map<string, NewsItem[]>();
-    for (const c of clusters) clusterMap.set(c.id, []);
+    for (const c of filteredClusters) clusterMap.set(c.id, []);
     const singletons: NewsItem[] = [];
-    for (const it of items) {
+    for (const it of filteredItems) {
       if (it.clusterId && clusterMap.has(it.clusterId)) {
         clusterMap.get(it.clusterId)!.push(it);
       } else {
@@ -208,8 +242,10 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       }
     }
 
+    const isSafety = activeTab === "safety";
+
     // Each cluster + the singleton bucket gets one "group slot" in the ring
-    const groupCount = clusters.length + (singletons.length > 0 ? 1 : 0);
+    const groupCount = filteredClusters.length + (singletons.length > 0 ? 1 : 0);
     if (groupCount === 0) {
       nodesRef.current = [];
       return;
@@ -217,9 +253,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     const arcSize = (Math.PI * 2) / groupCount;
     const newNodes: NodeT[] = [];
 
-    // Stable angle per cluster: same id always lands in the same slot when
-    // clusters appear/disappear, so the layout doesn't shuffle on refresh.
-    clusters.forEach((cluster, ci) => {
+    filteredClusters.forEach((cluster, ci) => {
       const members = clusterMap.get(cluster.id) ?? [];
       if (members.length === 0) return;
       const baseStart = ci * arcSize;
@@ -236,7 +270,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         const jitter = (Math.random() - 0.5) * 10;
         const radius = baseRadius + jitter;
         const existing = nodesRef.current.find((n) => n.id === item.id);
-        const color = CATEGORY_COLORS[item.category] ?? "#94a3b8";
+        const color = isSafety ? "#ef4444" : (CATEGORY_COLORS[item.category] ?? "#94a3b8");
         newNodes.push({
           ...item,
           x: existing?.x ?? cx + Math.cos(angle) * radius,
@@ -254,13 +288,13 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
 
     // Singletons get the final arc slot, evenly spaced across it
     if (singletons.length > 0) {
-      const baseStart = clusters.length * arcSize;
+      const baseStart = filteredClusters.length * arcSize;
       const sub = arcSize / singletons.length;
       singletons.forEach((item, i) => {
         const angle = baseStart + sub * i + sub * 0.5;
         const radius = minR + (maxR - minR) * (0.3 + Math.random() * 0.6);
         const existing = nodesRef.current.find((n) => n.id === item.id);
-        const color = CATEGORY_COLORS[item.category] ?? "#94a3b8";
+        const color = isSafety ? "#f87171" : (CATEGORY_COLORS[item.category] ?? "#94a3b8");
         newNodes.push({
           ...item,
           x: existing?.x ?? cx + Math.cos(angle) * radius,
@@ -277,7 +311,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     }
 
     nodesRef.current = newNodes;
-  }, [items, clusters, size.w, size.h]);
+  }, [items, clusters, activeTab, size.w, size.h]);
 
   // ── Animation loop ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -307,9 +341,12 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       ctx.save();
       ctx.scale(dpr, dpr);
 
+      // Safety view flag (read from ref for current value)
+      const isSafetyView = activeTabRef.current === "safety";
+
       // Background radial glow
       const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(size.w, size.h) * 0.6);
-      bg.addColorStop(0, "rgba(0,212,255,0.05)");
+      bg.addColorStop(0, isSafetyView ? "rgba(239,68,68,0.04)" : "rgba(0,212,255,0.05)");
       bg.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, size.w, size.h);
@@ -402,18 +439,18 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       }
 
       // NAVI core (pulsing)
-      const pulse = 1 + Math.sin(t * 1.4) * 0.12;
+      const pulse = 1 + Math.sin(t * (isSafetyView ? 2.0 : 1.4)) * 0.12;
       const coreR = 32 * pulse;
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
-      coreGrad.addColorStop(0,   "rgba(0,212,255,0.50)");
-      coreGrad.addColorStop(0.4, "rgba(201,162,39,0.22)");
+      coreGrad.addColorStop(0,   isSafetyView ? "rgba(239,68,68,0.50)"   : "rgba(0,212,255,0.50)");
+      coreGrad.addColorStop(0.4, isSafetyView ? "rgba(185,28,28,0.22)"   : "rgba(201,162,39,0.22)");
       coreGrad.addColorStop(1,   "rgba(0,0,0,0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
       ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(0,212,255,0.95)";
+      ctx.fillStyle = isSafetyView ? "rgba(239,68,68,0.95)" : "rgba(0,212,255,0.95)";
       ctx.beginPath();
       ctx.arc(cx, cy, 7, 0, Math.PI * 2);
       ctx.fill();
@@ -538,6 +575,50 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     })();
     return () => { cancelled = true; };
   }, [selected, userContext]);
+
+  // ── Fetch Safety overview insight when safety tab opened ─────────────────
+  useEffect(() => {
+    if (activeTab !== "safety") {
+      setSafetyInsight(null);
+      setSafetyInsightError(null);
+      setSafetyInsightLoading(false);
+      return;
+    }
+    const safetyItems = items.filter(isSafetyItem);
+    if (safetyItems.length === 0) return;
+    let cancelled = false;
+    setSafetyInsight(null);
+    setSafetyInsightError(null);
+    setSafetyInsightLoading(true);
+    const articles = safetyItems.slice(0, 10).map((it) => ({
+      title: it.title, summary: it.summary, source: it.source,
+    }));
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId: "safety-overview",
+            clusterName: "Safety & Public Safety",
+            keywords: ["safety", "crime", "emergency", "police", "alert"],
+            articles,
+            userContext,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) { setSafetyInsightError("Could not generate safety overview."); return; }
+        const json = await res.json() as { insight?: Insight };
+        if (json.insight) setSafetyInsight(json.insight);
+        else setSafetyInsightError("No overview generated.");
+      } catch {
+        if (!cancelled) setSafetyInsightError("Could not reach the insight service.");
+      } finally {
+        if (!cancelled) setSafetyInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, items, userContext]);
 
   // ── Fetch NAVI cluster trend insight when a cluster is selected ──────────
   useEffect(() => {
@@ -670,7 +751,168 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         </div>
       </div>
 
-      {/* Canvas container */}
+      {/* Tab bar */}
+      <div style={{
+        display: "flex", gap: 4, padding: "6px 16px 6px",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        flexShrink: 0, zIndex: 4, background: "rgba(2,2,8,0.85)",
+      }}>
+        {([
+          { key: "web" as const, label: "Web", icon: "🌐" },
+          { key: "insights" as const, label: "Insights", icon: "💡" },
+          { key: "safety" as const, label: "Safety", icon: "🛡️" },
+        ]).map(({ key, label, icon }) => {
+          const active = activeTab === key;
+          const safetyAccent = key === "safety";
+          const accent = safetyAccent ? "#ef4444" : "#00d4ff";
+          return (
+            <button
+              key={key}
+              onClick={() => {
+                setActiveTab(key);
+                setSelected(null);
+                setSelectedCluster(null);
+              }}
+              style={{
+                flex: 1, padding: "7px 0", borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                fontSize: 10, fontFamily: "monospace", fontWeight: active ? 700 : 400,
+                cursor: "pointer",
+                background: active ? `${accent}15` : "transparent",
+                border: active ? `1px solid ${accent}40` : "1px solid transparent",
+                color: active ? accent : "#64748b",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <span style={{ fontSize: 12 }}>{icon}</span>
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── INSIGHTS LIST VIEW ──────────────────────────────────────────── */}
+      {activeTab === "insights" && (
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 24px" }}>
+          <div style={{
+            fontSize: 9, letterSpacing: "0.28em", textTransform: "uppercase",
+            color: "#00d4ff", fontWeight: 700, marginBottom: 12,
+          }}>
+            Topic Clusters ({clusters.length})
+          </div>
+
+          {clusters.length === 0 && !loading && (
+            <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>
+              No topic clusters formed yet. Check back when more stories come in.
+            </div>
+          )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {clusters.map((c) => {
+              const accent = CATEGORY_COLORS[c.category ?? ""] ?? "#94a3b8";
+              const memberItems = items.filter((it) => c.itemIds.includes(it.id));
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => { setActiveTab("web"); setSelectedCluster(c); }}
+                  style={{
+                    padding: "14px 16px", borderRadius: 14, textAlign: "left",
+                    background: `${accent}08`,
+                    border: `1px solid ${accent}25`,
+                    cursor: "pointer", width: "100%", fontFamily: "monospace",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: accent, boxShadow: `0 0 6px ${accent}`,
+                    }} />
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>
+                      {c.name}
+                    </div>
+                    <span style={{ marginLeft: "auto", fontSize: 9, color: "#475569" }}>
+                      {memberItems.length} stories
+                    </span>
+                  </div>
+                  {c.keywords.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+                      {c.keywords.slice(0, 5).map((k) => (
+                        <span key={k} style={{
+                          padding: "2px 6px", borderRadius: 4,
+                          fontSize: 8, background: `${accent}12`, color: accent,
+                          border: `1px solid ${accent}20`,
+                        }}>
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 10, color: "#64748b" }}>
+                    {memberItems.slice(0, 2).map((it) => it.title).join(" · ").slice(0, 100)}…
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── SAFETY VIEW — banner + filtered canvas ──────────────────────── */}
+      {activeTab === "safety" && (() => {
+        const safetyItems = items.filter(isSafetyItem);
+        return safetyItems.length === 0 && !loading ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24 }}>
+            <div style={{ fontSize: 48, opacity: 0.5 }}>🛡️</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#34d399" }}>
+              No safety concerns detected
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b", textAlign: "center", lineHeight: 1.6, maxWidth: 280 }}>
+              NAVI is monitoring news feeds for safety-related stories. Nothing flagged right now — that{"'"}s a good sign.
+            </div>
+          </div>
+        ) : null;
+      })()}
+
+      {/* Safety overview panel — floats above the canvas */}
+      {activeTab === "safety" && items.filter(isSafetyItem).length > 0 && (
+        <div style={{
+          padding: "10px 16px", flexShrink: 0,
+          borderBottom: "1px solid rgba(239,68,68,0.12)",
+          background: "rgba(239,68,68,0.04)",
+          maxHeight: 180, overflowY: "auto",
+          zIndex: 3,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "#ef4444", boxShadow: "0 0 8px #ef4444",
+              animation: safetyInsightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+            }} />
+            <div style={{ fontSize: 9, letterSpacing: "0.24em", textTransform: "uppercase", color: "#ef4444", fontWeight: 700 }}>
+              Safety Overview · {items.filter(isSafetyItem).length} flagged
+            </div>
+          </div>
+          {safetyInsightLoading && (
+            <div style={{ fontSize: 10, color: "#64748b" }}>NAVI is analyzing safety patterns…</div>
+          )}
+          {!safetyInsightLoading && safetyInsightError && (
+            <div style={{ fontSize: 10, color: "#fca5a5" }}>{safetyInsightError}</div>
+          )}
+          {!safetyInsightLoading && safetyInsight && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 11, color: "#fca5a5", lineHeight: 1.55, fontWeight: 600 }}>
+                {safetyInsight.whatsHappening}
+              </div>
+              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.55 }}>
+                {safetyInsight.whatYouShouldDo}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Canvas container — visible for Web and Safety (when items exist) tabs */}
+      {(activeTab === "web" || (activeTab === "safety" && items.filter(isSafetyItem).length > 0)) && (
       <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", touchAction: "none" }}>
         <canvas
           ref={canvasRef}
@@ -788,6 +1030,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
           </div>
         )}
       </div>
+      )}
 
       {/* Detail panel (slides up when a node is selected) */}
       {selected && (() => {
