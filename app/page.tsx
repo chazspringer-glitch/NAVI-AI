@@ -2115,6 +2115,64 @@ export default function HomePage() {
         setHubTab("rewards");
         setMenuOpen(true);
         break;
+      case "subscription":
+        setHubTab("subscription");
+        setMenuOpen(true);
+        break;
+      case "programs":
+        setHubTab("programs");
+        setMenuOpen(true);
+        break;
+      case "podcast":
+        setHubTab("podcast");
+        setMenuOpen(true);
+        break;
+
+      // ── New feature panels ─────────────────────────────────────────────
+      case "newsWeb":
+        if (hasSeenIntro("newsWeb")) { setShowNewsWeb(true); }
+        else { markIntroSeen("newsWeb"); setShowNewsWebIntro(true); }
+        setMenuOpen(false);
+        break;
+      case "library":
+        if (hasSeenIntro("library")) { setShowNaviLibrary(true); }
+        else { markIntroSeen("library"); setShowNaviLibraryIntro(true); }
+        setMenuOpen(false);
+        break;
+      case "naviTV":
+        if (hasSeenIntro("naviTV")) { setShowNaviTV(true); }
+        else { markIntroSeen("naviTV"); setShowNaviTVIntro(true); }
+        setMenuOpen(false);
+        break;
+      case "trades":
+        setShowTrades(true);
+        setMenuOpen(false);
+        break;
+      case "leaderboard":
+        setShowLeaderboard(true);
+        setMenuOpen(false);
+        break;
+      case "whyNavi":
+        setShowWhyNavi(true);
+        setMenuOpen(false);
+        break;
+      case "autoFinder":
+        setShowAutoFinder(true);
+        setMenuOpen(false);
+        break;
+      case "jobFinder":
+        setShowJobFinder(true);
+        setMenuOpen(false);
+        break;
+      case "familySupport":
+        setShowFamilySupport(true);
+        setMenuOpen(false);
+        break;
+      case "legalRights":
+        setShowLegalRights(true);
+        setMenuOpen(false);
+        break;
+
       default:
         break;
     }

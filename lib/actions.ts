@@ -30,7 +30,22 @@ export interface TrackProgressAction {
 export type NavigateDestination =
   | "job" | "lawyer" | "history" | "companion" | "housing" | "stem" | "ai_skills"
   | "resumeBuilder" | "bizPlanBuilder" | "localResources"
-  | "homeworkHelper" | "truthRoom" | "partners" | "housingFinder" | "stemLesson" | "aiSkillsLesson";
+  | "homeworkHelper" | "truthRoom" | "partners" | "housingFinder" | "stemLesson" | "aiSkillsLesson"
+  // ── New tabs/panels ────────────────────────────────────────────────────────
+  | "newsWeb"        // 📡 News Web interactive visualization
+  | "library"        // 📚 NAVI Library (founder's books)
+  | "trades"         // 🚛 Trades Mode (CDL + others)
+  | "leaderboard"    // 🏆 XP leaderboard
+  | "whyNavi"        // 💛 Why NAVI Exists origin story
+  | "autoFinder"     // 🚗 Car search
+  | "jobFinder"      // 💼 Job Finder quick-links panel
+  | "familySupport"  // 💛 Family Support Finder
+  | "legalRights"    // ⚖️ Legal Rights Guide
+  | "naviTV"         // 📺 NaviTV (alias of truthRoom)
+  | "rewards"        // ⭐ Rewards hub tab
+  | "subscription"   // 💎 Subscription hub tab
+  | "programs"       // 🎓 Programs hub tab (Academy)
+  | "podcast";       // 🎙️ Podcast Partnership
 
 export interface NavigateAction {
   type: "navigate";
@@ -79,6 +94,9 @@ export function parseAction(raw: unknown): AgentAction | null {
     "job", "lawyer", "history", "companion", "housing", "stem", "ai_skills",
     "resumeBuilder", "bizPlanBuilder", "localResources",
     "homeworkHelper", "truthRoom", "partners", "housingFinder", "stemLesson", "aiSkillsLesson",
+    "newsWeb", "library", "trades", "leaderboard", "whyNavi", "autoFinder",
+    "jobFinder", "familySupport", "legalRights", "naviTV",
+    "rewards", "subscription", "programs", "podcast",
   ];
   if (t === "navigate" && typeof a.destination === "string" && VALID_DESTINATIONS.includes(a.destination as NavigateDestination)) {
     return {
