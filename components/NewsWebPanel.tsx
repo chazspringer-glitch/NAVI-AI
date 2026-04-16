@@ -108,6 +108,14 @@ function isSafetyItem(item: NewsItem): boolean {
   return SAFETY_KEYWORDS.test(item.title) || SAFETY_KEYWORDS.test(item.summary ?? "");
 }
 
+// ── Opportunity keyword detection ───────────────────────────────────────────
+const OPPORTUNITY_KEYWORDS = /\b(hiring|job[s ]|career|employ|recruit|apprentice|training|workforce|scholarship|grant|fund|voucher|subsid|free program|free class|free course|housing assist|section 8|affordable hous|rent assist|down payment|first.time buyer|benefit|resource|food bank|food pantry|community center|mentor|internship|startup|small business|entrepreneur|wage increase|minimum wage|tax credit|earn|certificate|credential|diploma|GED|tuition|financial aid|FAFSA|unemployment|snap|wic|medicaid|childcare|daycare)\b/i;
+
+function isOpportunityItem(item: NewsItem): boolean {
+  if (isSafetyItem(item)) return false; // safety takes priority visually
+  return OPPORTUNITY_KEYWORDS.test(item.title) || OPPORTUNITY_KEYWORDS.test(item.summary ?? "");
+}
+
 // Single unified view — no tabs. Safety awareness is integrated inline.
 
 interface NewsWebPanelProps {
@@ -145,14 +153,20 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
 
-  // Location detection for safety awareness
+  // Location detection for safety + opportunity awareness
   const [userCity,  setUserCity]  = useState<string | null>(null);
-  const [safetyBannerOpen, setSafetyBannerOpen] = useState(true);
+  const [safetyBannerOpen,      setSafetyBannerOpen]      = useState(true);
+  const [opportunityBannerOpen, setOpportunityBannerOpen] = useState(true);
 
   // Safety overview insight (shows inline in main web, location-aware)
   const [safetyInsight,        setSafetyInsight]        = useState<Insight | null>(null);
   const [safetyInsightLoading, setSafetyInsightLoading] = useState(false);
   const [safetyInsightError,   setSafetyInsightError]   = useState<string | null>(null);
+
+  // Opportunity insight
+  const [opInsight,        setOpInsight]        = useState<Insight | null>(null);
+  const [opInsightLoading, setOpInsightLoading] = useState(false);
+  const [opInsightError,   setOpInsightError]   = useState<string | null>(null);
 
   // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
@@ -439,11 +453,21 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         const sz = n.size * n.age;
         if (sz < 0.5) continue;
         const safety = isSafetyItem(n);
-        // Safety ring — subtle pulsing red outline for safety-tagged nodes
+        const opportunity = !safety && isOpportunityItem(n);
+        // Safety ring — subtle pulsing red outline
         if (safety) {
           const ringAlpha = 0.4 + Math.sin(t * 2.5 + n.driftPhase) * 0.2;
           ctx.strokeStyle = `rgba(239,68,68,${ringAlpha})`;
           ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Opportunity ring — pulsing green outline
+        if (opportunity) {
+          const ringAlpha = 0.45 + Math.sin(t * 2.0 + n.driftPhase) * 0.2;
+          ctx.strokeStyle = `rgba(52,211,153,${ringAlpha})`;
+          ctx.lineWidth = 1.4;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
@@ -634,6 +658,51 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => { cancelled = true; };
   }, [items, userCity, userContext]);
 
+  // ── Auto-fetch opportunity insight when opportunity items exist ──────────
+  useEffect(() => {
+    const opItems = items.filter(isOpportunityItem);
+    if (opItems.length === 0) {
+      setOpInsight(null);
+      setOpInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setOpInsight(null);
+    setOpInsightError(null);
+    setOpInsightLoading(true);
+    const articles = opItems.slice(0, 10).map((it) => ({
+      title: it.title, summary: it.summary, source: it.source,
+    }));
+    const locationCtx = userCity ? { ...userContext, location: userCity } : userContext;
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId: `opportunity-${userCity || "general"}`,
+            clusterName: userCity
+              ? `Opportunities Near ${userCity}`
+              : "Jobs, Training & Community Resources",
+            keywords: ["jobs", "training", "grants", "housing", "free resources", "hiring"],
+            articles,
+            userContext: locationCtx,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) { setOpInsightError("Could not generate opportunity overview."); return; }
+        const json = await res.json() as { insight?: Insight };
+        if (json.insight) setOpInsight(json.insight);
+        else setOpInsightError("No overview generated.");
+      } catch {
+        if (!cancelled) setOpInsightError("Could not reach the insight service.");
+      } finally {
+        if (!cancelled) setOpInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [items, userCity, userContext]);
+
   // ── Fetch NAVI cluster trend insight when a cluster is selected ──────────
   useEffect(() => {
     if (!selectedCluster) {
@@ -811,6 +880,82 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               color: "#475569", fontSize: 10, cursor: "pointer",
             }}
             aria-label="Dismiss safety banner"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── Opportunity awareness banner — location-based, inline ───── */}
+      {items.filter(isOpportunityItem).length > 0 && opportunityBannerOpen && (
+        <div style={{
+          padding: "8px 16px", flexShrink: 0,
+          borderBottom: "1px solid rgba(52,211,153,0.10)",
+          background: "rgba(52,211,153,0.03)",
+          display: "flex", alignItems: "flex-start", gap: 10,
+          zIndex: 4,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", marginTop: 4, flexShrink: 0,
+            background: "#34d399", boxShadow: "0 0 8px #34d399",
+            animation: opInsightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
+              color: "#34d399", fontWeight: 700, marginBottom: 3,
+            }}>
+              💡 Opportunities{userCity ? ` — ${userCity}` : ""} · {items.filter(isOpportunityItem).length} detected
+            </div>
+            {opInsightLoading && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>Scanning for opportunities…</div>
+            )}
+            {!opInsightLoading && opInsightError && (
+              <div style={{ fontSize: 10, color: "#86efac" }}>{opInsightError}</div>
+            )}
+            {!opInsightLoading && opInsight && (
+              <>
+                <div style={{ fontSize: 10, color: "#86efac", lineHeight: 1.55, fontWeight: 600, marginBottom: 2 }}>
+                  {opInsight.whatsHappening}
+                </div>
+                <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.55 }}>
+                  {opInsight.whatYouShouldDo}
+                </div>
+                {opInsight.suggestedFeatures.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 5 }}>
+                    {opInsight.suggestedFeatures.map((fid) => {
+                      const meta = FEATURE_META[fid];
+                      if (!meta) return null;
+                      return (
+                        <button
+                          key={fid}
+                          onClick={() => { onAction?.(fid); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "4px 8px", borderRadius: 6,
+                            background: "rgba(52,211,153,0.08)",
+                            border: "1px solid rgba(52,211,153,0.25)",
+                            color: "#34d399", fontSize: 8, fontWeight: 700,
+                            fontFamily: "monospace", cursor: "pointer",
+                          }}
+                        >
+                          {meta.icon} {meta.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <button
+            onClick={() => setOpportunityBannerOpen(false)}
+            style={{
+              width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+              border: "none", background: "transparent",
+              color: "#475569", fontSize: 10, cursor: "pointer",
+            }}
+            aria-label="Dismiss opportunity banner"
           >
             ✕
           </button>
