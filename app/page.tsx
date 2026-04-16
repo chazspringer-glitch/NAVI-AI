@@ -2750,7 +2750,34 @@ export default function HomePage() {
 
       {/* News Web Panel */}
       {showNewsWeb && (
-        <NewsWebPanel onClose={() => setShowNewsWeb(false)} />
+        <NewsWebPanel
+          onClose={() => setShowNewsWeb(false)}
+          onAction={(feature) => {
+            // Close News Web first so the next overlay doesn't sit on top of it
+            setShowNewsWeb(false);
+            // Tiny delay so the slide-out animation finishes cleanly
+            setTimeout(() => {
+              switch (feature) {
+                case "housing":  setShowHousingPanel(true);    break;
+                case "jobs":     setShowJobFinder(true);       break;
+                case "trades":   setShowTrades(true);          break;
+                case "legal":    setShowLegalRights(true);     break;
+                case "family":   setShowFamilySupport(true);   break;
+                case "local":    setShowLocalResources(true);  break;
+                case "business": setShowBizPlanBuilder(true);  break;
+                case "resume":   setShowResumeBuilder(true);   break;
+                case "stem":     setShowStemPanel(true);       break;
+                case "ai":       setShowAiSkillsPanel(true);   break;
+                case "history":  setShowBlackHistory(true);    break;
+                case "library":  setShowNaviLibraryIntro(true); break;
+                case "tv":       setShowNaviTVIntro(true);     break;
+                case "auto":     setShowAutoFinder(true);      break;
+                case "academy":  setHubTab("programs"); setMenuOpen(true); break;
+              }
+              trackXP("tool_used");
+            }, 120);
+          }}
+        />
       )}
 
       {/* Leaderboard Panel */}

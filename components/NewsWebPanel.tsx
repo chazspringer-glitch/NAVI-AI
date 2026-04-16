@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
+export type FeatureId =
+  | "housing" | "jobs" | "trades" | "legal" | "family"
+  | "local"   | "business" | "resume" | "stem" | "ai"
+  | "history" | "library"  | "tv"     | "auto" | "academy";
+
 interface NewsItem {
   id: string;
   title: string;
@@ -11,6 +16,31 @@ interface NewsItem {
   category: string;
   timestamp: number;
 }
+
+interface Insight {
+  whatsHappening:    string;
+  whyItMatters:      string;
+  whatYouShouldDo:   string;
+  suggestedFeatures: FeatureId[];
+}
+
+const FEATURE_META: Record<FeatureId, { label: string; icon: string; color: string }> = {
+  housing:  { label: "Housing",         icon: "🏠",   color: "#34d399" },
+  jobs:     { label: "Job Finder",      icon: "💼",   color: "#00d4ff" },
+  trades:   { label: "Trades Mode",     icon: "🚛",   color: "#f59e0b" },
+  legal:    { label: "Legal Rights",    icon: "⚖️",   color: "#60a5fa" },
+  family:   { label: "Family Support",  icon: "💛",   color: "#f59e0b" },
+  local:    { label: "Local Help",      icon: "📍",   color: "#86efac" },
+  business: { label: "Business Plan",   icon: "📊",   color: "#C9A227" },
+  resume:   { label: "Resume Builder",  icon: "📄",   color: "#a855f7" },
+  stem:     { label: "STEM Program",    icon: "🧪",   color: "#34d399" },
+  ai:       { label: "AI Skills",       icon: "🤖",   color: "#00d4ff" },
+  history:  { label: "Black History",   icon: "📜",   color: "#C9A227" },
+  library:  { label: "NAVI Library",    icon: "📚",   color: "#C9A227" },
+  tv:       { label: "NaviTV",          icon: "📺",   color: "#a855f7" },
+  auto:     { label: "Auto Finder",     icon: "🚗",   color: "#f472b6" },
+  academy:  { label: "NAVI Academy",    icon: "🎓",   color: "#00d4ff" },
+};
 
 interface NodeT extends NewsItem {
   x: number;
@@ -50,7 +80,15 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export default function NewsWebPanel({ onClose }: { onClose: () => void }) {
+interface NewsWebPanelProps {
+  onClose:   () => void;
+  /** Open another NAVI feature when an insight action button is tapped. */
+  onAction?: (feature: FeatureId) => void;
+  /** Optional context shipped with insight requests for personalized advice. */
+  userContext?: { location?: string; interests?: string[] };
+}
+
+export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWebPanelProps) {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const nodesRef     = useRef<NodeT[]>([]);
@@ -63,6 +101,11 @@ export default function NewsWebPanel({ onClose }: { onClose: () => void }) {
   const [error,    setError]    = useState<string | null>(null);
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+
+  // Insight state
+  const [insight,        setInsight]        = useState<Insight | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError,   setInsightError]   = useState<string | null>(null);
 
   // ── Fetch news + auto-refresh every 5 minutes ─────────────────────────────
   const fetchNews = useCallback(async () => {
@@ -275,6 +318,54 @@ export default function NewsWebPanel({ onClose }: { onClose: () => void }) {
   }, [size.w, size.h]);
 
   // ── Click → hit-test nearest node ─────────────────────────────────────────
+  // ── Fetch NAVI insight whenever a node is selected ────────────────────────
+  useEffect(() => {
+    if (!selected) {
+      setInsight(null);
+      setInsightError(null);
+      setInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setInsight(null);
+    setInsightError(null);
+    setInsightLoading(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title:    selected.title,
+            summary:  selected.summary,
+            source:   selected.source,
+            category: selected.category,
+            url:      selected.url,
+            userContext,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setInsightError("NAVI couldn't break this one down right now.");
+          return;
+        }
+        const json = await res.json() as { insight?: Insight; error?: string };
+        if (json.insight) {
+          setInsight(json.insight);
+        } else {
+          setInsightError(json.error ?? "No insight returned.");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[news/insight] fetch error:", err);
+        setInsightError("NAVI couldn't reach the insight service.");
+      } finally {
+        if (!cancelled) setInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selected, userContext]);
+
   const handlePointer = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -389,63 +480,200 @@ export default function NewsWebPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Detail panel (slides up when a node is selected) */}
-      {selected && (
-        <div style={{
-          position: "absolute", left: 0, right: 0, bottom: 0,
-          padding: 16, zIndex: 5,
-          animation: "slideUpNW 0.28s ease forwards",
-        }}>
+      {selected && (() => {
+        const accent = CATEGORY_COLORS[selected.category] ?? "#475569";
+        return (
           <div style={{
-            borderRadius: 16, overflow: "hidden",
-            background: "linear-gradient(160deg, rgba(16,16,26,0.98) 0%, rgba(10,10,20,0.98) 100%)",
-            border: `1px solid ${CATEGORY_COLORS[selected.category] ?? "#475569"}40`,
-            boxShadow: `0 0 32px ${CATEGORY_COLORS[selected.category] ?? "#0006"}26, 0 -10px 40px rgba(0,0,0,0.6)`,
+            position: "absolute", left: 0, right: 0, bottom: 0,
+            padding: 16, zIndex: 5,
+            animation: "slideUpNW 0.28s ease forwards",
           }}>
-            <div style={{ padding: "14px 16px 8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, flexWrap: "wrap" }}>
-                <div style={{
-                  padding: "3px 8px", borderRadius: 6,
-                  fontSize: 9, fontWeight: 700,
-                  color: CATEGORY_COLORS[selected.category] ?? "#94a3b8",
-                  background: `${CATEGORY_COLORS[selected.category] ?? "#475569"}1a`,
-                  border: `1px solid ${CATEGORY_COLORS[selected.category] ?? "#475569"}33`,
-                  textTransform: "uppercase", letterSpacing: "0.08em",
-                }}>
-                  {CATEGORY_LABEL[selected.category] ?? selected.category}
-                </div>
-                <div style={{ fontSize: 9, color: "#64748b" }}>
-                  {selected.source} · {timeAgo(selected.timestamp)}
-                </div>
-              </div>
-              <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 11, flexShrink: 0 }} aria-label="Close detail">✕</button>
-            </div>
-            <div style={{ padding: "0 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.4, marginBottom: 8 }}>
-                {selected.title}
-              </div>
-              {selected.summary && (
-                <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65 }}>
-                  {selected.summary}
-                </div>
-              )}
-            </div>
-            <a href={selected.url} target="_blank" rel="noopener noreferrer" style={{
-              display: "block", padding: "12px 16px", textAlign: "center",
-              fontSize: 11, fontWeight: 700,
-              color: CATEGORY_COLORS[selected.category] ?? "#00d4ff",
-              textDecoration: "none", letterSpacing: "0.08em",
+            <div style={{
+              borderRadius: 16, overflow: "hidden",
+              background: "linear-gradient(160deg, rgba(16,16,26,0.98) 0%, rgba(10,10,20,0.98) 100%)",
+              border: `1px solid ${accent}40`,
+              boxShadow: `0 0 32px ${accent}26, 0 -10px 40px rgba(0,0,0,0.6)`,
+              maxHeight: "82vh",
+              display: "flex", flexDirection: "column",
             }}>
-              READ FULL STORY ↗
-            </a>
+              {/* Header — always visible */}
+              <div style={{ padding: "14px 16px 8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, flexWrap: "wrap" }}>
+                  <div style={{
+                    padding: "3px 8px", borderRadius: 6,
+                    fontSize: 9, fontWeight: 700,
+                    color: accent,
+                    background: `${accent}1a`,
+                    border: `1px solid ${accent}33`,
+                    textTransform: "uppercase", letterSpacing: "0.08em",
+                  }}>
+                    {CATEGORY_LABEL[selected.category] ?? selected.category}
+                  </div>
+                  <div style={{ fontSize: 9, color: "#64748b" }}>
+                    {selected.source} · {timeAgo(selected.timestamp)}
+                  </div>
+                </div>
+                <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 11, flexShrink: 0 }} aria-label="Close detail">✕</button>
+              </div>
+
+              {/* Scrollable body */}
+              <div style={{ overflowY: "auto", padding: "0 16px 8px", flex: 1 }}>
+                {/* Title + summary */}
+                <div style={{ paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.4, marginBottom: 8 }}>
+                    {selected.title}
+                  </div>
+                  {selected.summary && (
+                    <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65 }}>
+                      {selected.summary}
+                    </div>
+                  )}
+                </div>
+
+                {/* NAVI Breakdown */}
+                <div style={{ paddingTop: 14 }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+                  }}>
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: "#00d4ff",
+                      boxShadow: "0 0 8px #00d4ff",
+                      animation: insightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+                    }} />
+                    <div style={{ fontSize: 9, letterSpacing: "0.28em", textTransform: "uppercase", color: "#00d4ff", fontWeight: 700 }}>
+                      NAVI Breakdown
+                    </div>
+                  </div>
+
+                  {insightLoading && (
+                    <div style={{
+                      padding: "16px", textAlign: "center",
+                      fontSize: 10, color: "#64748b", letterSpacing: "0.1em",
+                    }}>
+                      NAVI is reading the story…
+                    </div>
+                  )}
+
+                  {!insightLoading && insightError && (
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      background: "rgba(239,68,68,0.06)",
+                      border: "1px solid rgba(239,68,68,0.18)",
+                      fontSize: 10, color: "#fca5a5", lineHeight: 1.6,
+                    }}>
+                      {insightError}
+                    </div>
+                  )}
+
+                  {!insightLoading && insight && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <InsightSection
+                        label="WHAT'S HAPPENING"
+                        body={insight.whatsHappening}
+                        color="#00d4ff"
+                      />
+                      <InsightSection
+                        label="WHY IT MATTERS"
+                        body={insight.whyItMatters}
+                        color="#C9A227"
+                      />
+                      <InsightSection
+                        label="WHAT YOU SHOULD DO"
+                        body={insight.whatYouShouldDo}
+                        color="#34d399"
+                      />
+
+                      {/* Action buttons — open NAVI features */}
+                      {insight.suggestedFeatures.length > 0 && (
+                        <div style={{ marginTop: 4 }}>
+                          <div style={{ fontSize: 8, letterSpacing: "0.28em", textTransform: "uppercase", color: "#475569", fontWeight: 700, marginBottom: 8 }}>
+                            Take Action
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {insight.suggestedFeatures.map((fid) => {
+                              const meta = FEATURE_META[fid];
+                              if (!meta) return null;
+                              return (
+                                <button
+                                  key={fid}
+                                  onClick={() => { onAction?.(fid); }}
+                                  style={{
+                                    display: "inline-flex", alignItems: "center", gap: 6,
+                                    padding: "8px 12px", borderRadius: 10,
+                                    background: `${meta.color}10`,
+                                    border: `1px solid ${meta.color}40`,
+                                    color: meta.color, fontSize: 10, fontWeight: 700,
+                                    fontFamily: "monospace", cursor: "pointer",
+                                    letterSpacing: "0.04em",
+                                  }}
+                                >
+                                  <span style={{ fontSize: 13 }}>{meta.icon}</span>
+                                  {meta.label}
+                                  <span style={{ fontSize: 10, opacity: 0.6 }}>↗</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Read full story footer — always visible */}
+              <a
+                href={selected.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block", padding: "12px 16px", textAlign: "center",
+                  fontSize: 11, fontWeight: 700,
+                  color: accent,
+                  textDecoration: "none", letterSpacing: "0.08em",
+                  borderTop: "1px solid rgba(255,255,255,0.04)",
+                  flexShrink: 0,
+                }}
+              >
+                READ FULL STORY ↗
+              </a>
+            </div>
+            <style jsx>{`
+              @keyframes slideUpNW {
+                from { transform: translateY(110%); opacity: 0; }
+                to   { transform: translateY(0);    opacity: 1; }
+              }
+              @keyframes pulseDot {
+                0%, 100% { opacity: 0.4; transform: scale(1);   }
+                50%      { opacity: 1;   transform: scale(1.4); }
+              }
+            `}</style>
           </div>
-          <style jsx>{`
-            @keyframes slideUpNW {
-              from { transform: translateY(110%); opacity: 0; }
-              to   { transform: translateY(0);    opacity: 1; }
-            }
-          `}</style>
-        </div>
-      )}
+        );
+      })()}
+    </div>
+  );
+}
+
+// ── Insight section helper ──────────────────────────────────────────────────
+function InsightSection({ label, body, color }: { label: string; body: string; color: string }) {
+  if (!body) return null;
+  return (
+    <div style={{
+      padding: "10px 12px", borderRadius: 10,
+      background: `${color}07`,
+      border: `1px solid ${color}1f`,
+    }}>
+      <div style={{
+        fontSize: 8, letterSpacing: "0.28em", textTransform: "uppercase",
+        color, fontWeight: 700, marginBottom: 6,
+      }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.65 }}>
+        {body}
+      </div>
     </div>
   );
 }
