@@ -104,6 +104,55 @@ export async function getUserRank(userId: string): Promise<{ entry: LeaderboardE
   return { entry: idx >= 0 ? all[idx] : null, rank: idx >= 0 ? idx + 1 : 0 };
 }
 
+/**
+ * Ensure a leaderboard row exists for this user. Creates a 0-XP entry if
+ * none exists; otherwise keeps their XP but refreshes display_name if the
+ * caller has a better one than what's stored. Used on sign-in so every
+ * signed-up user is visible on the leaderboard immediately.
+ */
+export async function ensureLeaderboardEntry(userId: string, displayName: string): Promise<LeaderboardEntry | null> {
+  try {
+    const { data: existing, error: fetchErr } = await supabase
+      .from("leaderboard")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (fetchErr && fetchErr.code !== "PGRST116") {
+      console.error("[leaderboard] ensure fetch error:", fetchErr.message);
+    }
+
+    const name = (displayName || "").trim() || "NAVI User";
+
+    if (existing) {
+      // Backfill a better display_name if the stored one is the generic default
+      if (existing.display_name !== name && (existing.display_name === "NAVI User" || !existing.display_name)) {
+        const { data: updated, error } = await supabase
+          .from("leaderboard")
+          .update({ display_name: name })
+          .eq("id", existing.id)
+          .select()
+          .single();
+        if (error) { console.error("[leaderboard] ensure update error:", error.message); return existing; }
+        return updated;
+      }
+      return existing;
+    }
+
+    const { data: inserted, error } = await supabase
+      .from("leaderboard")
+      .insert({ user_id: userId, display_name: name, xp: 0, level: 1, streak: 0, achievements: 0 })
+      .select()
+      .single();
+    if (error) { console.error("[leaderboard] ensure insert error:", error.message); return null; }
+    console.log("[leaderboard] Seeded entry for:", name);
+    return inserted;
+  } catch (err) {
+    console.error("[leaderboard] ensureLeaderboardEntry error:", err);
+    return null;
+  }
+}
+
 /** XP reward amounts */
 export const XP_REWARDS = {
   chat_message: 5,

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,12 +25,14 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
     try {
-      console.log("[Signup] Attempting signup for:", email);
+      const name = displayName.trim();
+      console.log("[Signup] Attempting signup for:", email, "as", name);
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: { display_name: name, full_name: name },
         },
       });
       if (authError) {
@@ -37,6 +40,15 @@ export default function SignupPage() {
         setError(authError.message);
       } else {
         console.log("[Signup] Success — user:", data.user?.id, "confirmed:", data.user?.confirmed_at ? "yes" : "pending");
+        // Seed leaderboard entry immediately so the user is visible on the
+        // leaderboard even before they earn any XP. Best-effort — ignore errors.
+        if (data.user?.id) {
+          fetch("/api/leaderboard/ensure", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: data.user.id, display_name: name || "NAVI User" }),
+          }).catch(() => {});
+        }
         setSuccess(true);
       }
     } catch {
@@ -111,6 +123,27 @@ export default function SignupPage() {
           boxShadow: "0 0 40px rgba(201,162,39,0.06), 0 8px 32px rgba(0,0,0,0.4)",
           display: "flex", flexDirection: "column", gap: 16,
         }}>
+          <div>
+            <div style={{ fontSize: 9, color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
+              Display Name
+            </div>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="How you'll appear on the leaderboard"
+              required
+              maxLength={32}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 10,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#e2e8f0", fontSize: 12, fontFamily: "monospace",
+                outline: "none",
+              }}
+            />
+          </div>
+
           <div>
             <div style={{ fontSize: 9, color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
               Email

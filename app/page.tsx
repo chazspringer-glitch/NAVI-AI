@@ -805,6 +805,7 @@ export default function HomePage() {
   const [codeStatus,        setCodeStatus]              = useState<"idle" | "loading" | "success" | "error">("idle");
   const [codeMessage,       setCodeMessage]             = useState("");
   const [authUserId,        setAuthUserId]              = useState<string | null>(null);
+  const [authDisplayName,   setAuthDisplayName]         = useState<string>("");
   const [showHousingPanel,  setShowHousingPanel]   = useState(false);
   const [showHousingHub,    setShowHousingHub]     = useState(false);
   const [showStemPanel,     setShowStemPanel]      = useState(false);
@@ -1100,15 +1101,44 @@ export default function HomePage() {
 
   // Check Supabase auth for "My Business" tab visibility
   useEffect(() => {
+    // Resolve the best available display name from Supabase user metadata.
+    const resolveName = (session: { user: { user_metadata?: { display_name?: string; full_name?: string }; email?: string } } | null): string => {
+      if (!session?.user) return "";
+      const md = session.user.user_metadata ?? {};
+      return (
+        (md.display_name || md.full_name || "").trim() ||
+        (session.user.email ? session.user.email.split("@")[0] : "") ||
+        "NAVI User"
+      );
+    };
+
+    // Seed a leaderboard entry for every signed-in user so they're visible
+    // immediately — backfills users who signed up before this code existed.
+    const ensureLBEntry = (session: { user: { id: string; user_metadata?: { display_name?: string; full_name?: string }; email?: string } } | null) => {
+      if (!session?.user?.id) return;
+      const name = resolveName(session);
+      fetch("/api/leaderboard/ensure", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: session.user.id, display_name: name }),
+      }).catch(() => {});
+    };
+
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log("[NAVI] Auth check:", session ? `logged in (${session.user.id})` : "not logged in", error?.message ?? "");
       setIsLoggedIn(!!session);
       setAuthUserId(session?.user?.id ?? null);
+      setAuthDisplayName(resolveName(session));
+      ensureLBEntry(session);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("[NAVI] Auth change:", event, session ? "logged in" : "logged out");
       setIsLoggedIn(!!session);
       setAuthUserId(session?.user?.id ?? null);
+      setAuthDisplayName(resolveName(session));
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        ensureLBEntry(session);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -1137,9 +1167,9 @@ export default function HomePage() {
     fetch("/api/xp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: authUserId, display_name: userName || "NAVI User", action }),
+      body: JSON.stringify({ user_id: authUserId, display_name: authDisplayName || userName || "NAVI User", action }),
     }).catch(() => {});
-  }, [authUserId, userName]);
+  }, [authUserId, authDisplayName, userName]);
 
   const openServiceWithAuth = useCallback((svc: { icon: string; title: string; desc: string; subject: string }) => {
     if (isLoggedIn) {
@@ -1712,7 +1742,7 @@ export default function HomePage() {
         fetch("/api/xp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: authUserId, display_name: userName || "NAVI User", action: "chat_message" }),
+          body: JSON.stringify({ user_id: authUserId, display_name: authDisplayName || userName || "NAVI User", action: "chat_message" }),
         }).catch(() => {});
       }
       if (soundEnabledRef.current) playNaviResponse();
