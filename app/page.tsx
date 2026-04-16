@@ -1840,6 +1840,7 @@ export default function HomePage() {
     }
 
     // ── Regular speech → send directly (bypasses input-state closure) ──────
+    unlockAudio(); // keep audio context alive between mic + TTS
     fromVoiceRef.current = true;
     sendMessageRef.current(text);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
