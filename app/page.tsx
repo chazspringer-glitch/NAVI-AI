@@ -453,24 +453,66 @@ function useContinuousSpeech(
 // Call unlockAudio() at the very start of any user-initiated action (send,
 // keydown, voice result) BEFORE the first await so the context is warm by the
 // time we try to play audio after an API round-trip.
+//
+// iOS specifically requires that the SAME HTMLAudioElement instance that will
+// eventually play audio have .play() called during a user gesture. We create
+// one persistent <audio> element here, prime it with a silent clip during the
+// first gesture, and reuse it for every TTS playback by swapping its src.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _audioCtx: any = null;
+let _primedAudio: HTMLAudioElement | null = null;
+let _primedAudioReady = false;
+// Tiny silent MP3 (base64) — ~0.1s of silence, just enough to satisfy iOS
+const SILENT_MP3 =
+  "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/80DEKwAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/80DEAAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
 function unlockAudio(): void {
   if (typeof window === "undefined") return;
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Ctor = (window as any).AudioContext ?? (window as any).webkitAudioContext;
-    if (!Ctor) return;
-    if (!_audioCtx) _audioCtx = new Ctor();
-    const ctx = _audioCtx;
-    if (ctx.state === "suspended") ctx.resume().catch(() => {});
-    // Play a 1-sample silent buffer — this is the "user-gesture touch"
-    const buf = ctx.createBuffer(1, 1, 22050);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(ctx.destination);
-    src.start(0);
+    if (Ctor) {
+      if (!_audioCtx) _audioCtx = new Ctor();
+      const ctx = _audioCtx;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      // Play a 1-sample silent buffer — this is the "user-gesture touch"
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    }
   } catch { /* some devices don't support AudioContext */ }
+
+  // Prime a persistent HTMLAudioElement so TTS playback works after async
+  // handoffs (e.g., speech-recognition → API fetch → audio.play()).
+  try {
+    if (!_primedAudio) {
+      _primedAudio = new Audio();
+      _primedAudio.preload = "auto";
+      _primedAudio.crossOrigin = "anonymous";
+      // Keep it out of the DOM flow but attached so mobile browsers don't GC it
+      _primedAudio.setAttribute("playsinline", "");
+      _primedAudio.muted = false;
+      _primedAudio.volume = 1;
+    }
+    if (!_primedAudioReady) {
+      const el = _primedAudio;
+      el.src = SILENT_MP3;
+      const p = el.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          _primedAudioReady = true;
+          try { el.pause(); el.currentTime = 0; } catch { /* ignore */ }
+        }).catch(() => { /* ignored — will retry on next gesture */ });
+      } else {
+        _primedAudioReady = true;
+      }
+    }
+  } catch { /* ignore */ }
+}
+
+function getPrimedAudio(): HTMLAudioElement | null {
+  return _primedAudio;
 }
 
 // ── Text-to-Speech hook (ElevenLabs via /api/tts) ────────────────────────────
@@ -554,7 +596,20 @@ function useTTS() {
         blobUrl = URL.createObjectURL(blob);
       }
 
-      const audio  = new Audio(blobUrl);
+      // Reuse the primed HTMLAudioElement if available — this is the one that
+      // had .play() called during a user gesture, so iOS will let it play
+      // fresh audio without another gesture. Fall back to a new Audio if the
+      // primed one doesn't exist yet (desktop / first-load paths).
+      const primed = getPrimedAudio();
+      const audio  = primed ?? new Audio();
+      // Clear any previous handlers on the primed element before rebinding
+      audio.onplay = null;
+      audio.onended = null;
+      audio.onerror = null;
+      audio.src = blobUrl;
+      try { audio.currentTime = 0; } catch { /* ignore */ }
+      audio.muted = false;
+      audio.volume = 1;
       const savedUrl = blobUrl;
       audioRef.current = audio;
 
