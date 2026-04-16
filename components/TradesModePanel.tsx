@@ -12,16 +12,6 @@ const CDL_STEPS = [
   { num: "5", title: "Get Your CDL & Start Working", desc: "Once you pass, your CDL is issued. Apply to trucking companies — many hire immediately and offer sign-on bonuses.", color: "#f59e0b" },
 ];
 
-const PRACTICE_QUESTIONS = [
-  { q: "What is the minimum age to obtain an interstate CDL?", options: ["18", "19", "21", "25"], answer: 2 },
-  { q: "During a pre-trip inspection, you should check:", options: ["Only tires", "Only brakes", "All major systems", "Just the engine"], answer: 2 },
-  { q: "The safe following distance for a loaded truck at highway speed is:", options: ["1 second", "3 seconds", "7+ seconds", "Same as a car"], answer: 2 },
-  { q: "What does 'GVWR' stand for?", options: ["Gross Vehicle Weight Rating", "General Vehicle Width Ratio", "Gross Velocity Weight Requirement", "None of the above"], answer: 0 },
-  { q: "When backing a tractor-trailer, you should:", options: ["Back quickly", "Use a spotter when possible", "Never check mirrors", "Ignore the trailer"], answer: 1 },
-  { q: "Air brakes must be drained of moisture because:", options: ["It improves fuel economy", "Water can freeze and cause brake failure", "It reduces noise", "It's optional"], answer: 1 },
-  { q: "A CDL is required for vehicles over:", options: ["10,000 lbs GVWR", "16,001 lbs GVWR", "26,001 lbs GVWR", "30,000 lbs GVWR"], answer: 2 },
-];
-
 const EARNINGS = [
   { role: "Entry-Level (Year 1)", range: "$45K–$55K", note: "OTR long-haul, most companies" },
   { role: "Experienced (2–5 yrs)", range: "$60K–$80K", note: "Regional or dedicated routes" },
@@ -44,34 +34,10 @@ function buildSearchUrl(type: string, state: string) {
 
 export default function TradesModePanel({ onClose }: { onClose: () => void }) {
   const [userState, setUserState] = useState("");
-  const [activeSection, setActiveSection] = useState<"guide" | "test" | "programs" | "jobs" | "earnings">("guide");
-  const [testIdx, setTestIdx] = useState(0);
-  const [testAnswer, setTestAnswer] = useState<number | null>(null);
-  const [testScore, setTestScore] = useState(0);
-  const [testDone, setTestDone] = useState(false);
-
-  const handleAnswer = (idx: number) => {
-    if (testAnswer !== null) return;
-    setTestAnswer(idx);
-    if (idx === PRACTICE_QUESTIONS[testIdx].answer) setTestScore((s) => s + 1);
-  };
-
-  const nextQuestion = () => {
-    if (testIdx < PRACTICE_QUESTIONS.length - 1) {
-      setTestIdx((i) => i + 1);
-      setTestAnswer(null);
-    } else {
-      setTestDone(true);
-    }
-  };
-
-  const resetTest = () => {
-    setTestIdx(0); setTestAnswer(null); setTestScore(0); setTestDone(false);
-  };
-
+  const [activeSection, setActiveSection] = useState<"guide" | "prep" | "programs" | "jobs" | "earnings">("guide");
   const TABS = [
     { key: "guide" as const, label: "Guide", icon: "📋" },
-    { key: "test" as const, label: "Practice", icon: "✏️" },
+    { key: "prep" as const, label: "Test Prep", icon: "✏️" },
     { key: "programs" as const, label: "Training", icon: "🎓" },
     { key: "jobs" as const, label: "Jobs", icon: "💼" },
     { key: "earnings" as const, label: "Earnings", icon: "💰" },
@@ -156,55 +122,39 @@ export default function TradesModePanel({ onClose }: { onClose: () => void }) {
           </>
         )}
 
-        {/* ── Practice Test ──────────────────────────────────────────────── */}
-        {userState && activeSection === "test" && (
-          <div style={{ padding: "16px", borderRadius: 14, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(168,85,247,0.12)" }}>
-            {!testDone ? (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#a855f7" }}>Question {testIdx + 1} of {PRACTICE_QUESTIONS.length}</div>
-                  <div style={{ fontSize: 10, color: "#34d399" }}>Score: {testScore}/{testIdx + (testAnswer !== null ? 1 : 0)}</div>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.5, marginBottom: 14 }}>
-                  {PRACTICE_QUESTIONS[testIdx].q}
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {PRACTICE_QUESTIONS[testIdx].options.map((opt, i) => {
-                    const correct = i === PRACTICE_QUESTIONS[testIdx].answer;
-                    const selected = testAnswer === i;
-                    const revealed = testAnswer !== null;
-                    return (
-                      <button key={i} onClick={() => handleAnswer(i)} disabled={revealed} style={{
-                        width: "100%", padding: "10px 12px", borderRadius: 10, textAlign: "left",
-                        fontSize: 11, fontFamily: "monospace", cursor: revealed ? "default" : "pointer",
-                        background: revealed ? (correct ? "rgba(52,211,153,0.10)" : selected ? "rgba(239,68,68,0.10)" : "rgba(255,255,255,0.02)") : "rgba(255,255,255,0.03)",
-                        border: revealed ? (correct ? "1px solid rgba(52,211,153,0.35)" : selected ? "1px solid rgba(239,68,68,0.35)" : "1px solid rgba(255,255,255,0.06)") : "1px solid rgba(255,255,255,0.08)",
-                        color: revealed ? (correct ? "#34d399" : selected ? "#f87171" : "#64748b") : "#e2e8f0",
-                      }}>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-                {testAnswer !== null && (
-                  <button onClick={nextQuestion} style={{ width: "100%", marginTop: 12, padding: "10px", borderRadius: 10, background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.28)", color: "#a855f7", fontSize: 11, fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
-                    {testIdx < PRACTICE_QUESTIONS.length - 1 ? "Next Question →" : "See Results"}
-                  </button>
-                )}
-              </>
-            ) : (
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>{testScore >= 5 ? "🎉" : testScore >= 3 ? "👍" : "📚"}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: testScore >= 5 ? "#34d399" : "#f59e0b", marginBottom: 4 }}>{testScore}/{PRACTICE_QUESTIONS.length}</div>
-                <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 16 }}>
-                  {testScore >= 5 ? "Great job! You're on track for the CDL test." : testScore >= 3 ? "Good start. Keep studying the CDL manual." : "Keep practicing — review the CDL manual and try again."}
-                </div>
-                <button onClick={resetTest} style={{ padding: "10px 24px", borderRadius: 10, background: "rgba(168,85,247,0.10)", border: "1px solid rgba(168,85,247,0.28)", color: "#a855f7", fontSize: 11, fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
-                  Retake Test
-                </button>
+        {/* ── CDL Test Prep Links ──────────────────────────────────────── */}
+        {userState && activeSection === "prep" && (
+          <>
+            <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.12)" }}>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+                <span style={{ color: "#a855f7", fontWeight: 700 }}>NAVI:</span> These are the best free CDL practice tests online. Study the general knowledge test first, then add endorsements.
               </div>
-            )}
-          </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "Cristcdl.com — Free CDL Practice Test", desc: "Most popular free CDL prep. General knowledge, air brakes, combinations, and all endorsements.", url: "https://cristcdl.com/", color: "#a855f7" },
+                { label: "CDL Prep — State-Specific Tests", desc: "Practice tests modeled after your state's actual CDL exam. Unlimited retakes.", url: "https://www.cdlprepapp.com/", color: "#00d4ff" },
+                { label: "DMV.org — CDL Practice Tests", desc: "Free practice tests for every CDL class and endorsement. Clean interface.", url: `https://www.dmv.org/${userState.toLowerCase().replace(/\s+/g, "-")}/cdl-license.php`, color: "#34d399" },
+                { label: "Trucker Country — CDL Test Prep", desc: "500+ practice questions covering all sections of the CDL written exam.", url: "https://www.truckercountry.com/cdl-practice-tests/", color: "#C9A227" },
+                { label: "FMCSA — Official Study Guide", desc: "The official federal guide to CDL requirements, regulations, and test topics.", url: "https://www.fmcsa.dot.gov/registration/commercial-drivers-license/drivers", color: "#f59e0b" },
+              ].map(({ label, desc, url, color }) => (
+                <button key={label} onClick={() => window.open(url, "_blank")} style={{
+                  width: "100%", display: "flex", alignItems: "flex-start", gap: 12, padding: "14px", borderRadius: 14, cursor: "pointer",
+                  background: `${color}06`, border: `1px solid ${color}18`, textAlign: "left",
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>📝</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 3 }}>{label}</div>
+                    <div style={{ fontSize: 9, color: "#475569", lineHeight: 1.5 }}>{desc}</div>
+                  </div>
+                  <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>↗</span>
+                </button>
+              ))}
+            </div>
+            <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(245,158,11,0.03)", border: "1px solid rgba(245,158,11,0.10)", fontSize: 9, color: "#475569", lineHeight: 1.6 }}>
+              💡 Tip: Take the general knowledge test first. You need to pass it before any endorsement tests. Most states require 80% to pass.
+            </div>
+          </>
         )}
 
         {/* ── Training Programs ──────────────────────────────────────────── */}
