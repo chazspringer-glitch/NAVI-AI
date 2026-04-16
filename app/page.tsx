@@ -40,6 +40,7 @@ const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPa
 const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
 const NaviLibraryPanel        = dynamic(() => import("@/components/NaviLibraryPanel"),        { ssr: false });
+const NewsWebPanel            = dynamic(() => import("@/components/NewsWebPanel"),            { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -803,6 +804,8 @@ export default function HomePage() {
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
   const [showNaviLibrary,    setShowNaviLibrary]        = useState(false);
   const [showNaviLibraryIntro, setShowNaviLibraryIntro] = useState(false);
+  const [showNewsWeb,        setShowNewsWeb]            = useState(false);
+  const [showNewsWebIntro,   setShowNewsWebIntro]       = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -2677,6 +2680,77 @@ export default function HomePage() {
       {/* NAVI Library */}
       {showNaviLibrary && (
         <NaviLibraryPanel onClose={() => setShowNaviLibrary(false)} />
+      )}
+
+      {/* News Web Cinematic Intro */}
+      {showNewsWebIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "18%", right: "20%", width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(0,212,255,0.5))" }}>📡</div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#00d4ff", marginBottom: 10 }}>
+              NAVI Pulse
+            </div>
+
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(0,212,255,0.25)" }}>
+              News Web
+            </div>
+
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 8 }}>
+              Real news. Real time. See the connections.
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 24 }}>
+              Stories orbit NAVI{"'"}s core. Tap any node to read the full piece.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+              {[
+                { c: "#a855f7", l: "National" },
+                { c: "#00d4ff", l: "World" },
+                { c: "#34d399", l: "Tech" },
+                { c: "#f59e0b", l: "Sports" },
+                { c: "#C9A227", l: "Business" },
+                { c: "#f472b6", l: "Politics" },
+              ].map(({ c, l }) => (
+                <span key={l} style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  fontSize: 9, color: "#94a3b8",
+                  padding: "4px 8px", borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: `1px solid ${c}33`,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: c, boxShadow: `0 0 6px ${c}` }} />
+                  {l}
+                </span>
+              ))}
+            </div>
+
+            <button onClick={() => { setShowNewsWebIntro(false); setShowNewsWeb(true); }}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #0891b2)", border: "none", color: "#02020a", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(0,212,255,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+              Open the Web →
+            </button>
+            <button onClick={() => setShowNewsWebIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* News Web Panel */}
+      {showNewsWeb && (
+        <NewsWebPanel onClose={() => setShowNewsWeb(false)} />
       )}
 
       {/* Leaderboard Panel */}
@@ -5199,6 +5273,7 @@ export default function HomePage() {
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#00d4ff", textTransform: "uppercase", marginBottom: 10 }}>Learning</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("📺", "NaviTV", "#a855f7", () => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  {toolBtn("📡", "News Web", "#00d4ff", () => { setShowNewsWebIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   {toolBtn("📚", "Homework Helper", "#00d4ff", () => { if (proLocked) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, proLocked)}
                   <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
