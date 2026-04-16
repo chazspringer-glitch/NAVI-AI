@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import BondDisplay from "./BondDisplay";
-
-const NaviParticleFace = dynamic(() => import("./NaviParticleFace"), { ssr: false });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getTimeOfDay() {
@@ -1046,19 +1043,6 @@ export default function NaviFace({
               );
             })}
 
-          </div>
-          {/* Particle face — moves with the orb */}
-          <div style={{
-            position: "absolute", top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            pointerEvents: "none", zIndex: 25,
-            opacity: 0.35,
-            mixBlendMode: "screen",
-          }}>
-            <NaviParticleFace
-              size={160}
-              state={isLoading ? "thinking" : isSpeaking ? "responding" : "idle"}
-            />
           </div>
           {/* /orb wrapper */}
         </div>
