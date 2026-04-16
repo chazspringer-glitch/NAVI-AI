@@ -40,6 +40,7 @@ const LeaderboardPanel        = dynamic(() => import("@/components/LeaderboardPa
 const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPanel"),          { ssr: false });
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
+const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -3043,6 +3044,19 @@ export default function HomePage() {
           wakeActive={wakeActive}
           onTap={handleNaviOrbTap}
         />
+        {/* Particle face overlay */}
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -60%)",
+          pointerEvents: "none", zIndex: 25,
+          opacity: 0.35,
+          mixBlendMode: "screen",
+        }}>
+          <NaviParticleFace
+            size={180}
+            state={isLoading ? "thinking" : isSpeaking ? "responding" : "idle"}
+          />
+        </div>
 
         {/* Triple-tap founder glow pulse — brief radial bloom on the orb */}
         {founderOrbPulse && (
