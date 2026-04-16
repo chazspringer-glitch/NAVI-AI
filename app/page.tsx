@@ -802,6 +802,7 @@ export default function HomePage() {
   const [showFreshFood,      setShowFreshFood]          = useState(false);
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
   const [showNaviLibrary,    setShowNaviLibrary]        = useState(false);
+  const [showNaviLibraryIntro, setShowNaviLibraryIntro] = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -2617,6 +2618,60 @@ export default function HomePage() {
           opens the full panel. Flip FRESH_FOOD_LOCKED to false to re-enable. */}
       {showFreshFood && !FRESH_FOOD_LOCKED && (
         <FreshFoodPanel onClose={() => setShowFreshFood(false)} />
+      )}
+
+      {/* NAVI Library Cinematic Intro */}
+      {showNaviLibraryIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          {/* Ambient glows */}
+          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,162,39,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "18%", left: "20%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(201,162,39,0.45))" }}>📚</div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#C9A227", marginBottom: 10 }}>
+              NAVI Library
+            </div>
+
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 8, textShadow: "0 0 24px rgba(201,162,39,0.25)" }}>
+              The Founder{"'"}s Collection
+            </div>
+
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.8, marginBottom: 12, fontStyle: "italic" }}>
+              Every level of growth starts with knowledge.
+            </div>
+            <div style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.8, marginBottom: 12, fontWeight: 600 }}>
+              These aren{"'"}t just books… these are blueprints.
+            </div>
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.8, marginBottom: 24, fontStyle: "italic" }}>
+              Choose what speaks to you… and start your evolution.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 24 }}>
+              {["📖", "✨", "🧠", "💎", "🔥"].map((e, i) => (
+                <span key={i} style={{ fontSize: 24, filter: "drop-shadow(0 0 6px rgba(201,162,39,0.4))" }}>{e}</span>
+              ))}
+            </div>
+
+            <button onClick={() => { setShowNaviLibraryIntro(false); setShowNaviLibrary(true); }}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #C9A227, #a07818)", border: "none", color: "#08080f", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(201,162,39,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+              Enter the Library →
+            </button>
+            <button onClick={() => setShowNaviLibraryIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+              Maybe later
+            </button>
+          </div>
+        </div>
       )}
 
       {/* NAVI Library */}
@@ -5115,7 +5170,7 @@ export default function HomePage() {
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>📺</span><span style={{ fontWeight: 600 }}>NaviTV</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
-                  <button onClick={() => { setShowNaviLibrary(true); setMenuOpen(false); trackXP("tool_used"); }}
+                  <button onClick={() => { setShowNaviLibraryIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.18)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>📚</span><span style={{ fontWeight: 600 }}>NAVI Library</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>

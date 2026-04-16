@@ -220,14 +220,8 @@ export default function NaviLibraryPanel({ onClose }: { onClose: () => void }) {
                   <div style={{ padding: "16px 18px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
                     <div>
                       <div style={{
-                        fontSize: 8, letterSpacing: "0.28em", textTransform: "uppercase",
-                        color: accent, marginBottom: 4,
-                      }}>
-                        Volume {String(i + 1).padStart(2, "0")}
-                      </div>
-                      <div style={{
-                        fontSize: 15, fontWeight: 700, color: "#f1f5f9",
-                        lineHeight: 1.35,
+                        fontSize: 17, fontWeight: 800, color: "#f1f5f9",
+                        lineHeight: 1.3, letterSpacing: "0.005em",
                       }}>
                         {book.title}
                       </div>
