@@ -52,6 +52,7 @@ import type { AgentAction, NavigateDestination } from "@/lib/actions";
 import { matchServiceRoute } from "@/lib/voiceNav";
 import { playTabSwitch, playConfirm, playNaviResponse } from "@/lib/sounds";
 import { EMAIL_RECEIVER } from "@/lib/emailConfig";
+import { hasSeenIntro, markIntroSeen } from "@/lib/introSeen";
 import { supabase } from "@/lib/supabase";
 import { track } from "@vercel/analytics";
 import {
@@ -822,6 +823,7 @@ export default function HomePage() {
   const [showNaviLibraryIntro, setShowNaviLibraryIntro] = useState(false);
   const [showNewsWeb,        setShowNewsWeb]            = useState(false);
   const [showNewsWebIntro,   setShowNewsWebIntro]       = useState(false);
+  const [showPartnersIntro,  setShowPartnersIntro]      = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -2101,8 +2103,13 @@ export default function HomePage() {
         setMenuOpen(true);
         break;
       case "partners":
-        setHubTab("partners");
-        setMenuOpen(true);
+        if (hasSeenIntro("partners")) {
+          setHubTab("partners");
+          setMenuOpen(true);
+        } else {
+          markIntroSeen("partners");
+          setShowPartnersIntro(true);
+        }
         break;
       case "rewards":
         setHubTab("rewards");
@@ -2696,6 +2703,66 @@ export default function HomePage() {
       {/* NAVI Library */}
       {showNaviLibrary && (
         <NaviLibraryPanel onClose={() => setShowNaviLibrary(false)} />
+      )}
+
+      {/* Partners Cinematic Intro */}
+      {showPartnersIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          <div style={{ position: "absolute", top: "22%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,162,39,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "18%", left: "18%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(201,162,39,0.45))" }}>🤝</div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#C9A227", marginBottom: 10 }}>
+              CherryTree Network
+            </div>
+
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(201,162,39,0.25)" }}>
+              NAVI Partners
+            </div>
+
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 10 }}>
+              The businesses, banks, and community leaders in NAVI{"'"}s corner.
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 24 }}>
+              Every partner here is working to keep resources circulating in our community. Support them — they support us.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+              {["🏦", "💳", "🛍", "🌟", "📍", "🐦"].map((e, i) => (
+                <span key={i} style={{ fontSize: 24, filter: "drop-shadow(0 0 6px rgba(201,162,39,0.35))" }}>{e}</span>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowPartnersIntro(false);
+                showSwitching("Partners");
+                track("hub_tab_switch", { tab: "partners" });
+                setHubTab("partners");
+                setMenuOpen(true);
+              }}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #C9A227, #a07818)", border: "none", color: "#08080f", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(201,162,39,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}
+            >
+              Meet the Partners →
+            </button>
+            <button
+              onClick={() => setShowPartnersIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
       )}
 
       {/* News Web Cinematic Intro */}
@@ -5268,7 +5335,13 @@ export default function HomePage() {
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.18)", color: "#a855f7", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🎙️</span><span style={{ fontWeight: 600 }}>Podcast Partnership</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
-                  <button onClick={() => { showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); setHubTab("partners"); }}
+                  <button onClick={() => {
+                      if (hasSeenIntro("partners")) {
+                        showSwitching("Partners"); track("hub_tab_switch", { tab: "partners" }); setHubTab("partners");
+                      } else {
+                        markIntroSeen("partners"); setShowPartnersIntro(true);
+                      }
+                    }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.03)", border: "1px solid rgba(201,162,39,0.12)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🤝</span><span style={{ fontWeight: 600 }}>Partners</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
@@ -5283,7 +5356,11 @@ export default function HomePage() {
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
                   {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
-                  <button onClick={() => { setShowNaviLibraryIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
+                  <button onClick={() => {
+                      if (hasSeenIntro("library")) { setShowNaviLibrary(true); }
+                      else { markIntroSeen("library"); setShowNaviLibraryIntro(true); }
+                      setMenuOpen(false); trackXP("tool_used");
+                    }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.18)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>📚</span><span style={{ fontWeight: 600 }}>NAVI Library</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
@@ -5315,8 +5392,16 @@ export default function HomePage() {
               <div>
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#00d4ff", textTransform: "uppercase", marginBottom: 10 }}>Learning</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {toolBtn("📺", "NaviTV", "#a855f7", () => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
-                  {toolBtn("📡", "News Web", "#00d4ff", () => { setShowNewsWebIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  {toolBtn("📺", "NaviTV", "#a855f7", () => {
+                    if (hasSeenIntro("naviTV")) { setShowNaviTV(true); }
+                    else { markIntroSeen("naviTV"); setShowNaviTVIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
+                  {toolBtn("📡", "News Web", "#00d4ff", () => {
+                    if (hasSeenIntro("newsWeb")) { setShowNewsWeb(true); }
+                    else { markIntroSeen("newsWeb"); setShowNewsWebIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
                   {toolBtn("📚", "Homework Helper", "#00d4ff", () => { if (proLocked) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, proLocked)}
                   <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
