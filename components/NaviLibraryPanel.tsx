@@ -23,28 +23,44 @@ type Book = {
 
 const BOOKS: Book[] = [
   {
-    cover: "",
-    title: "Book Title #1",
-    description: "Short blurb about what this book teaches and who it's for. Replace this copy with the real back-cover pitch.",
-    price: "$19.99",
-    url: "https://www.amazon.com/",
+    cover: "", // TODO: paste cover image URL from the Amazon listing
+    title: "Volume 01", // TODO: real title
+    description: "Coming soon — tap View Book to see this title on Amazon.",
+    price: "View on Amazon", // TODO: real price (e.g., "$19.99")
+    url: "https://a.co/d/09jJlKiB",
     accent: "#C9A227",
   },
   {
     cover: "",
-    title: "Book Title #2",
-    description: "A second blueprint for your evolution. Swap this with the real title, price, cover image, and Amazon link.",
-    price: "$24.99",
-    url: "https://www.amazon.com/",
+    title: "Volume 02",
+    description: "Coming soon — tap View Book to see this title on Amazon.",
+    price: "View on Amazon",
+    url: "https://a.co/d/03H0iMhl",
     accent: "#a855f7",
   },
   {
     cover: "",
-    title: "Book Title #3",
-    description: "Third volume description. Update BOOKS at the top of components/NaviLibraryPanel.tsx to change anything.",
-    price: "$14.99",
-    url: "https://www.amazon.com/",
+    title: "Volume 03",
+    description: "Coming soon — tap View Book to see this title on Amazon.",
+    price: "View on Amazon",
+    url: "https://a.co/d/00xKmIMp",
     accent: "#00d4ff",
+  },
+  {
+    cover: "",
+    title: "Volume 04",
+    description: "Coming soon — tap View Book to see this title on Amazon.",
+    price: "View on Amazon",
+    url: "https://a.co/d/0eFPH3HL",
+    accent: "#34d399",
+  },
+  {
+    cover: "",
+    title: "Volume 05",
+    description: "Coming soon — tap View Book to see this title on Amazon.",
+    price: "View on Amazon",
+    url: "https://a.co/d/01vvgV50",
+    accent: "#f472b6",
   },
 ];
 
