@@ -15,6 +15,16 @@ interface NewsItem {
   source: string;
   category: string;
   timestamp: number;
+  keywords?:  string[];
+  clusterId?: string;
+}
+
+interface NewsCluster {
+  id:        string;
+  name:      string;
+  itemIds:   string[];
+  keywords:  string[];
+  category?: string;
 }
 
 interface Insight {
@@ -54,6 +64,17 @@ interface NodeT extends NewsItem {
   color: string;
 }
 
+/** Per-frame cluster geometry computed from current node positions. */
+interface ClusterGeom {
+  id: string;
+  name: string;
+  cx: number;
+  cy: number;
+  r:  number;
+  color: string;
+  size: number; // member count
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   national: "#a855f7",
   world:    "#00d4ff",
@@ -89,23 +110,31 @@ interface NewsWebPanelProps {
 }
 
 export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWebPanelProps) {
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const nodesRef     = useRef<NodeT[]>([]);
-  const frameRef     = useRef<number>(0);
-  const timeRef      = useRef<number>(0);
+  const canvasRef         = useRef<HTMLCanvasElement>(null);
+  const containerRef      = useRef<HTMLDivElement>(null);
+  const nodesRef          = useRef<NodeT[]>([]);
+  const clusterGeomRef    = useRef<ClusterGeom[]>([]);
+  const frameRef          = useRef<number>(0);
+  const timeRef           = useRef<number>(0);
 
   const [items,    setItems]    = useState<NewsItem[]>([]);
+  const [clusters, setClusters] = useState<NewsCluster[]>([]);
   const [selected, setSelected] = useState<NewsItem | null>(null);
+  const [selectedCluster, setSelectedCluster] = useState<NewsCluster | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
 
-  // Insight state
+  // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightError,   setInsightError]   = useState<string | null>(null);
+
+  // Cluster trend insight state
+  const [clusterInsight,        setClusterInsight]        = useState<Insight | null>(null);
+  const [clusterInsightLoading, setClusterInsightLoading] = useState(false);
+  const [clusterInsightError,   setClusterInsightError]   = useState<string | null>(null);
 
   // ── Fetch news + auto-refresh every 5 minutes ─────────────────────────────
   const fetchNews = useCallback(async () => {
@@ -114,6 +143,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       const json = await res.json();
       if (Array.isArray(json.news)) {
         setItems(json.news);
+        setClusters(Array.isArray(json.clusters) ? json.clusters : []);
         setError(null);
         setRefreshedAt(Date.now());
       } else {
@@ -145,30 +175,77 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // ── Build/refresh nodes when items or size change ─────────────────────────
+  // ── Build/refresh nodes when items, clusters, or size change ──────────────
+  // Layout: each cluster gets its own arc segment; items inside a cluster
+  // sit close together so the bubble drawn around them stays compact.
+  // Singletons (items not in any cluster) are gathered in their own arc
+  // segment after the clusters.
   useEffect(() => {
     if (size.w === 0 || size.h === 0) return;
     const cx = size.w / 2;
     const cy = size.h / 2;
-    const minR = Math.min(80, Math.min(size.w, size.h) * 0.18);
+    const minR = Math.min(110, Math.min(size.w, size.h) * 0.22);
     const maxR = Math.min(size.w, size.h) * 0.42;
 
-    // Group by category so same-category nodes cluster in arcs
-    const byCat: Record<string, NewsItem[]> = {};
-    items.forEach((it) => {
-      (byCat[it.category] ??= []).push(it);
-    });
-    const categories = Object.keys(byCat);
-    const arcSize = (Math.PI * 2) / Math.max(1, categories.length);
+    // Build a map of clusterId → member NewsItems (preserving server order)
+    const clusterMap = new Map<string, NewsItem[]>();
+    for (const c of clusters) clusterMap.set(c.id, []);
+    const singletons: NewsItem[] = [];
+    for (const it of items) {
+      if (it.clusterId && clusterMap.has(it.clusterId)) {
+        clusterMap.get(it.clusterId)!.push(it);
+      } else {
+        singletons.push(it);
+      }
+    }
 
+    // Each cluster + the singleton bucket gets one "group slot" in the ring
+    const groupCount = clusters.length + (singletons.length > 0 ? 1 : 0);
+    if (groupCount === 0) {
+      nodesRef.current = [];
+      return;
+    }
+    const arcSize = (Math.PI * 2) / groupCount;
     const newNodes: NodeT[] = [];
-    categories.forEach((cat, ci) => {
-      const arr = byCat[cat];
+
+    // Stable angle per cluster: same id always lands in the same slot when
+    // clusters appear/disappear, so the layout doesn't shuffle on refresh.
+    clusters.forEach((cluster, ci) => {
+      const members = clusterMap.get(cluster.id) ?? [];
+      if (members.length === 0) return;
       const baseStart = ci * arcSize;
-      const subArc = arcSize / Math.max(1, arr.length);
-      arr.forEach((item, i) => {
-        const angle = baseStart + subArc * i + subArc * 0.5;
-        const radius = minR + (maxR - minR) * (0.3 + Math.random() * 0.7);
+      // Cluster footprint: 65% of the slot — leaves breathing room between bubbles
+      const footprint = arcSize * 0.65;
+      const subArc = footprint / Math.max(1, members.length);
+      const baseRadius = minR + (maxR - minR) * 0.55;
+      members.forEach((item, i) => {
+        const angle = baseStart + (arcSize - footprint) * 0.5 + subArc * i + subArc * 0.5;
+        const jitter = (Math.random() - 0.5) * 18;
+        const radius = baseRadius + jitter;
+        const existing = nodesRef.current.find((n) => n.id === item.id);
+        const color = CATEGORY_COLORS[item.category] ?? "#94a3b8";
+        newNodes.push({
+          ...item,
+          x: existing?.x ?? cx + Math.cos(angle) * radius,
+          y: existing?.y ?? cy + Math.sin(angle) * radius,
+          baseAngle: angle,
+          baseRadius: radius,
+          driftSpeed: 0.2 + Math.random() * 0.3,
+          driftPhase: Math.random() * Math.PI * 2,
+          size: 6 + Math.random() * 4,
+          age: existing?.age ?? 0,
+          color,
+        });
+      });
+    });
+
+    // Singletons get the final arc slot, evenly spaced across it
+    if (singletons.length > 0) {
+      const baseStart = clusters.length * arcSize;
+      const sub = arcSize / singletons.length;
+      singletons.forEach((item, i) => {
+        const angle = baseStart + sub * i + sub * 0.5;
+        const radius = minR + (maxR - minR) * (0.3 + Math.random() * 0.6);
         const existing = nodesRef.current.find((n) => n.id === item.id);
         const color = CATEGORY_COLORS[item.category] ?? "#94a3b8";
         newNodes.push({
@@ -184,9 +261,10 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
           color,
         });
       });
-    });
+    }
+
     nodesRef.current = newNodes;
-  }, [items, size.w, size.h]);
+  }, [items, clusters, size.w, size.h]);
 
   // ── Animation loop ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -232,7 +310,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         if (n.age < 1) n.age = Math.min(1, n.age + 0.018);
       }
 
-      // Spokes from each node to NAVI core
+      // Faint spoke from each node to NAVI core
       for (const n of nodes) {
         ctx.strokeStyle = `${n.color}1a`;
         ctx.lineWidth = 0.5;
@@ -242,23 +320,56 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         ctx.stroke();
       }
 
-      // Cluster lines: connect same-category nodes within distance threshold
-      const linkDist = 200;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j];
-          if (a.category !== b.category) continue;
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
+      // ── Compute cluster geometry from current node positions ─────────────
+      const geoms: ClusterGeom[] = [];
+      for (const c of clusters) {
+        const members = nodes.filter((n) => n.clusterId === c.id);
+        if (members.length < 2) continue;
+        let mx = 0, my = 0;
+        for (const m of members) { mx += m.x; my += m.y; }
+        mx /= members.length;
+        my /= members.length;
+        let r = 0;
+        for (const m of members) {
+          const dx = m.x - mx, dy = m.y - my;
           const d = Math.sqrt(dx * dx + dy * dy);
-          if (d > linkDist) continue;
-          const alpha = (1 - d / linkDist) * 0.35;
-          const hex = Math.round(alpha * 255).toString(16).padStart(2, "0");
-          ctx.strokeStyle = `${a.color}${hex}`;
-          ctx.lineWidth = 0.7;
+          if (d > r) r = d;
+        }
+        // Padding so the bubble visibly contains the glow halos
+        r += 22 + Math.min(8, members.length);
+        const accent = CATEGORY_COLORS[c.category ?? ""] ?? "#94a3b8";
+        geoms.push({ id: c.id, name: c.name, cx: mx, cy: my, r, color: accent, size: members.length });
+      }
+      // Save for hit-testing
+      clusterGeomRef.current = geoms;
+
+      // ── Draw cluster bubbles + labels ────────────────────────────────────
+      for (const g of geoms) {
+        const isSelected = selectedCluster?.id === g.id;
+        // Outer translucent fill
+        const bubble = ctx.createRadialGradient(g.cx, g.cy, g.r * 0.3, g.cx, g.cy, g.r);
+        bubble.addColorStop(0, `${g.color}14`);
+        bubble.addColorStop(0.7, `${g.color}0a`);
+        bubble.addColorStop(1, `${g.color}00`);
+        ctx.fillStyle = bubble;
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, g.r, 0, Math.PI * 2);
+        ctx.fill();
+        // Dashed edge ring
+        ctx.strokeStyle = `${g.color}${isSelected ? "aa" : "55"}`;
+        ctx.lineWidth = isSelected ? 1.4 : 0.8;
+        ctx.setLineDash([4, 5]);
+        ctx.beginPath();
+        ctx.arc(g.cx, g.cy, g.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Connect each member to the cluster centroid (subtle)
+        for (const m of nodes.filter((n) => n.clusterId === g.id)) {
+          ctx.strokeStyle = `${g.color}22`;
+          ctx.lineWidth = 0.6;
           ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
+          ctx.moveTo(g.cx, g.cy);
+          ctx.lineTo(m.x, m.y);
           ctx.stroke();
         }
       }
@@ -309,13 +420,48 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         ctx.fill();
       }
 
+      // ── Cluster name labels ─────────────────────────────────────────────
+      // Drawn last so labels sit above the bubble + nodes. Position label
+      // above the bubble, falling back to inside if it would be off-screen.
+      ctx.font = "600 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.textAlign = "center";
+      for (const g of geoms) {
+        const label = g.name.length > 38 ? g.name.slice(0, 36) + "…" : g.name;
+        let lx = g.cx, ly = g.cy - g.r - 10;
+        if (ly < 18) ly = g.cy - g.r + 14;
+        // Pill background for readability
+        const padX = 8, padY = 4;
+        const metrics = ctx.measureText(label);
+        const w = metrics.width + padX * 2;
+        const h = 14 + padY;
+        // Clamp to viewport horizontally so labels don't get clipped
+        if (lx - w / 2 < 6) lx = w / 2 + 6;
+        if (lx + w / 2 > size.w - 6) lx = size.w - 6 - w / 2;
+        ctx.fillStyle = "rgba(8,8,16,0.78)";
+        roundRect(ctx, lx - w / 2, ly - h * 0.7, w, h, 6);
+        ctx.fill();
+        ctx.strokeStyle = `${g.color}55`;
+        ctx.lineWidth = 0.8;
+        roundRect(ctx, lx - w / 2, ly - h * 0.7, w, h, 6);
+        ctx.stroke();
+        // Text
+        ctx.fillStyle = g.color;
+        ctx.fillText(label, lx, ly + 1);
+        // Member count chip
+        ctx.fillStyle = `${g.color}aa`;
+        ctx.font = "700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.fillText(`${g.size}`, lx + w / 2 - 8, ly - 5);
+        ctx.font = "600 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      }
+      ctx.textAlign = "start";
+
       ctx.restore();
       frameRef.current = requestAnimationFrame(animate);
     };
 
     frameRef.current = requestAnimationFrame(animate);
     return () => { running = false; cancelAnimationFrame(frameRef.current); };
-  }, [size.w, size.h]);
+  }, [size.w, size.h, clusters, selectedCluster]);
 
   // ── Click → hit-test nearest node ─────────────────────────────────────────
   // ── Fetch NAVI insight whenever a node is selected ────────────────────────
@@ -366,6 +512,56 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => { cancelled = true; };
   }, [selected, userContext]);
 
+  // ── Fetch NAVI cluster trend insight when a cluster is selected ──────────
+  useEffect(() => {
+    if (!selectedCluster) {
+      setClusterInsight(null);
+      setClusterInsightError(null);
+      setClusterInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setClusterInsight(null);
+    setClusterInsightError(null);
+    setClusterInsightLoading(true);
+    const memberItems = items.filter((it) => selectedCluster.itemIds.includes(it.id));
+    const articles = memberItems.slice(0, 10).map((it) => ({
+      title:   it.title,
+      summary: it.summary,
+      source:  it.source,
+    }));
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId:   selectedCluster.id,
+            clusterName: selectedCluster.name,
+            keywords:    selectedCluster.keywords,
+            articles,
+            userContext,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setClusterInsightError("NAVI couldn't analyze this trend right now.");
+          return;
+        }
+        const json = await res.json() as { insight?: Insight; error?: string };
+        if (json.insight) setClusterInsight(json.insight);
+        else setClusterInsightError(json.error ?? "No insight returned.");
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[news/insight/cluster] fetch error:", err);
+        setClusterInsightError("NAVI couldn't reach the trend insight service.");
+      } finally {
+        if (!cancelled) setClusterInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedCluster, items, userContext]);
+
   const handlePointer = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -373,20 +569,45 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    let nearest: NodeT | null = null;
-    let minDist = Infinity;
+    // 1. Hit-test nodes first (they sit on top of bubbles visually)
+    let nearestNode: NodeT | null = null;
+    let minNodeDist = Infinity;
     for (const n of nodesRef.current) {
       const dx = n.x - x;
       const dy = n.y - y;
       const d = Math.sqrt(dx * dx + dy * dy);
       const hitR = Math.max(n.size * 3, 18);
-      if (d < hitR && d < minDist) {
-        nearest = n;
-        minDist = d;
+      if (d < hitR && d < minNodeDist) {
+        nearestNode = n;
+        minNodeDist = d;
       }
     }
-    if (nearest) setSelected(nearest);
-  }, []);
+    if (nearestNode) {
+      setSelectedCluster(null);
+      setSelected(nearestNode);
+      return;
+    }
+
+    // 2. Cluster bubble hit — pick the smallest bubble that contains the point
+    // (smaller = more specific). This avoids the case where overlapping
+    // bubbles always select the largest one.
+    let nearestCluster: { id: string; r: number } | null = null;
+    for (const g of clusterGeomRef.current) {
+      const dx = g.cx - x;
+      const dy = g.cy - y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < g.r && (!nearestCluster || g.r < nearestCluster.r)) {
+        nearestCluster = { id: g.id, r: g.r };
+      }
+    }
+    if (nearestCluster) {
+      const cluster = clusters.find((c) => c.id === nearestCluster!.id);
+      if (cluster) {
+        setSelected(null);
+        setSelectedCluster(cluster);
+      }
+    }
+  }, [clusters]);
 
   return (
     <div style={{
@@ -652,8 +873,200 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
           </div>
         );
       })()}
+
+      {/* Cluster trend detail panel */}
+      {selectedCluster && (() => {
+        const accent = CATEGORY_COLORS[selectedCluster.category ?? ""] ?? "#00d4ff";
+        const memberItems = items.filter((it) => selectedCluster.itemIds.includes(it.id));
+        return (
+          <div style={{
+            position: "absolute", left: 0, right: 0, bottom: 0,
+            padding: 16, zIndex: 6,
+            animation: "slideUpNW 0.28s ease forwards",
+          }}>
+            <div style={{
+              borderRadius: 16, overflow: "hidden",
+              background: "linear-gradient(160deg, rgba(16,16,26,0.98) 0%, rgba(10,10,20,0.98) 100%)",
+              border: `1px solid ${accent}55`,
+              boxShadow: `0 0 32px ${accent}33, 0 -10px 40px rgba(0,0,0,0.6)`,
+              maxHeight: "82vh",
+              display: "flex", flexDirection: "column",
+            }}>
+              {/* Header */}
+              <div style={{ padding: "14px 16px 8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, flexWrap: "wrap" }}>
+                  <div style={{
+                    padding: "3px 8px", borderRadius: 6,
+                    fontSize: 9, fontWeight: 700,
+                    color: accent,
+                    background: `${accent}1a`,
+                    border: `1px solid ${accent}33`,
+                    textTransform: "uppercase", letterSpacing: "0.08em",
+                  }}>
+                    Trend · {memberItems.length} stories
+                  </div>
+                  {selectedCluster.keywords.length > 0 && (
+                    <div style={{ fontSize: 9, color: "#64748b" }}>
+                      {selectedCluster.keywords.slice(0, 4).join(", ")}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedCluster(null)}
+                  style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 11, flexShrink: 0 }}
+                  aria-label="Close cluster detail"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable body */}
+              <div style={{ overflowY: "auto", padding: "0 16px 8px", flex: 1 }}>
+                {/* Cluster name */}
+                <div style={{ paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.35, marginBottom: 4 }}>
+                    {selectedCluster.name}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>
+                    NAVI grouped these stories by topic similarity.
+                  </div>
+                </div>
+
+                {/* NAVI Trend Breakdown */}
+                <div style={{ paddingTop: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: "#00d4ff",
+                      boxShadow: "0 0 8px #00d4ff",
+                      animation: clusterInsightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+                    }} />
+                    <div style={{ fontSize: 9, letterSpacing: "0.28em", textTransform: "uppercase", color: "#00d4ff", fontWeight: 700 }}>
+                      Trend Analysis
+                    </div>
+                  </div>
+
+                  {clusterInsightLoading && (
+                    <div style={{ padding: "16px", textAlign: "center", fontSize: 10, color: "#64748b", letterSpacing: "0.1em" }}>
+                      NAVI is connecting the dots…
+                    </div>
+                  )}
+
+                  {!clusterInsightLoading && clusterInsightError && (
+                    <div style={{
+                      padding: "10px 12px", borderRadius: 10,
+                      background: "rgba(239,68,68,0.06)",
+                      border: "1px solid rgba(239,68,68,0.18)",
+                      fontSize: 10, color: "#fca5a5", lineHeight: 1.6,
+                    }}>
+                      {clusterInsightError}
+                    </div>
+                  )}
+
+                  {!clusterInsightLoading && clusterInsight && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <InsightSection label="WHAT'S HAPPENING"   body={clusterInsight.whatsHappening}  color="#00d4ff" />
+                      <InsightSection label="WHY IT MATTERS"     body={clusterInsight.whyItMatters}    color="#C9A227" />
+                      <InsightSection label="WHAT YOU SHOULD DO" body={clusterInsight.whatYouShouldDo} color="#34d399" />
+
+                      {clusterInsight.suggestedFeatures.length > 0 && (
+                        <div style={{ marginTop: 4 }}>
+                          <div style={{ fontSize: 8, letterSpacing: "0.28em", textTransform: "uppercase", color: "#475569", fontWeight: 700, marginBottom: 8 }}>
+                            Take Action
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {clusterInsight.suggestedFeatures.map((fid) => {
+                              const meta = FEATURE_META[fid];
+                              if (!meta) return null;
+                              return (
+                                <button
+                                  key={fid}
+                                  onClick={() => { onAction?.(fid); }}
+                                  style={{
+                                    display: "inline-flex", alignItems: "center", gap: 6,
+                                    padding: "8px 12px", borderRadius: 10,
+                                    background: `${meta.color}10`,
+                                    border: `1px solid ${meta.color}40`,
+                                    color: meta.color, fontSize: 10, fontWeight: 700,
+                                    fontFamily: "monospace", cursor: "pointer",
+                                    letterSpacing: "0.04em",
+                                  }}
+                                >
+                                  <span style={{ fontSize: 13 }}>{meta.icon}</span>
+                                  {meta.label}
+                                  <span style={{ fontSize: 10, opacity: 0.6 }}>↗</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Member stories list */}
+                <div style={{ paddingTop: 18 }}>
+                  <div style={{ fontSize: 8, letterSpacing: "0.28em", textTransform: "uppercase", color: "#475569", fontWeight: 700, marginBottom: 8 }}>
+                    Stories in this trend
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {memberItems.slice(0, 15).map((it) => {
+                      const itColor = CATEGORY_COLORS[it.category] ?? "#94a3b8";
+                      return (
+                        <button
+                          key={it.id}
+                          onClick={() => { setSelectedCluster(null); setSelected(it); }}
+                          style={{
+                            display: "flex", alignItems: "flex-start", gap: 8,
+                            padding: "8px 10px", borderRadius: 8,
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            cursor: "pointer", textAlign: "left", width: "100%",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          <span style={{
+                            width: 6, height: 6, borderRadius: "50%",
+                            background: itColor, boxShadow: `0 0 6px ${itColor}`,
+                            marginTop: 5, flexShrink: 0,
+                          }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.4 }}>
+                              {it.title}
+                            </div>
+                            <div style={{ fontSize: 8, color: "#475569", marginTop: 2 }}>
+                              {it.source} · {timeAgo(it.timestamp)}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
+}
+
+// ── Canvas helpers ──────────────────────────────────────────────────────────
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rad = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.lineTo(x + w - rad, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+  ctx.lineTo(x + w, y + h - rad);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+  ctx.lineTo(x + rad, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+  ctx.lineTo(x, y + rad);
+  ctx.quadraticCurveTo(x, y, x + rad, y);
+  ctx.closePath();
 }
 
 // ── Insight section helper ──────────────────────────────────────────────────

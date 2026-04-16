@@ -17,11 +17,24 @@ export interface NewsCacheItem {
   source: string;
   category: string;
   timestamp: number;
+  /** Topic keywords extracted by the clustering algorithm. */
+  keywords?: string[];
+  /** Set when this item belongs to a multi-article cluster. */
+  clusterId?: string;
+}
+
+export interface NewsCacheCluster {
+  id:        string;
+  name:      string;
+  itemIds:   string[];
+  keywords:  string[];
+  category?: string;
 }
 
 export interface NewsCacheState {
-  data: NewsCacheItem[];
-  ts:   number;
+  data:     NewsCacheItem[];
+  clusters: NewsCacheCluster[];
+  ts:       number;
 }
 
 let cache: NewsCacheState | null = null;
@@ -31,8 +44,11 @@ export function readNewsCache(): NewsCacheState | null {
   return cache;
 }
 
-export function writeNewsCache(data: NewsCacheItem[]): NewsCacheState {
-  cache = { data, ts: Date.now() };
+export function writeNewsCache(
+  data: NewsCacheItem[],
+  clusters: NewsCacheCluster[] = [],
+): NewsCacheState {
+  cache = { data, clusters, ts: Date.now() };
   return cache;
 }
 

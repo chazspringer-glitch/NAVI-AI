@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readNewsCache, writeNewsCache, CACHE_MS } from "@/lib/newsCache";
+import { clusterItems } from "@/lib/newsClustering";
 
 export const dynamic = "force-dynamic";
 
@@ -98,7 +99,12 @@ export async function GET() {
   // Serve from cache when fresh
   const cached = readNewsCache();
   if (cached && Date.now() - cached.ts < CACHE_MS) {
-    return NextResponse.json({ news: cached.data, cached: true, fetchedAt: cached.ts });
+    return NextResponse.json({
+      news:      cached.data,
+      clusters:  cached.clusters,
+      cached:    true,
+      fetchedAt: cached.ts,
+    });
   }
 
   const results = await Promise.all(SOURCES.map(fetchSource));
@@ -107,6 +113,27 @@ export async function GET() {
   // Sort newest first
   news.sort((a, b) => b.timestamp - a.timestamp);
 
-  const written = writeNewsCache(news);
-  return NextResponse.json({ news, cached: false, fetchedAt: written.ts });
+  // ── Cluster the merged feed ─────────────────────────────────────────────
+  // Pure-logic, no AI calls. Tags each item with extracted keywords and a
+  // clusterId when the item belongs to a multi-article topic group.
+  const { clusters, itemKeywords, itemCluster } = clusterItems(news, {
+    threshold:      0.16,
+    minClusterSize: 2,
+    maxClusters:    8,
+  });
+
+  for (const item of news) {
+    const kw = itemKeywords[item.id];
+    if (kw && kw.length) (item as NewsItem & { keywords?: string[] }).keywords = kw;
+    const cid = itemCluster[item.id];
+    if (cid) (item as NewsItem & { clusterId?: string }).clusterId = cid;
+  }
+
+  const written = writeNewsCache(news, clusters);
+  return NextResponse.json({
+    news,
+    clusters,
+    cached:    false,
+    fetchedAt: written.ts,
+  });
 }
