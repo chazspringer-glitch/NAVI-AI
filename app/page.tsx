@@ -41,6 +41,7 @@ const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPane
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
+const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
 import AchievementDock from "@/components/AchievementDock";
 import NaviIntro from "@/components/NaviIntro";
 import ServiceErrorBoundary from "@/components/ServiceErrorBoundary";
@@ -741,6 +742,7 @@ export default function HomePage() {
   const [showFreshFoodIntro, setShowFreshFoodIntro]     = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
+  const [showTrades,         setShowTrades]             = useState(false);
   const [showNaviTVIntro,    setShowNaviTVIntro]        = useState(false);
   const [showLuckyMode,     setShowLuckyMode]           = useState(false);
   const [isLoggedIn,        setIsLoggedIn]              = useState(false);
@@ -2377,6 +2379,11 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Trades Mode */}
+      {showTrades && (
+        <TradesModePanel onClose={() => setShowTrades(false)} />
       )}
 
       {/* Why NAVI Exists */}
@@ -4980,6 +4987,7 @@ export default function HomePage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("📄", "Resume Builder", "#4ade80", () => { if (proLocked) { setProGateFeature("Resume Builder"); return; } setShowResumeBuilder(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("🚀", "Business Plan Builder", "#f59e0b", () => { if (proLocked) { setProGateFeature("Business Plan Builder"); return; } setShowBizPlanBuilder(true); setMenuOpen(false); }, proLocked)}
+                  {toolBtn("🚛", "Trades Mode (CDL)", "#f59e0b", () => { setShowTrades(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => { if (!foundersIntroSeen) { setShowFoundersIntro(true); } else { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); setHubTab("founders"); } }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.22)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>💼</span><span style={{ fontWeight: 600 }}>Founders — Work With Us</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
