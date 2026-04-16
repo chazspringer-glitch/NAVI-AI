@@ -4119,7 +4119,7 @@ export default function HomePage() {
             {/* Mic toggle */}
             {micSupported && (
               <button
-                onClick={() => { toggleMic(); track("mic_toggled", { enabled: !micEnabled }); }}
+                onClick={() => { unlockAudio(); toggleMic(); track("mic_toggled", { enabled: !micEnabled }); }}
                 aria-label={micEnabled ? "Turn off continuous listening" : "Tap to enable voice"}
                 title={micEnabled ? (micStatus === "listening" ? "Listening…" : "Mic on") : "Tap to enable voice"}
                 className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
