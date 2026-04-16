@@ -204,6 +204,13 @@ const PARTNERS = [
     color: "#a855f7",
     url: "https://kairosempowermentcenter.com/",
   },
+  {
+    name: "Schmaders 910",
+    desc: "A locally connected brand providing products and services to the Wilmington community. Supporting local businesses helps strengthen the ecosystem and keep resources circulating within the city.",
+    icon: "📍",
+    color: "#C9A227",
+    url: "https://www.schmaders910.com/",
+  },
 ];
 
 // ── Live opportunity banner messages ─────────────────────────────────────────
