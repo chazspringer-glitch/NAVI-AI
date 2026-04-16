@@ -117,7 +117,7 @@ export async function GET() {
   // Pure-logic, no AI calls. Tags each item with extracted keywords and a
   // clusterId when the item belongs to a multi-article topic group.
   const { clusters, itemKeywords, itemCluster } = clusterItems(news, {
-    threshold:      0.16,
+    threshold:      0.22,
     minClusterSize: 2,
     maxClusters:    8,
   });

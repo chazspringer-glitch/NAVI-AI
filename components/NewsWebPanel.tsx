@@ -223,13 +223,17 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       const members = clusterMap.get(cluster.id) ?? [];
       if (members.length === 0) return;
       const baseStart = ci * arcSize;
-      // Cluster footprint: 65% of the slot — leaves breathing room between bubbles
-      const footprint = arcSize * 0.65;
+      // Cluster footprint: keep members packed tight so the bubble around
+      // them stays compact. Larger clusters get slightly more room.
+      const footprintFrac = members.length <= 2 ? 0.22
+                          : members.length <= 4 ? 0.35
+                          : 0.50;
+      const footprint = arcSize * footprintFrac;
       const subArc = footprint / Math.max(1, members.length);
       const baseRadius = minR + (maxR - minR) * 0.55;
       members.forEach((item, i) => {
         const angle = baseStart + (arcSize - footprint) * 0.5 + subArc * i + subArc * 0.5;
-        const jitter = (Math.random() - 0.5) * 18;
+        const jitter = (Math.random() - 0.5) * 10;
         const radius = baseRadius + jitter;
         const existing = nodesRef.current.find((n) => n.id === item.id);
         const color = CATEGORY_COLORS[item.category] ?? "#94a3b8";
@@ -352,6 +356,14 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         }
         // Padding so the bubble visibly contains the glow halos
         r += 22 + Math.min(8, members.length);
+        // Clamp to a sensible max per cluster size so a 2-member cluster
+        // can't take over the canvas when its members temporarily drift
+        // apart during the layout transition.
+        const maxR = members.length <= 2 ? 75
+                   : members.length <= 4 ? 110
+                   : members.length <= 6 ? 140
+                   : 170;
+        r = Math.min(r, maxR);
         const accent = CATEGORY_COLORS[c.category ?? ""] ?? "#94a3b8";
         geoms.push({ id: c.id, name: c.name, cx: mx, cy: my, r, color: accent, size: members.length });
       }
