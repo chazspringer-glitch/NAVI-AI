@@ -183,12 +183,12 @@ export default function WhyNaviPanel({ onClose }: { onClose: () => void }) {
           const hasMore = s.label === "What NAVI Is";
           return (
             <RevealSection key={i} delay={i * 80}>
-              <div>
+              <div style={{ textAlign: "center" }}>
                 {/* Section label */}
                 <button
                   onClick={() => setExpandedIdx(isExpanded ? null : i)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12,
                     background: "none", border: "none", cursor: "pointer", padding: 0, width: "100%",
                   }}
                 >
@@ -204,7 +204,7 @@ export default function WhyNaviPanel({ onClose }: { onClose: () => void }) {
                     {s.label}
                   </div>
                   <div style={{
-                    marginLeft: "auto", fontSize: 10, color: "#334155",
+                    fontSize: 10, color: "#334155",
                     transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
                     transition: "transform 0.25s ease",
                   }}>
@@ -232,10 +232,10 @@ export default function WhyNaviPanel({ onClose }: { onClose: () => void }) {
                     <div style={{
                       padding: "12px 14px", borderRadius: 12, marginBottom: 12,
                       background: `${s.color}08`, border: `1px solid ${s.color}15`,
-                      display: "flex", alignItems: "center", gap: 12,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
                     }}>
                       {isExpanded && <AnimatedCounter value={s.stat.value} color={s.color} />}
-                      <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.4 }}>{s.stat.label}</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.4, textAlign: "left" }}>{s.stat.label}</div>
                     </div>
                   )}
 
@@ -248,7 +248,7 @@ export default function WhyNaviPanel({ onClose }: { onClose: () => void }) {
 
                   {/* Feature tags — What NAVI Is */}
                   {(s as { features?: string[] }).features && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, marginBottom: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 8, marginBottom: 8 }}>
                       {((s as { features?: string[] }).features || []).map((f) => (
                         <span key={f} style={{
                           padding: "4px 10px", borderRadius: 8,
@@ -291,7 +291,7 @@ export default function WhyNaviPanel({ onClose }: { onClose: () => void }) {
                 {!isExpanded && s.body && (
                   <button
                     onClick={() => setExpandedIdx(i)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 9, color: s.color, fontWeight: 600 }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 9, color: s.color, fontWeight: 600, display: "block", margin: "0 auto" }}
                   >
                     Tap to read more
                   </button>
