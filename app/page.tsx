@@ -82,6 +82,11 @@ import {
   getRewardForLevel,
 } from "@/lib/gamification";
 
+// ── Feature flags ────────────────────────────────────────────────────────────
+// Fresh Food Market is locked until local farm partnerships are finalized.
+// Flip to false to re-enable the full panel.
+const FRESH_FOOD_LOCKED = true;
+
 const CHECK_IN_THRESHOLD_MS = 8 * 60 * 60 * 1000; // 8 hours between check-ins
 const ADMIN_PASSCODE = "chaz_admin"; // Founder passcode — grants full voice access
 
@@ -2554,7 +2559,27 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, textAlign: "left" }}>
+            {/* ── Coming Soon banner ───────────────────────────────────────── */}
+            <div style={{
+              padding: "14px 16px",
+              borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(245,158,11,0.10), rgba(201,162,39,0.06))",
+              border: "1px solid rgba(245,158,11,0.28)",
+              marginBottom: 20,
+              textAlign: "center",
+            }}>
+              <div style={{ fontSize: 9, letterSpacing: "0.32em", textTransform: "uppercase", color: "#f59e0b", marginBottom: 6 }}>
+                🔒 Coming Soon
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
+                Launching this summer
+              </div>
+              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6 }}>
+                We{"'"}re finalizing partnerships with local farms. Check back soon — this service will roll out to select communities first.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, textAlign: "left", opacity: 0.55 }}>
               {[
                 "Fresh bundles starting at $10",
                 "Local farms, supporting your community",
@@ -2568,32 +2593,27 @@ export default function HomePage() {
             </div>
 
             <button
-              onClick={() => { setShowFreshFoodIntro(false); setShowFreshFood(true); }}
+              onClick={() => setShowFreshFoodIntro(false)}
               style={{
                 width: "100%", padding: "14px", borderRadius: 12,
-                background: "linear-gradient(135deg, #34d399, #10b981)",
+                background: "linear-gradient(135deg, #C9A227, #a07818)",
                 border: "none", color: "#02020a",
                 fontSize: 14, fontFamily: "monospace", fontWeight: 700,
                 cursor: "pointer", letterSpacing: "0.06em",
-                boxShadow: "0 0 24px rgba(52,211,153,0.30)",
+                boxShadow: "0 0 24px rgba(201,162,39,0.30)",
                 marginBottom: 12,
               }}
             >
-              Browse Bundles →
-            </button>
-
-            <button
-              onClick={() => setShowFreshFoodIntro(false)}
-              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}
-            >
-              Maybe later
+              Got it
             </button>
           </div>
         </div>
       )}
 
-      {/* Fresh Food Panel */}
-      {showFreshFood && (
+      {/* Fresh Food Panel — LOCKED (Coming Soon) */}
+      {/* The intro overlay now shows a "Coming Soon" banner and no longer
+          opens the full panel. Flip FRESH_FOOD_LOCKED to false to re-enable. */}
+      {showFreshFood && !FRESH_FOOD_LOCKED && (
         <FreshFoodPanel onClose={() => setShowFreshFood(false)} />
       )}
 
@@ -5083,7 +5103,7 @@ export default function HomePage() {
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
-                  {toolBtn("🥬", "Fresh Food Market", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => { setShowNaviTVIntro(true); setMenuOpen(false); trackXP("tool_used"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>📺</span><span style={{ fontWeight: 600 }}>NaviTV</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
