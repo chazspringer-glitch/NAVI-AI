@@ -88,6 +88,9 @@ const SAFE_MODE_THRESHOLD = 3;
 const SERVICE_LABELS: Record<ServiceName, string> = {
   voice: "Voice System",
   api:   "AI Services",
+  data:  "Database (Auth · Leaderboard · XP)",
+  news:  "News Web",
+  tts:   "Voice Output (TTS)",
   email: "Email Delivery",
   ui:    "UI Components",
 };

@@ -2,16 +2,17 @@
  * NAVI Self-Diagnostic Engine — lib/diagnostics.ts
  *
  * Pure-logic module (no React). Provides:
- *  - Health check functions for voice, API, and email services
+ *  - Health check functions for voice, api, data, news, tts, email
  *  - LocalStorage-backed error log (max 50 entries)
  *  - Alert dispatch to /api/alert with 10-minute throttle per service
  *  - Auto-recovery logic per service type
- *  - runAllChecks() convenience wrapper
+ *  - runAllChecks() convenience wrapper that does ONE /api/health fetch
+ *    and fans the per-service status out into the diagnostic model.
  *
  * All public functions are wrapped in try/catch — none will ever throw.
  */
 
-export type ServiceName = "voice" | "api" | "email" | "ui";
+export type ServiceName = "voice" | "api" | "data" | "news" | "tts" | "email" | "ui";
 
 export interface DiagnosticError {
   id:        string;
@@ -27,6 +28,12 @@ export interface HealthStatus {
   healthy:     boolean;
   lastChecked: number;
   error?:      string;
+}
+
+// Shape of the JSON returned by /api/health (subset we care about).
+interface HealthPayload {
+  ok:       boolean;
+  services: Partial<Record<string, { healthy?: boolean; configured?: boolean; error?: string }>>;
 }
 
 // ── LocalStorage helpers ──────────────────────────────────────────────────────
@@ -129,8 +136,32 @@ export async function sendAlert(service: ServiceName, errorDetails: string): Pro
   }
 }
 
+// ── /api/health single-fetch helper ──────────────────────────────────────────
+
+let cachedPayload: { data: HealthPayload; ts: number } | null = null;
+const HEALTH_CACHE_MS = 30 * 1000; // 30s — far less than the 3-min check cycle
+
+async function fetchHealth(force = false): Promise<HealthPayload | null> {
+  if (!force && cachedPayload && Date.now() - cachedPayload.ts < HEALTH_CACHE_MS) {
+    return cachedPayload.data;
+  }
+  try {
+    const ctrl = new AbortController();
+    const t    = setTimeout(() => ctrl.abort(), 6000);
+    const res  = await fetch("/api/health", { signal: ctrl.signal, cache: "no-store" });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const data = await res.json() as HealthPayload;
+    cachedPayload = { data, ts: Date.now() };
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 // ── Health checks ─────────────────────────────────────────────────────────────
 
+/** Browser-side: are speech APIs present? */
 export async function checkVoice(): Promise<HealthStatus> {
   const service: ServiceName = "voice";
   try {
@@ -149,19 +180,68 @@ export async function checkVoice(): Promise<HealthStatus> {
   }
 }
 
-export async function checkAPI(): Promise<HealthStatus> {
+/** Server reachability + critical services up (openai + supabase). */
+export async function checkAPI(payload?: HealthPayload | null): Promise<HealthStatus> {
   const service: ServiceName = "api";
-  try {
-    const ctrl    = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 5000);
-    const res     = await fetch("/api/health", { signal: ctrl.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return { service, healthy: true, lastChecked: Date.now() };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { service, healthy: false, lastChecked: Date.now(), error: msg };
+  const data = payload === undefined ? await fetchHealth() : payload;
+  if (!data) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "health_endpoint_unreachable" };
   }
+  if (!data.ok) {
+    const failed: string[] = [];
+    if (data.services.openai?.healthy   === false) failed.push("openai");
+    if (data.services.supabase?.healthy === false) failed.push("supabase");
+    return {
+      service, healthy: false, lastChecked: Date.now(),
+      error: failed.length ? `degraded: ${failed.join(", ")}` : "critical_services_down",
+    };
+  }
+  return { service, healthy: true, lastChecked: Date.now() };
+}
+
+/** Supabase / leaderboard / xp / cdl-progress / auth all live behind one client. */
+export async function checkData(payload?: HealthPayload | null): Promise<HealthStatus> {
+  const service: ServiceName = "data";
+  const data = payload === undefined ? await fetchHealth() : payload;
+  if (!data) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "health_endpoint_unreachable" };
+  }
+  const sb = data.services.supabase;
+  if (!sb?.configured) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "supabase_not_configured" };
+  }
+  if (sb.healthy === false) {
+    return { service, healthy: false, lastChecked: Date.now(), error: sb.error ?? "supabase_probe_failed" };
+  }
+  return { service, healthy: true, lastChecked: Date.now() };
+}
+
+/** News Web RSS aggregator — non-critical, but tracked so a regression alerts. */
+export async function checkNews(payload?: HealthPayload | null): Promise<HealthStatus> {
+  const service: ServiceName = "news";
+  const data = payload === undefined ? await fetchHealth() : payload;
+  if (!data) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "health_endpoint_unreachable" };
+  }
+  const n = data.services.news;
+  if (n?.healthy === false) {
+    return { service, healthy: false, lastChecked: Date.now(), error: n.error ?? "news_probe_failed" };
+  }
+  return { service, healthy: true, lastChecked: Date.now() };
+}
+
+/** ElevenLabs configured — full TTS round-trip would burn credits, skip. */
+export async function checkTTS(payload?: HealthPayload | null): Promise<HealthStatus> {
+  const service: ServiceName = "tts";
+  const data = payload === undefined ? await fetchHealth() : payload;
+  if (!data) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "health_endpoint_unreachable" };
+  }
+  const t = data.services.elevenlabs;
+  if (!t?.configured) {
+    return { service, healthy: false, lastChecked: Date.now(), error: "elevenlabs_not_configured" };
+  }
+  return { service, healthy: true, lastChecked: Date.now() };
 }
 
 export async function checkEmail(): Promise<HealthStatus> {
@@ -179,42 +259,30 @@ export async function attemptRecovery(service: ServiceName): Promise<boolean> {
   try {
     switch (service) {
       case "voice":
-        // Cancel any stuck speech-synthesis state and verify APIs still present
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
           window.speechSynthesis.cancel();
         }
-        // Re-run the voice check to confirm
         return (await checkVoice()).healthy;
 
-      case "api": {
-        // Re-ping health endpoint
-        const ctrl    = new AbortController();
-        const timeout = setTimeout(() => ctrl.abort(), 4000);
-        try {
-          const res = await fetch("/api/health", { signal: ctrl.signal });
-          clearTimeout(timeout);
-          return res.ok;
-        } catch {
-          clearTimeout(timeout);
-          return false;
+      case "api":
+      case "data":
+      case "news":
+      case "tts": {
+        // Force a fresh /api/health fetch (bypass 30s diag cache) then re-check
+        const data = await fetchHealth(true);
+        if (!data) return false;
+        switch (service) {
+          case "api":  return (await checkAPI(data)).healthy;
+          case "data": return (await checkData(data)).healthy;
+          case "news": return (await checkNews(data)).healthy;
+          case "tts":  return (await checkTTS(data)).healthy;
         }
+        return false;
       }
 
-      case "email": {
-        // Verify EmailJS config is present via health endpoint
-        const ctrl    = new AbortController();
-        const timeout = setTimeout(() => ctrl.abort(), 4000);
-        try {
-          const res  = await fetch("/api/health", { signal: ctrl.signal });
-          clearTimeout(timeout);
-          if (!res.ok) return false;
-          const data = await res.json() as { services?: { emailjs?: { configured?: boolean } } };
-          return !!data?.services?.emailjs?.configured;
-        } catch {
-          clearTimeout(timeout);
-          return false;
-        }
-      }
+      case "email":
+        // Not in active use today
+        return true;
 
       case "ui":
         // UI crashes are handled by ServiceErrorBoundary; nothing to do here
@@ -232,13 +300,19 @@ export async function attemptRecovery(service: ServiceName): Promise<boolean> {
 
 export async function runAllChecks(): Promise<HealthStatus[]> {
   try {
-    const [voice, api, email] = await Promise.all([
+    // ONE /api/health fetch fans out into multiple service statuses, plus a
+    // browser-side voice check and a no-op email check.
+    const payload = await fetchHealth();
+    const [voice, api, data, news, tts, email] = await Promise.all([
       checkVoice(),
-      checkAPI(),
+      checkAPI(payload),
+      checkData(payload),
+      checkNews(payload),
+      checkTTS(payload),
       checkEmail(),
     ]);
     const ui: HealthStatus = { service: "ui", healthy: true, lastChecked: Date.now() };
-    return [voice, api, email, ui];
+    return [voice, api, data, news, tts, email, ui];
   } catch {
     // If the parallel check itself throws (shouldn't happen), return empty
     return [];

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readNewsCache, writeNewsCache, CACHE_MS } from "@/lib/newsCache";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +27,7 @@ interface NewsItem {
   timestamp: number;
 }
 
-// 5-minute in-memory cache (per server instance)
-let cache: { data: NewsItem[]; ts: number } | null = null;
-const CACHE_MS = 5 * 60 * 1000;
+// Cache lives in lib/newsCache.ts so /api/health can read it directly
 
 function decode(str: string): string {
   return str
@@ -97,8 +96,9 @@ async function fetchSource(s: { url: string; name: string; category: string }): 
 
 export async function GET() {
   // Serve from cache when fresh
-  if (cache && Date.now() - cache.ts < CACHE_MS) {
-    return NextResponse.json({ news: cache.data, cached: true, fetchedAt: cache.ts });
+  const cached = readNewsCache();
+  if (cached && Date.now() - cached.ts < CACHE_MS) {
+    return NextResponse.json({ news: cached.data, cached: true, fetchedAt: cached.ts });
   }
 
   const results = await Promise.all(SOURCES.map(fetchSource));
@@ -107,6 +107,6 @@ export async function GET() {
   // Sort newest first
   news.sort((a, b) => b.timestamp - a.timestamp);
 
-  cache = { data: news, ts: Date.now() };
-  return NextResponse.json({ news, cached: false, fetchedAt: cache.ts });
+  const written = writeNewsCache(news);
+  return NextResponse.json({ news, cached: false, fetchedAt: written.ts });
 }
