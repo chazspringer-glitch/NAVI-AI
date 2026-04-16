@@ -8,7 +8,9 @@ export const dynamic     = "force-dynamic";
 // ── Allowed action-button feature IDs ────────────────────────────────────────
 // The model is instructed to return 0–3 of these. NewsWebPanel maps each ID
 // to a label / icon / color and an open-feature handler in app/page.tsx.
-export const ALLOWED_FEATURES = [
+// Kept module-internal because Next.js route files may only export a small
+// fixed set of names (GET, POST, runtime, dynamic, etc.).
+const ALLOWED_FEATURES = [
   "housing",  "jobs",     "trades",    "legal",     "family",
   "local",    "business", "resume",    "stem",      "ai",
   "history",  "library",  "tv",        "auto",      "academy",
