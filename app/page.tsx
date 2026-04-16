@@ -211,6 +211,15 @@ const PARTNERS = [
     color: "#C9A227",
     url: "https://www.schmaders910.com/",
   },
+  {
+    name: "7 Birds Co.",
+    category: "Fashion · Streetwear · Culture",
+    desc: "A streetwear brand built on individuality, style, and self-expression. 7 Birds Co. brings bold designs and high-quality apparel to people who move with confidence and stand out in their environment.",
+    icon: "🐦",
+    color: "#f43f5e",
+    url: "https://7birdsco.com/",
+    buttonLabel: "Shop 7 Birds",
+  },
 ];
 
 // ── Live opportunity banner messages ─────────────────────────────────────────
@@ -5473,13 +5482,26 @@ export default function HomePage() {
                     }}>
                       {p.icon}
                     </div>
-                    <div style={{
-                      fontSize: 13, fontFamily: "monospace", fontWeight: "bold",
-                      color: hovered ? "#f1f5f9" : "#e2e8f0",
-                      letterSpacing: "0.02em",
-                      transition: "color 0.18s ease",
-                    }}>
-                      {p.name}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 13, fontFamily: "monospace", fontWeight: "bold",
+                        color: hovered ? "#f1f5f9" : "#e2e8f0",
+                        letterSpacing: "0.02em",
+                        transition: "color 0.18s ease",
+                      }}>
+                        {p.name}
+                      </div>
+                      {"category" in p && p.category && (
+                        <div style={{
+                          marginTop: 4,
+                          fontSize: 8, fontFamily: "monospace", fontWeight: 700,
+                          letterSpacing: "0.18em", textTransform: "uppercase",
+                          color: color,
+                          opacity: 0.85,
+                        }}>
+                          {p.category}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -5511,7 +5533,7 @@ export default function HomePage() {
                         transition: "all 0.18s ease",
                         cursor: "pointer",
                       }}>
-                        Visit Website ↗
+                        {("buttonLabel" in p && p.buttonLabel) ? p.buttonLabel : "Visit Website"} ↗
                       </div>
                     </a>
                   ) : (
