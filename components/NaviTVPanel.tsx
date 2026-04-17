@@ -139,6 +139,60 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        {/* ── Featured Channels ────────────────────────────────────────── */}
+        <div>
+          <div style={{ fontSize: 9, letterSpacing: "0.24em", textTransform: "uppercase", color: "#a855f7", fontWeight: 700, marginBottom: 10 }}>
+            Featured Channels
+          </div>
+
+          {/* Drus World Cartoon */}
+          <div style={{
+            borderRadius: 14,
+            background: "linear-gradient(135deg, rgba(251,146,60,0.06), rgba(168,85,247,0.04))",
+            border: "1px solid rgba(251,146,60,0.18)",
+            overflow: "hidden",
+          }}>
+            <div style={{ padding: "14px 16px 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: "linear-gradient(135deg, rgba(251,146,60,0.20), rgba(168,85,247,0.15))",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 20,
+                  }}>
+                    🎨
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>Drus World Cartoon</div>
+                    <div style={{
+                      fontSize: 7, letterSpacing: "0.16em", textTransform: "uppercase",
+                      color: "#fb923c", fontWeight: 700, marginTop: 2,
+                    }}>
+                      Animation · Kids · Entertainment
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65, marginBottom: 12 }}>
+                A creative cartoon channel delivering animated stories and entertainment content. Great for light viewing, creativity, and engaging storytelling through animation.
+              </div>
+              <a href="https://m.youtube.com/@DrusWorldCartoon" target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "9px 16px", borderRadius: 10,
+                  background: "linear-gradient(135deg, #fb923c, #ea580c)",
+                  border: "none", color: "#08080f",
+                  fontSize: 11, fontFamily: "monospace", fontWeight: 700,
+                  textDecoration: "none", letterSpacing: "0.04em",
+                  boxShadow: "0 0 14px rgba(251,146,60,0.30)",
+                }}>
+                Watch Channel ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* More content coming soon */}
         <div style={{
           padding: "20px 16px", borderRadius: 14, textAlign: "center",
@@ -146,9 +200,9 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
           border: "1px solid rgba(168,85,247,0.10)",
         }}>
           <div style={{ fontSize: 24, marginBottom: 8 }}>📺</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#a855f7", marginBottom: 4 }}>More Content Coming Soon</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#a855f7", marginBottom: 4 }}>More Channels Coming Soon</div>
           <div style={{ fontSize: 10, color: "#475569", lineHeight: 1.5 }}>
-            NaviTV is growing. Educational videos on money, housing, AI, business, and more are on the way.
+            NaviTV is growing. Have a channel? Reach out to be featured.
           </div>
         </div>
 
