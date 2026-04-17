@@ -2195,6 +2195,15 @@ export default function HomePage() {
         else { markIntroSeen("startHere"); setShowStartHereIntro(true); }
         setMenuOpen(false);
         break;
+      case "policeAccountability":
+        setAccountabilityState("");
+        setShowAccountability(true);
+        setMenuOpen(false);
+        break;
+      case "blackHistory":
+        setShowBlackHistory(true);
+        setMenuOpen(false);
+        break;
 
       default:
         break;

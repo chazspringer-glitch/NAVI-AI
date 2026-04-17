@@ -46,7 +46,9 @@ export type NavigateDestination =
   | "subscription"   // 💎 Subscription hub tab
   | "programs"       // 🎓 Programs hub tab (Academy)
   | "podcast"        // 🎙️ Podcast Partnership
-  | "startHere";     // 🧭 Start Here guide
+  | "startHere"              // 🧭 Start Here guide
+  | "policeAccountability"   // 🔍 Police Accountability dashboard
+  | "blackHistory";          // ✊ Black History panel
 
 export interface NavigateAction {
   type: "navigate";
@@ -98,6 +100,7 @@ export function parseAction(raw: unknown): AgentAction | null {
     "newsWeb", "library", "trades", "leaderboard", "whyNavi", "autoFinder",
     "jobFinder", "familySupport", "legalRights", "naviTV",
     "rewards", "subscription", "programs", "podcast", "startHere",
+    "policeAccountability", "blackHistory",
   ];
   if (t === "navigate" && typeof a.destination === "string" && VALID_DESTINATIONS.includes(a.destination as NavigateDestination)) {
     return {
