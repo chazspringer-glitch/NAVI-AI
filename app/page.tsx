@@ -2834,8 +2834,10 @@ export default function HomePage() {
           padding: 20,
           animation: "overlayIn 0.4s ease forwards",
         }}>
-          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: "18%", right: "20%", width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+          {/* Ambient glows */}
+          <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "22%", left: "20%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "30%", right: "15%", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
 
           <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
             <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(0,212,255,0.5))" }}>📡</div>
@@ -2845,17 +2847,31 @@ export default function HomePage() {
             </div>
 
             <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(0,212,255,0.25)" }}>
-              News Web
+              Your News Intelligence
             </div>
 
-            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 8 }}>
-              Real news. Real time. See the connections.
-            </div>
-            <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 24 }}>
-              Stories orbit NAVI{"'"}s core. Tap any node to read the full piece.
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 20 }}>
+              Real-time news visualized as an interactive web. NAVI scans every story, groups related topics into clusters, and flags what matters to you.
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+            {/* Feature highlights */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+              {[
+                { icon: "🌐", label: "Tap any node for NAVI's breakdown", color: "#00d4ff" },
+                { icon: "🔗", label: "AI clusters group related stories", color: "#a855f7" },
+                { icon: "🛡️", label: "Safety awareness based on your location", color: "#ef4444" },
+                { icon: "💡", label: "Opportunity detection — jobs, grants, resources", color: "#34d399" },
+                { icon: "🤏", label: "Pinch to zoom · slow 360° rotation", color: "#C9A227" },
+              ].map(({ icon, label, color }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: `1px solid ${color}22` }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                  <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Category legend */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
               {[
                 { c: "#a855f7", l: "National" },
                 { c: "#00d4ff", l: "World" },
@@ -2879,7 +2895,7 @@ export default function HomePage() {
 
             <button onClick={() => { setShowNewsWebIntro(false); setShowNewsWeb(true); }}
               style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #0891b2)", border: "none", color: "#02020a", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(0,212,255,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
-              Open the Web →
+              Open the Pulse →
             </button>
             <button onClick={() => setShowNewsWebIntro(false)}
               style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
