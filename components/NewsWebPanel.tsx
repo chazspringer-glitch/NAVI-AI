@@ -438,13 +438,22 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
     if (!ctx) return;
 
     let running = true;
+    let lastFrameTime = 0;
+    const TARGET_FPS = 24;
+    const FRAME_MS = 1000 / TARGET_FPS;
 
-    const animate = () => {
+    const animate = (now: number = 0) => {
       if (!running) return;
-      timeRef.current += 0.016;
+      // Cap to TARGET_FPS — request next frame but skip the draw if too soon
+      if (now - lastFrameTime < FRAME_MS) {
+        frameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime = now;
+      timeRef.current += FRAME_MS / 1000;
       const t = timeRef.current;
-      // Slow global rotation: ~one revolution every ~3 minutes
-      rotationRef.current += 0.0006;
+      // Very slow global rotation: ~one revolution every ~5 minutes
+      rotationRef.current += 0.0003;
       const rot  = rotationRef.current;
       const zoomNow = zoomRef.current;
       const cx = size.w / 2;
@@ -467,15 +476,17 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
 
       // Update node positions (smooth drift toward rotated, zoomed target)
       for (const n of nodes) {
-        const driftX = Math.sin(t * n.driftSpeed + n.driftPhase) * 6;
-        const driftY = Math.cos(t * n.driftSpeed * 0.7 + n.driftPhase) * 6;
+        // Reduced drift amplitude (3px instead of 6) and slower frequency
+        const driftX = Math.sin(t * n.driftSpeed * 0.4 + n.driftPhase) * 3;
+        const driftY = Math.cos(t * n.driftSpeed * 0.3 + n.driftPhase) * 3;
         const angleNow = n.baseAngle + rot;
         const r = n.baseRadius * zoomNow;
         const targetX = pcx + Math.cos(angleNow) * r + driftX;
         const targetY = pcy + Math.sin(angleNow) * r + driftY;
-        n.x += (targetX - n.x) * 0.06;
-        n.y += (targetY - n.y) * 0.06;
-        if (n.age < 1) n.age = Math.min(1, n.age + 0.018);
+        // Slower lerp for smoother, calmer movement
+        n.x += (targetX - n.x) * 0.04;
+        n.y += (targetY - n.y) * 0.04;
+        if (n.age < 1) n.age = Math.min(1, n.age + 0.015);
       }
 
       // Faint spoke from each node to NAVI core
@@ -550,12 +561,11 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
         }
       }
 
-      // NAVI core (pulsing) — follows pan
-      const pulse = 1 + Math.sin(t * 1.4) * 0.12;
-      const coreR = 32 * pulse;
+      // NAVI core (steady, no pulsing)
+      const coreR = 32;
       const coreGrad = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, coreR);
-      coreGrad.addColorStop(0,   "rgba(0,212,255,0.50)");
-      coreGrad.addColorStop(0.4, "rgba(201,162,39,0.22)");
+      coreGrad.addColorStop(0,   "rgba(0,212,255,0.45)");
+      coreGrad.addColorStop(0.4, "rgba(201,162,39,0.18)");
       coreGrad.addColorStop(1,   "rgba(0,0,0,0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
@@ -687,7 +697,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
       frameRef.current = requestAnimationFrame(animate);
     };
 
-    frameRef.current = requestAnimationFrame(animate);
+    frameRef.current = requestAnimationFrame((ts) => animate(ts));
     return () => { running = false; cancelAnimationFrame(frameRef.current); };
   }, [size.w, size.h, clusters]);
 
