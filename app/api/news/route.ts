@@ -27,6 +27,10 @@ const SOURCES: { url: string; name: string; category: string }[] = [
   { url: "https://www.complex.com/feed",                                      name: "Complex",         category: "culture"       },
   // ── Health ────────────────────────────────────────────────────────────────
   { url: "https://rss.nytimes.com/services/xml/rss/nyt/Health.xml",           name: "NYT Health",      category: "health"        },
+  // ── Civic / Government ────────────────────────────────────────────────────
+  { url: "https://www.propublica.org/feeds/propublica/main",                  name: "ProPublica",      category: "civic"         },
+  { url: "https://feeds.npr.org/1014/rss.xml",                               name: "NPR Politics",    category: "civic"         },
+  { url: "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",        name: "NYT Politics",    category: "civic"         },
 ];
 
 interface NewsItem {

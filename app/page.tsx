@@ -2960,6 +2960,7 @@ export default function HomePage() {
                 { icon: "🔗", label: "AI clusters group related stories", color: "#a855f7" },
                 { icon: "🛡️", label: "Safety awareness based on your location", color: "#ef4444" },
                 { icon: "💡", label: "Opportunity detection — jobs, grants, resources", color: "#34d399" },
+                { icon: "🏛️", label: "Civic pulse — local politics, voting, policy", color: "#3b82f6" },
                 { icon: "🤏", label: "Pinch to zoom · slow 360° rotation", color: "#C9A227" },
               ].map(({ icon, label, color }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: `1px solid ${color}22` }}>
@@ -2983,6 +2984,7 @@ export default function HomePage() {
                 { c: "#f43f5e", l: "Fashion" },
                 { c: "#8b5cf6", l: "Culture" },
                 { c: "#2dd4bf", l: "Health" },
+                { c: "#3b82f6", l: "Civic" },
               ].map(({ c, l }) => (
                 <span key={l} style={{
                   display: "inline-flex", alignItems: "center", gap: 5,

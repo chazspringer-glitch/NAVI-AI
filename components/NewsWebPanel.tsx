@@ -87,6 +87,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   fashion:       "#f43f5e",
   culture:       "#8b5cf6",
   health:        "#2dd4bf",
+  civic:         "#3b82f6",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -101,6 +102,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   fashion:       "Fashion",
   culture:       "Culture",
   health:        "Health",
+  civic:         "Civic",
 };
 
 function timeAgo(ts: number): string {
@@ -126,7 +128,16 @@ function isOpportunityItem(item: NewsItem): boolean {
   return OPPORTUNITY_KEYWORDS.test(item.title) || OPPORTUNITY_KEYWORDS.test(item.summary ?? "");
 }
 
-// Single unified view — no tabs. Safety awareness is integrated inline.
+// ── Civic engagement keyword detection ───────────────────────────────────────
+const CIVIC_KEYWORDS = /\b(vote|voting|voter|election|ballot|candidate|mayor|council|commissioner|school board|zoning|ordinance|legislat|policy|bill|budget|public hearing|town hall|redistrict|census|representat|senator|governor|amendment|referendum|civic|advocacy|community meeting|public comment|alderman|supervisor|precinct|polling|registration|constituent|city hall|municipal|county board|local government|executive order|veto|bipartisan|gerrymandering|recall|proposition|measure|incumbent|runoff|primary|midterm|caucus)\b/i;
+
+function isCivicItem(item: NewsItem): boolean {
+  if (isSafetyItem(item)) return false;
+  if (isOpportunityItem(item)) return false;
+  return CIVIC_KEYWORDS.test(item.title) || CIVIC_KEYWORDS.test(item.summary ?? "");
+}
+
+// Single unified view — safety, opportunity, and civic awareness are integrated inline.
 
 interface NewsWebPanelProps {
   onClose:   () => void;
@@ -182,6 +193,12 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [opInsight,        setOpInsight]        = useState<Insight | null>(null);
   const [opInsightLoading, setOpInsightLoading] = useState(false);
   const [opInsightError,   setOpInsightError]   = useState<string | null>(null);
+
+  // Civic engagement insight
+  const [civicBannerOpen,       setCivicBannerOpen]       = useState(true);
+  const [civicInsight,          setCivicInsight]          = useState<Insight | null>(null);
+  const [civicInsightLoading,   setCivicInsightLoading]   = useState(false);
+  const [civicInsightError,     setCivicInsightError]     = useState<string | null>(null);
 
   // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
@@ -471,6 +488,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         if (sz < 0.5) continue;
         const safety = isSafetyItem(n);
         const opportunity = !safety && isOpportunityItem(n);
+        const civic = !safety && !opportunity && isCivicItem(n);
         // Safety ring — subtle pulsing red outline
         if (safety) {
           const ringAlpha = 0.4 + Math.sin(t * 2.5 + n.driftPhase) * 0.2;
@@ -485,6 +503,15 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
           const ringAlpha = 0.45 + Math.sin(t * 2.0 + n.driftPhase) * 0.2;
           ctx.strokeStyle = `rgba(52,211,153,${ringAlpha})`;
           ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Civic ring — pulsing blue outline
+        if (civic) {
+          const ringAlpha = 0.4 + Math.sin(t * 1.8 + n.driftPhase) * 0.2;
+          ctx.strokeStyle = `rgba(59,130,246,${ringAlpha})`;
+          ctx.lineWidth = 1.3;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
@@ -715,6 +742,51 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         if (!cancelled) setOpInsightError("Could not reach the insight service.");
       } finally {
         if (!cancelled) setOpInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [items, userCity, userContext]);
+
+  // ── Auto-fetch civic insight when civic items exist ─────────────────────
+  useEffect(() => {
+    const civicItems = items.filter(isCivicItem);
+    if (civicItems.length === 0) {
+      setCivicInsight(null);
+      setCivicInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setCivicInsight(null);
+    setCivicInsightError(null);
+    setCivicInsightLoading(true);
+    const articles = civicItems.slice(0, 10).map((it) => ({
+      title: it.title, summary: it.summary, source: it.source,
+    }));
+    const locationCtx = userCity ? { ...userContext, location: userCity } : userContext;
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId: `civic-${userCity || "general"}`,
+            clusterName: userCity
+              ? `Civic Activity — ${userCity}`
+              : "Civic Engagement & Local Government",
+            keywords: ["voting", "election", "council", "policy", "local government", "civic engagement"],
+            articles,
+            userContext: locationCtx,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) { setCivicInsightError("Could not generate civic overview."); return; }
+        const json = await res.json() as { insight?: Insight };
+        if (json.insight) setCivicInsight(json.insight);
+        else setCivicInsightError("No overview generated.");
+      } catch {
+        if (!cancelled) setCivicInsightError("Could not reach the insight service.");
+      } finally {
+        if (!cancelled) setCivicInsightLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -974,6 +1046,73 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
             }}
             aria-label="Dismiss opportunity banner"
           >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── Civic engagement banner — location-based, inline ────────── */}
+      {items.filter(isCivicItem).length > 0 && civicBannerOpen && (
+        <div style={{
+          padding: "8px 16px", flexShrink: 0,
+          borderBottom: "1px solid rgba(59,130,246,0.10)",
+          background: "rgba(59,130,246,0.03)",
+          display: "flex", alignItems: "flex-start", gap: 10,
+          zIndex: 4,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", marginTop: 4, flexShrink: 0,
+            background: "#3b82f6", boxShadow: "0 0 8px #3b82f6",
+            animation: civicInsightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
+              color: "#3b82f6", fontWeight: 700, marginBottom: 3,
+            }}>
+              🏛️ Civic Pulse{userCity ? ` — ${userCity}` : ""} · {items.filter(isCivicItem).length} stories
+            </div>
+            {civicInsightLoading && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>Scanning civic activity…</div>
+            )}
+            {!civicInsightLoading && civicInsightError && (
+              <div style={{ fontSize: 10, color: "#93c5fd" }}>{civicInsightError}</div>
+            )}
+            {!civicInsightLoading && civicInsight && (
+              <>
+                <div style={{ fontSize: 10, color: "#93c5fd", lineHeight: 1.55, fontWeight: 600, marginBottom: 2 }}>
+                  {civicInsight.whatsHappening}
+                </div>
+                <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.55 }}>
+                  {civicInsight.whatYouShouldDo}
+                </div>
+                {civicInsight.suggestedFeatures.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 5 }}>
+                    {civicInsight.suggestedFeatures.map((fid) => {
+                      const meta = FEATURE_META[fid];
+                      if (!meta) return null;
+                      return (
+                        <button key={fid} onClick={() => { onAction?.(fid); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "4px 8px", borderRadius: 6,
+                            background: "rgba(59,130,246,0.08)",
+                            border: "1px solid rgba(59,130,246,0.25)",
+                            color: "#3b82f6", fontSize: 8, fontWeight: 700,
+                            fontFamily: "monospace", cursor: "pointer",
+                          }}>
+                          {meta.icon} {meta.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <button onClick={() => setCivicBannerOpen(false)}
+            style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: "none", background: "transparent", color: "#475569", fontSize: 10, cursor: "pointer" }}
+            aria-label="Dismiss civic banner">
             ✕
           </button>
         </div>
