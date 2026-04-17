@@ -2137,8 +2137,10 @@ export default function HomePage() {
         setMenuOpen(true);
         break;
       case "podcast":
-        setHubTab("podcast");
-        setMenuOpen(true);
+        // Podcast partnership is now inside NaviTV
+        if (hasSeenIntro("naviTV")) { setShowNaviTV(true); }
+        else { markIntroSeen("naviTV"); setShowNaviTVIntro(true); }
+        setMenuOpen(false);
         break;
 
       // ── New feature panels ─────────────────────────────────────────────
@@ -5531,10 +5533,6 @@ export default function HomePage() {
                   <button onClick={() => { if (!foundersIntroSeen) { setShowFoundersIntro(true); } else { showSwitching("Founders"); track("hub_tab_switch", { tab: "founders" }); setHubTab("founders"); } }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.22)", color: "#C9A227", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>💼</span><span style={{ fontWeight: 600 }}>Founders — Work With Us</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
-                  </button>
-                  <button onClick={() => { showSwitching("Podcast"); track("hub_tab_switch", { tab: "podcast" }); setHubTab("podcast"); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.18)", color: "#a855f7", fontSize: 12, fontFamily: "monospace" }}>
-                    <span style={{ fontSize: 16 }}>🎙️</span><span style={{ fontWeight: 600 }}>Podcast Partnership</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
                   </button>
                   <button onClick={() => {
                       if (hasSeenIntro("partners")) {

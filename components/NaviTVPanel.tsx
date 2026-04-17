@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
+
+const PodcastPanel = dynamic(() => import("@/components/PodcastPanel"), { ssr: false });
 
 interface Video {
   id: string;
@@ -14,6 +17,7 @@ interface Video {
 export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
   const [dbVideos, setDbVideos] = useState<Video[]>([]);
   const [playing, setPlaying] = useState<Video | null>(null);
+  const [showPodcastApp, setShowPodcastApp] = useState(false);
 
   // Load any future DB videos
   const loadVideos = useCallback(async () => {
@@ -213,6 +217,80 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
               </a>
             </div>
           </div>
+        </div>
+
+        {/* ── Podcast Partnership ─────────────────────────────────────── */}
+        <div>
+          <div style={{ fontSize: 9, letterSpacing: "0.24em", textTransform: "uppercase", color: "#f472b6", fontWeight: 700, marginBottom: 10 }}>
+            Podcast Partnership
+          </div>
+
+          {!showPodcastApp ? (
+            <div style={{
+              borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(244,114,182,0.06), rgba(168,85,247,0.04))",
+              border: "1px solid rgba(244,114,182,0.18)",
+              padding: "16px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: "linear-gradient(135deg, rgba(244,114,182,0.20), rgba(168,85,247,0.15))",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20,
+                }}>
+                  🎙️
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>Get Featured on NAVI</div>
+                  <div style={{ fontSize: 7, letterSpacing: "0.16em", textTransform: "uppercase", color: "#f472b6", fontWeight: 700, marginTop: 2 }}>
+                    Podcast · Creator · Content
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65, marginBottom: 12 }}>
+                Have a podcast or content channel? Apply to be featured inside NAVI{"'"}s ecosystem. Get exposure to our growing community, AI-powered promotion, and creator resources.
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>
+                {["App exposure", "Community reach", "AI promotion", "Creator support", "Growth strategy"].map((b) => (
+                  <span key={b} style={{
+                    padding: "3px 8px", borderRadius: 6, fontSize: 8,
+                    background: "rgba(244,114,182,0.08)", border: "1px solid rgba(244,114,182,0.18)",
+                    color: "#f472b6", fontWeight: 600,
+                  }}>{b}</span>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowPodcastApp(true)}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: 10,
+                  background: "linear-gradient(135deg, #f472b6, #db2777)",
+                  border: "none", color: "#08080f",
+                  fontSize: 12, fontFamily: "monospace", fontWeight: 700,
+                  cursor: "pointer", letterSpacing: "0.04em",
+                  boxShadow: "0 0 14px rgba(244,114,182,0.30)",
+                }}>
+                Apply Now →
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              borderRadius: 14,
+              border: "1px solid rgba(244,114,182,0.18)",
+              overflow: "hidden",
+              background: "rgba(4,4,12,0.95)",
+            }}>
+              <div style={{ padding: "10px 16px 6px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#f472b6" }}>🎙️ Partnership Application</div>
+                <button
+                  onClick={() => setShowPodcastApp(false)}
+                  style={{ background: "none", border: "none", color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+                  ✕ Close
+                </button>
+              </div>
+              <PodcastPanel />
+            </div>
+          )}
         </div>
 
         {/* More content coming soon */}
