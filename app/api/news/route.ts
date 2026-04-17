@@ -6,16 +6,27 @@ export const dynamic = "force-dynamic";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public RSS feeds. To add/remove sources, edit this list. The `category`
-// field maps to a color in NewsWebPanel.tsx — use one of:
-// national | world | tech | sports | business | politics
+// field maps to a color in NewsWebPanel.tsx — available categories:
+// national | world | tech | sports | business | politics |
+// entertainment | music | fashion | culture | health
 // ─────────────────────────────────────────────────────────────────────────────
 const SOURCES: { url: string; name: string; category: string }[] = [
-  { url: "https://feeds.npr.org/1001/rss.xml",                                name: "NPR",         category: "national" },
-  { url: "http://feeds.bbci.co.uk/news/rss.xml",                              name: "BBC News",    category: "world"    },
-  { url: "https://techcrunch.com/feed/",                                      name: "TechCrunch",  category: "tech"     },
-  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",             name: "CNBC",        category: "business" },
-  { url: "https://thehill.com/news/feed/",                                    name: "The Hill",    category: "politics" },
-  { url: "https://www.espn.com/espn/rss/news",                                name: "ESPN",        category: "sports"   },
+  // ── Core news ─────────────────────────────────────────────────────────────
+  { url: "https://feeds.npr.org/1001/rss.xml",                                name: "NPR",             category: "national"      },
+  { url: "http://feeds.bbci.co.uk/news/rss.xml",                              name: "BBC News",        category: "world"         },
+  { url: "https://techcrunch.com/feed/",                                      name: "TechCrunch",      category: "tech"          },
+  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",             name: "CNBC",            category: "business"      },
+  { url: "https://thehill.com/news/feed/",                                    name: "The Hill",        category: "politics"      },
+  { url: "https://www.espn.com/espn/rss/news",                                name: "ESPN",            category: "sports"        },
+  // ── Entertainment & culture ───────────────────────────────────────────────
+  { url: "https://www.tmz.com/rss.xml",                                       name: "TMZ",             category: "entertainment" },
+  { url: "https://pagesix.com/feed/",                                         name: "Page Six",        category: "entertainment" },
+  { url: "https://pitchfork.com/feed/feed-news/rss",                          name: "Pitchfork",       category: "music"         },
+  { url: "https://www.billboard.com/feed/",                                   name: "Billboard",       category: "music"         },
+  { url: "https://fashionista.com/.rss/full/",                                name: "Fashionista",     category: "fashion"       },
+  { url: "https://www.complex.com/feed",                                      name: "Complex",         category: "culture"       },
+  // ── Health ────────────────────────────────────────────────────────────────
+  { url: "https://rss.nytimes.com/services/xml/rss/nyt/Health.xml",           name: "NYT Health",      category: "health"        },
 ];
 
 interface NewsItem {
@@ -68,7 +79,7 @@ function parseRSS(xml: string, source: { name: string; category: string }): News
       category: source.category,
       timestamp: date ? new Date(date).getTime() || Date.now() : Date.now(),
     });
-    if (items.length >= 5) break; // cap per feed
+    if (items.length >= 4) break; // cap per feed (13 sources × 4 = 52 max)
   }
   return items;
 }

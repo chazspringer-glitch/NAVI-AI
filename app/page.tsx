@@ -2978,6 +2978,11 @@ export default function HomePage() {
                 { c: "#f59e0b", l: "Sports" },
                 { c: "#C9A227", l: "Business" },
                 { c: "#f472b6", l: "Politics" },
+                { c: "#fb923c", l: "Entertainment" },
+                { c: "#e879f9", l: "Music" },
+                { c: "#f43f5e", l: "Fashion" },
+                { c: "#8b5cf6", l: "Culture" },
+                { c: "#2dd4bf", l: "Health" },
               ].map(({ c, l }) => (
                 <span key={l} style={{
                   display: "inline-flex", alignItems: "center", gap: 5,

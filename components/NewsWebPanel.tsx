@@ -76,21 +76,31 @@ interface ClusterGeom {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  national: "#a855f7",
-  world:    "#00d4ff",
-  tech:     "#34d399",
-  sports:   "#f59e0b",
-  business: "#C9A227",
-  politics: "#f472b6",
+  national:      "#a855f7",
+  world:         "#00d4ff",
+  tech:          "#34d399",
+  sports:        "#f59e0b",
+  business:      "#C9A227",
+  politics:      "#f472b6",
+  entertainment: "#fb923c",
+  music:         "#e879f9",
+  fashion:       "#f43f5e",
+  culture:       "#8b5cf6",
+  health:        "#2dd4bf",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
-  national: "National",
-  world:    "World",
-  tech:     "Tech",
-  sports:   "Sports",
-  business: "Business",
-  politics: "Politics",
+  national:      "National",
+  world:         "World",
+  tech:          "Tech",
+  sports:        "Sports",
+  business:      "Business",
+  politics:      "Politics",
+  entertainment: "Entertainment",
+  music:         "Music",
+  fashion:       "Fashion",
+  culture:       "Culture",
+  health:        "Health",
 };
 
 function timeAgo(ts: number): string {
