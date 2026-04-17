@@ -99,21 +99,34 @@ function generateEntries(era: string, topic: string): HistoryEntry[] {
     { title: "Madam C.J. Walker — First Self-Made Female Millionaire", year: "1910s", desc: "Built a hair care empire and became one of the wealthiest Black women in America. Used her wealth to fund civil rights causes.", significance: "Proved Black entrepreneurship could thrive despite systemic barriers.", category: "Reconstruction & Jim Crow (1865–1954)" },
     { title: "Jesse Owens — 1936 Berlin Olympics", year: "1936", desc: "Won 4 gold medals in Nazi Germany, directly defying Hitler's claims of Aryan racial superiority.", significance: "Used athletic excellence as a statement against racism.", category: "Reconstruction & Jim Crow (1865–1954)" },
     { title: "The Harlem Renaissance", year: "1920s–1930s", desc: "An explosion of Black art, literature, music, and thought. Langston Hughes, Zora Neale Hurston, Duke Ellington, and many others redefined American culture.", significance: "Proved that Black creativity was central to American identity.", category: "Reconstruction & Jim Crow (1865–1954)" },
+    // ── Expanded entries ─────────────────────────────────────────────────────
+    { title: "The Great Sphinx & African Origins", year: "~2500 BCE", desc: "Evidence suggests the Great Sphinx of Giza may predate dynastic Egypt. Ancient African civilizations built monumental structures that still stand today.", significance: "Africa's engineering legacy is older and deeper than most curricula acknowledge.", category: "Ancient Africa & Pre-Colonial" },
+    { title: "Queen Nzinga of Ndongo & Matamba", year: "1583–1663", desc: "Angolan queen who fought Portuguese colonizers for over 30 years, using guerrilla warfare and political strategy to protect her people.", significance: "One of Africa's greatest military leaders — rarely taught in Western schools.", category: "Ancient Africa & Pre-Colonial" },
+    { title: "Phillis Wheatley — First Published Black Poet", year: "1773", desc: "Enslaved at age 7, she became the first African American to publish a book of poetry. Her work was examined by a panel of 18 white men who doubted a Black woman could write.", significance: "Broke the myth that enslaved people were intellectually inferior.", category: "Slavery & Resistance (1619–1865)" },
+    { title: "The Freedmen's Bureau", year: "1865–1872", desc: "A federal agency established to help formerly enslaved people transition to freedom — providing food, housing, education, and legal aid.", significance: "America's first attempt at reparative justice — dismantled before it could finish its work.", category: "Reconstruction & Jim Crow (1865–1954)" },
+    { title: "Buffalo Soldiers", year: "1866–1951", desc: "All-Black regiments of the U.S. Army who served in the Indian Wars, Spanish-American War, and both World Wars with distinction despite facing racism from their own country.", significance: "Fought for a nation that wouldn't fight for them.", category: "Reconstruction & Jim Crow (1865–1954)" },
+    { title: "Medgar Evers Assassinated", year: "1963", desc: "NAACP field secretary in Mississippi, shot in his driveway by a white supremacist. His murder galvanized the civil rights movement.", significance: "His sacrifice helped pass the Civil Rights Act one year later.", category: "Civil Rights Movement (1954–1975)" },
+    { title: "Loving v. Virginia", year: "1967", desc: "Supreme Court struck down all state laws banning interracial marriage. Richard and Mildred Loving challenged Virginia's Racial Integrity Act.", significance: "Established that marriage is a fundamental right regardless of race.", category: "Civil Rights Movement (1954–1975)" },
+    { title: "Tuskegee Airmen", year: "1941–1946", desc: "First Black military aviators in the U.S. Armed Forces. Flew over 15,000 sorties in WWII with one of the lowest loss records of any escort group.", significance: "Their excellence helped end military segregation.", category: "Reconstruction & Jim Crow (1865–1954)" },
+    { title: "Oprah Winfrey — Media Mogul", year: "1986–Present", desc: "Built a media empire from her talk show, becoming the first Black female billionaire. Her influence spans television, publishing, film, and philanthropy.", significance: "Redefined what's possible for Black women in business and media.", category: "Modern Era (1975–Present)" },
+    { title: "Serena Williams — Greatest Athlete", year: "1999–2022", desc: "Won 23 Grand Slam singles titles, the most in the Open Era. Dominated tennis for two decades while facing racism and sexism.", significance: "Proved excellence transcends the barriers built to stop it.", category: "Modern Era (1975–Present)" },
+    { title: "Juneteenth Becomes Federal Holiday", year: "2021", desc: "President Biden signed the Juneteenth National Independence Day Act, making June 19th the first new federal holiday since MLK Day in 1983.", significance: "National recognition that freedom wasn't truly given on July 4th, 1776.", category: "Modern Era (1975–Present)" },
+    { title: "Emmett Till — The Murder That Changed America", year: "1955", desc: "A 14-year-old boy from Chicago was lynched in Mississippi. His mother insisted on an open casket, and the images shocked the nation.", significance: "His death became a catalyst for the modern civil rights movement.", category: "Civil Rights Movement (1954–1975)" },
   ];
 
   let filtered = all;
   if (era !== "Any Era") filtered = filtered.filter((e) => e.category === era);
   if (topic !== "Any Topic") {
     const topicMap: Record<string, string[]> = {
-      "Leaders & Activists": ["Mansa Musa", "Nat Turner", "Ida B. Wells", "Shirley Chisholm", "Black Panther", "Black Lives Matter", "Robert Smalls", "March on Washington"],
+      "Leaders & Activists": ["Mansa Musa", "Nat Turner", "Ida B. Wells", "Shirley Chisholm", "Black Panther", "Black Lives Matter", "Robert Smalls", "March on Washington", "Medgar Evers", "Queen Nzinga", "Malcolm X"],
       "Inventors & Scientists": ["Garrett Morgan", "Dr. Charles Drew", "Katherine Johnson"],
-      "Art, Music & Culture": ["Harlem Renaissance", "Hip-Hop", "1619 Project", "Timbuktu"],
-      "Business & Economics": ["Black Wall Street", "Madam C.J. Walker", "Mansa Musa"],
-      "Military & Wars": ["Haitian Revolution", "Robert Smalls", "Jesse Owens"],
-      "Education & Scholars": ["Timbuktu", "Brown v. Board", "Katherine Johnson", "1619 Project"],
-      "Sports & Athletes": ["Jesse Owens"],
-      "Politics & Law": ["Brown v. Board", "Shirley Chisholm", "Barack Obama"],
-      "Hidden Figures & Untold Stories": ["Katherine Johnson", "Robert Smalls", "Kingdom of Kush", "Black Wall Street", "Dr. Charles Drew"],
+      "Art, Music & Culture": ["Harlem Renaissance", "Hip-Hop", "1619 Project", "Timbuktu", "Phillis Wheatley", "Oprah Winfrey"],
+      "Business & Economics": ["Black Wall Street", "Madam C.J. Walker", "Mansa Musa", "Oprah Winfrey"],
+      "Military & Wars": ["Haitian Revolution", "Robert Smalls", "Jesse Owens", "Buffalo Soldiers", "Tuskegee Airmen"],
+      "Education & Scholars": ["Timbuktu", "Brown v. Board", "Katherine Johnson", "1619 Project", "Freedmen"],
+      "Sports & Athletes": ["Jesse Owens", "Serena Williams"],
+      "Politics & Law": ["Brown v. Board", "Shirley Chisholm", "Barack Obama", "Loving v. Virginia", "Juneteenth"],
+      "Hidden Figures & Untold Stories": ["Katherine Johnson", "Robert Smalls", "Kingdom of Kush", "Black Wall Street", "Dr. Charles Drew", "Phillis Wheatley", "Queen Nzinga", "Sphinx", "Emmett Till"],
     };
     const keywords = topicMap[topic] || [];
     if (keywords.length > 0) {
