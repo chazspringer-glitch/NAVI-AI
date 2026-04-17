@@ -227,12 +227,17 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [civicInsightLoading,   setCivicInsightLoading]   = useState(false);
   const [civicInsightError,     setCivicInsightError]     = useState<string | null>(null);
 
-  // Policing transparency insight
+  // Policing transparency insight + real data
   const [policingBannerOpen,    setPolicingBannerOpen]    = useState(true);
   const [policingInsight,       setPolicingInsight]       = useState<Insight | null>(null);
   const [policingInsightLoading, setPolicingInsightLoading] = useState(false);
   const [policingInsightError,  setPolicingInsightError]  = useState<string | null>(null);
   const [showRights,            setShowRights]            = useState(false);
+  const [policingData, setPolicingData] = useState<{
+    national: { totalIncidents: number; thisYear: number; bodyCameraRate: number; byRace: Record<string, number>; lastUpdated: string; source: string };
+    stateStats: { state: string; total: number; recentThisYear: { date: string; city: string }[] } | null;
+  } | null>(null);
+  const [policingDataLoading, setPolicingDataLoading] = useState(false);
 
   // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
@@ -869,6 +874,26 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => { cancelled = true; };
   }, [items, userCity, userContext]);
 
+  // ── Fetch real policing data from Washington Post database ──────────────
+  useEffect(() => {
+    let cancelled = false;
+    setPolicingDataLoading(true);
+    const stateAbbr = userCity?.split(",").pop()?.trim() || "";
+    const param = stateAbbr.length === 2 ? `?state=${stateAbbr}` : "";
+    (async () => {
+      try {
+        const res = await fetch(`/api/news/policing-data${param}`);
+        if (cancelled) return;
+        if (res.ok) {
+          const json = await res.json();
+          setPolicingData(json);
+        }
+      } catch { /* silent */ }
+      finally { if (!cancelled) setPolicingDataLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [userCity]);
+
   // ── Auto-fetch policing transparency insight ────────────────────────────
   useEffect(() => {
     const polItems = mergedItems.filter(isPolicingItem);
@@ -1081,6 +1106,52 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
                   {policingInsight.whatYouShouldDo}
                 </div>
               </>
+            )}
+
+            {/* Real policing data stats */}
+            {policingData && !policingDataLoading && (
+              <div style={{
+                marginTop: 6, padding: "8px 10px", borderRadius: 8,
+                background: "rgba(245,158,11,0.04)",
+                border: "1px solid rgba(245,158,11,0.12)",
+              }}>
+                <div style={{ fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: "#f59e0b", fontWeight: 700, marginBottom: 6 }}>
+                  📊 Verified Data — {policingData.national.source}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fbbf24" }}>{policingData.national.totalIncidents.toLocaleString()}</div>
+                    <div style={{ fontSize: 7, color: "#94a3b8" }}>Total since 2015</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fbbf24" }}>{policingData.national.thisYear.toLocaleString()}</div>
+                    <div style={{ fontSize: 7, color: "#94a3b8" }}>This year</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fbbf24" }}>{policingData.national.bodyCameraRate}%</div>
+                    <div style={{ fontSize: 7, color: "#94a3b8" }}>Body cam rate</div>
+                  </div>
+                </div>
+                {policingData.stateStats && policingData.stateStats.total > 0 && (
+                  <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.5, borderTop: "1px solid rgba(245,158,11,0.10)", paddingTop: 5, marginTop: 4 }}>
+                    <span style={{ color: "#fbbf24", fontWeight: 700 }}>{policingData.stateStats.state}:</span>{" "}
+                    {policingData.stateStats.total.toLocaleString()} total incidents
+                    {policingData.stateStats.recentThisYear.length > 0 && (
+                      <> · {policingData.stateStats.recentThisYear.length} this year
+                        {policingData.stateStats.recentThisYear.length > 0 && (
+                          <span style={{ color: "#64748b" }}> (latest: {policingData.stateStats.recentThisYear[policingData.stateStats.recentThisYear.length - 1]?.city})</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+                <div style={{ fontSize: 7, color: "#475569", marginTop: 4 }}>
+                  Last updated: {policingData.national.lastUpdated}
+                </div>
+              </div>
+            )}
+            {policingDataLoading && (
+              <div style={{ fontSize: 9, color: "#64748b", marginTop: 4 }}>Loading public data…</div>
             )}
 
             {/* Know Your Rights toggle */}
