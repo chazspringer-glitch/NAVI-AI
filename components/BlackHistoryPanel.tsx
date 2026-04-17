@@ -166,26 +166,46 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
           </div>
         </div>
 
-        {/* Search form */}
-        <div style={{ padding: "16px", borderRadius: 14, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(239,68,68,0.10)", display: "flex", flexDirection: "column", gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Time Period</div>
-            <select value={era} onChange={(e) => setEra(e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none", position: "relative", zIndex: 10 }}>
-              {ERAS.map((e) => <option key={e} value={e}>{e}</option>)}
-            </select>
+        {/* Era pills */}
+        <div>
+          <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6, paddingLeft: 2 }}>Time Period</div>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+            {ERAS.map((e) => {
+              const active = era === e;
+              return (
+                <button key={e} onClick={() => { setEra(e); setResults(generateEntries(e, topic)); }}
+                  style={{
+                    padding: "6px 12px", borderRadius: 999, whiteSpace: "nowrap",
+                    fontSize: 9, fontFamily: "monospace", fontWeight: active ? 700 : 400, cursor: "pointer",
+                    background: active ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.03)",
+                    border: active ? "1px solid rgba(239,68,68,0.40)" : "1px solid rgba(255,255,255,0.06)",
+                    color: active ? "#f87171" : "#64748b",
+                    transition: "all 0.15s ease",
+                  }}>{e === "Any Era" ? "All" : e.split("(")[0].trim()}</button>
+              );
+            })}
           </div>
-          <div>
-            <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Topic</div>
-            <select value={topic} onChange={(e) => setTopic(e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none", position: "relative", zIndex: 10 }}>
-              {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+        </div>
+
+        {/* Topic pills */}
+        <div>
+          <div style={{ fontSize: 8, color: "#475569", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6, paddingLeft: 2 }}>Topic</div>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", flexWrap: "wrap" }}>
+            {TOPICS.map((t) => {
+              const active = topic === t;
+              return (
+                <button key={t} onClick={() => { setTopic(t); setResults(generateEntries(era, t)); }}
+                  style={{
+                    padding: "6px 12px", borderRadius: 999, whiteSpace: "nowrap",
+                    fontSize: 9, fontFamily: "monospace", fontWeight: active ? 700 : 400, cursor: "pointer",
+                    background: active ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.03)",
+                    border: active ? "1px solid rgba(201,162,39,0.35)" : "1px solid rgba(255,255,255,0.06)",
+                    color: active ? "#C9A227" : "#64748b",
+                    transition: "all 0.15s ease",
+                  }}>{t === "Any Topic" ? "All" : t}</button>
+              );
+            })}
           </div>
-          <button onClick={handleSearch}
-            style={{ width: "100%", padding: "12px", borderRadius: 10, background: "linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08))", border: "1px solid rgba(239,68,68,0.30)", color: "#f87171", fontSize: 12, fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
-            ✊ Explore History
-          </button>
         </div>
 
         {/* Results */}
