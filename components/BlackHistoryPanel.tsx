@@ -286,15 +286,23 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
               <div style={{ fontSize: 9, color: "#475569", marginBottom: 14 }}>{results.length} entries · {era} · {topic}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {results.map((entry, i) => (
-                  <div key={i} style={{ padding: "14px", borderRadius: 12, background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.10)" }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.3, flex: 1 }}>{entry.title}</div>
-                      <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 9, fontWeight: 600, color: "#f87171", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)", flexShrink: 0, marginLeft: 8 }}>{entry.year}</span>
+                  <div key={`${entry.title}-${i}`} style={{
+                    padding: "16px", borderRadius: 14,
+                    background: "linear-gradient(160deg, rgba(20,20,32,0.95) 0%, rgba(12,12,22,0.95) 100%)",
+                    border: "1px solid rgba(239,68,68,0.12)",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+                    opacity: mounted ? 1 : 0,
+                    transform: mounted ? "translateY(0)" : "translateY(12px)",
+                    transition: `opacity 450ms ease ${300 + i * 80}ms, transform 450ms ease ${300 + i * 80}ms`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.3, flex: 1 }}>{entry.title}</div>
+                      <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 9, fontWeight: 700, color: "#f87171", background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.22)", flexShrink: 0, marginLeft: 10 }}>{entry.year}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65, marginBottom: 10 }}>{entry.desc}</div>
-                    <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.12)" }}>
-                      <div style={{ fontSize: 8, color: "#C9A227", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 3, fontWeight: 700 }}>Why This Matters</div>
-                      <div style={{ fontSize: 10, color: "#C9A227", lineHeight: 1.55 }}>{entry.significance}</div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7, marginBottom: 12 }}>{entry.desc}</div>
+                    <div style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(201,162,39,0.05)", border: "1px solid rgba(201,162,39,0.14)" }}>
+                      <div style={{ fontSize: 8, color: "#C9A227", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4, fontWeight: 700 }}>Why This Matters</div>
+                      <div style={{ fontSize: 10, color: "#C9A227", lineHeight: 1.6 }}>{entry.significance}</div>
                     </div>
                   </div>
                 ))}
