@@ -1254,6 +1254,20 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
             >
               Change
             </button>
+            {onOpenAccountability && (
+              <button
+                onClick={() => onOpenAccountability(userCity?.split(",").pop()?.trim() ?? "")}
+                style={{
+                  padding: "4px 8px", borderRadius: 6, flexShrink: 0,
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.20)",
+                  color: "#f59e0b", fontSize: 9, fontFamily: "monospace",
+                  cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                ⚖️ Accountability
+              </button>
+            )}
           </>
         ) : (
           <form

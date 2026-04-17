@@ -5560,6 +5560,7 @@ export default function HomePage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🔍", "Police Accountability", "#f59e0b", () => { setAccountabilityState(""); setShowAccountability(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
                   {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => {
