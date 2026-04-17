@@ -173,10 +173,32 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
                 </div>
+                <a href="https://m.youtube.com/@DrusWorldCartoon" target="_blank" rel="noopener noreferrer"
+                  style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(251,146,60,0.10)", border: "1px solid rgba(251,146,60,0.25)", color: "#fb923c", fontSize: 10, fontFamily: "monospace", fontWeight: 600, textDecoration: "none" }}>
+                  Full Channel ↗
+                </a>
+              </div>
+
+              {/* Episode 1 — embedded player */}
+              <div style={{ borderRadius: 12, overflow: "hidden", background: "#000", marginBottom: 12 }}>
+                <iframe
+                  width="100%" height="220"
+                  src="https://www.youtube.com/embed/Xnw-emPozQU"
+                  title="Dru's World – Episode 1"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ display: "block" }}
+                />
+              </div>
+
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
+                Dru{"'"}s World – Episode 1
               </div>
               <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65, marginBottom: 12 }}>
-                A creative cartoon channel delivering animated stories and entertainment content. Great for light viewing, creativity, and engaging storytelling through animation.
+                Episode 1 introduces a creative animated story full of personality, imagination, and fun storytelling.
               </div>
+
               <a href="https://m.youtube.com/@DrusWorldCartoon" target="_blank" rel="noopener noreferrer"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
