@@ -18,6 +18,7 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
   const [dbVideos, setDbVideos] = useState<Video[]>([]);
   const [playing, setPlaying] = useState<Video | null>(null);
   const [showPodcastApp, setShowPodcastApp] = useState(false);
+  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
 
   // Load any future DB videos
   const loadVideos = useCallback(async () => {
@@ -80,143 +81,121 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
         </div>
       )}
 
+      {/* YouTube embed modal */}
+      {embedUrl && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 80,
+          background: "rgba(0,0,0,0.95)",
+          display: "flex", flexDirection: "column",
+        }}>
+          <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
+            <button onClick={() => setEmbedUrl(null)} style={{ padding: "6px 14px", borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>✕ Close</button>
+          </div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <iframe
+              width="100%" height="100%"
+              src={embedUrl}
+              title="NaviTV Player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ display: "block", maxHeight: "60vh", borderRadius: 12, background: "#000" }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* QuantumPen — Featured */}
-        <div style={{
-          borderRadius: 14,
-          background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(168,85,247,0.04))",
-          border: "1px solid rgba(239,68,68,0.18)",
-          overflow: "hidden",
-        }}>
-          <div style={{ padding: "14px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#f87171" }}>🎥 The Truth Room</div>
-              <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>by QuantumPen</div>
-            </div>
-            <a href="https://youtube.com/@thequantumpen" target="_blank" rel="noopener noreferrer"
-              style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171", fontSize: 10, fontFamily: "monospace", fontWeight: 600, textDecoration: "none" }}>
-              Full Channel ↗
-            </a>
-          </div>
-
-          {/* Featured Video */}
-          <div style={{ padding: "0 16px 16px" }}>
-            <div style={{ borderRadius: 12, overflow: "hidden", background: "#000", marginBottom: 12 }}>
-              <iframe
-                width="100%" height="220"
-                src="https://www.youtube.com/embed/Q8mE1aq4GMo"
-                title="The Truth Room — Featured"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ display: "block" }}
-              />
-            </div>
-
-            <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6, marginBottom: 12 }}>
-              Learn the truth. Understand the history. Elevate your mind. Educational content from QuantumPen — real stories, real knowledge.
-            </div>
-
-            {/* More from QuantumPen */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { label: "QuantumPen — Latest Drop", note: "New content added regularly" },
-                { label: "Deep History Series", note: "Truth-based education" },
-                { label: "Subscribe on YouTube", note: "Never miss a video" },
-              ].map((v) => (
-                <a key={v.label} href="https://youtube.com/@thequantumpen" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(239,68,68,0.10)" }}>
-                    <div style={{ width: 40, height: 28, borderRadius: 6, background: "linear-gradient(135deg, rgba(239,68,68,0.20), rgba(168,85,247,0.20))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 12, color: "#f87171" }}>▶</span>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: "#e2e8f0", fontWeight: 500 }}>{v.label}</div>
-                      <div style={{ fontSize: 8, color: "#475569" }}>{v.note}</div>
-                    </div>
-                    <span style={{ marginLeft: "auto", fontSize: 10, color: "#475569" }}>↗</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Featured Channels ────────────────────────────────────────── */}
-        <div>
-          <div style={{ fontSize: 9, letterSpacing: "0.24em", textTransform: "uppercase", color: "#a855f7", fontWeight: 700, marginBottom: 10 }}>
-            Featured Channels
-          </div>
-
-          {/* Drus World Cartoon */}
-          <div style={{
-            borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(251,146,60,0.06), rgba(168,85,247,0.04))",
-            border: "1px solid rgba(251,146,60,0.18)",
-            overflow: "hidden",
-          }}>
-            <div style={{ padding: "14px 16px 12px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: "linear-gradient(135deg, rgba(251,146,60,0.20), rgba(168,85,247,0.15))",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 20,
-                  }}>
-                    🎨
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>Drus World Cartoon</div>
-                    <div style={{
-                      fontSize: 7, letterSpacing: "0.16em", textTransform: "uppercase",
-                      color: "#fb923c", fontWeight: 700, marginTop: 2,
-                    }}>
-                      Animation · Kids · Entertainment
-                    </div>
+        {/* ── Channels ──────────────────────────────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            {
+              name: "The Truth Room",
+              by: "QuantumPen",
+              icon: "🎥",
+              category: "Education · History · Culture",
+              desc: "Real stories, real knowledge. Educational content that elevates your mind.",
+              accent: "#f87171",
+              channelUrl: "https://youtube.com/@thequantumpen",
+              videoTitle: "Featured — The Truth Room",
+              videoEmbed: "https://www.youtube.com/embed/Q8mE1aq4GMo",
+            },
+            {
+              name: "Drus World Cartoon",
+              by: "Dru's World",
+              icon: "🎨",
+              category: "Animation · Kids · Entertainment",
+              desc: "Creative animated stories full of personality, imagination, and fun storytelling.",
+              accent: "#fb923c",
+              channelUrl: "https://m.youtube.com/@DrusWorldCartoon",
+              videoTitle: "Dru's World – Episode 1",
+              videoEmbed: "https://www.youtube.com/embed/Xnw-emPozQU",
+            },
+          ].map((ch) => (
+            <div key={ch.name} style={{
+              borderRadius: 14,
+              background: `linear-gradient(135deg, ${ch.accent}0a, rgba(168,85,247,0.04))`,
+              border: `1px solid ${ch.accent}28`,
+              padding: "14px 16px",
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10,
+                  background: `${ch.accent}22`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 18,
+                }}>
+                  {ch.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{ch.name}</div>
+                  <div style={{ fontSize: 7, letterSpacing: "0.14em", textTransform: "uppercase", color: ch.accent, fontWeight: 700, marginTop: 1 }}>
+                    {ch.category}
                   </div>
                 </div>
-                <a href="https://m.youtube.com/@DrusWorldCartoon" target="_blank" rel="noopener noreferrer"
-                  style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(251,146,60,0.10)", border: "1px solid rgba(251,146,60,0.25)", color: "#fb923c", fontSize: 10, fontFamily: "monospace", fontWeight: 600, textDecoration: "none" }}>
+              </div>
+              {/* Description */}
+              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6, marginBottom: 10 }}>
+                {ch.desc}
+              </div>
+              {/* Action buttons — same size, same layout for every card */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => setEmbedUrl(ch.videoEmbed)}
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: 10,
+                    background: `linear-gradient(135deg, ${ch.accent}, ${ch.accent}cc)`,
+                    border: "none", color: "#08080f",
+                    fontSize: 11, fontFamily: "monospace", fontWeight: 700,
+                    cursor: "pointer", letterSpacing: "0.04em",
+                    boxShadow: `0 0 12px ${ch.accent}40`,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  }}
+                >
+                  ▶ Watch Now
+                </button>
+                <a
+                  href={ch.channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: 10,
+                    background: `${ch.accent}10`,
+                    border: `1px solid ${ch.accent}30`,
+                    color: ch.accent,
+                    fontSize: 11, fontFamily: "monospace", fontWeight: 700,
+                    textDecoration: "none", letterSpacing: "0.04em",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  }}
+                >
                   Full Channel ↗
                 </a>
               </div>
-
-              {/* Episode 1 — embedded player */}
-              <div style={{ borderRadius: 12, overflow: "hidden", background: "#000", marginBottom: 12 }}>
-                <iframe
-                  width="100%" height="220"
-                  src="https://www.youtube.com/embed/Xnw-emPozQU"
-                  title="Dru's World – Episode 1"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ display: "block" }}
-                />
-              </div>
-
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
-                Dru{"'"}s World – Episode 1
-              </div>
-              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65, marginBottom: 12 }}>
-                Episode 1 introduces a creative animated story full of personality, imagination, and fun storytelling.
-              </div>
-
-              <a href="https://m.youtube.com/@DrusWorldCartoon" target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "9px 16px", borderRadius: 10,
-                  background: "linear-gradient(135deg, #fb923c, #ea580c)",
-                  border: "none", color: "#08080f",
-                  fontSize: 11, fontFamily: "monospace", fontWeight: 700,
-                  textDecoration: "none", letterSpacing: "0.04em",
-                  boxShadow: "0 0 14px rgba(251,146,60,0.30)",
-                }}>
-                Watch Channel ↗
-              </a>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* ── Podcast Partnership ─────────────────────────────────────── */}
