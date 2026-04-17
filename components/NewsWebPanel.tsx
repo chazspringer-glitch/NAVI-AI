@@ -154,6 +154,11 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const lastPinchEndRef   = useRef<number>(0);
   const [zoom, setZoom]   = useState<number>(1);
 
+  // Pan offset (single-finger drag)
+  const panRef            = useRef({ x: 0, y: 0 });
+  const dragRef           = useRef<{ startX: number; startY: number; panX: number; panY: number; moved: boolean } | null>(null);
+  const lastDragEndRef    = useRef<number>(0);
+
   const [items,    setItems]    = useState<NewsItem[]>([]);
   const [clusters, setClusters] = useState<NewsCluster[]>([]);
   const [selected, setSelected] = useState<NewsItem | null>(null);
@@ -338,13 +343,15 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       const zoomNow = zoomRef.current;
       const cx = size.w / 2;
       const cy = size.h / 2;
+      const pcx = cx + panRef.current.x;
+      const pcy = cy + panRef.current.y;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(dpr, dpr);
 
       // Background radial glow
-      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(size.w, size.h) * 0.6);
+      const bg = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, Math.max(size.w, size.h) * 0.6);
       bg.addColorStop(0, "rgba(0,212,255,0.05)");
       bg.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = bg;
@@ -358,8 +365,8 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         const driftY = Math.cos(t * n.driftSpeed * 0.7 + n.driftPhase) * 6;
         const angleNow = n.baseAngle + rot;
         const r = n.baseRadius * zoomNow;
-        const targetX = cx + Math.cos(angleNow) * r + driftX;
-        const targetY = cy + Math.sin(angleNow) * r + driftY;
+        const targetX = pcx + Math.cos(angleNow) * r + driftX;
+        const targetY = pcy + Math.sin(angleNow) * r + driftY;
         n.x += (targetX - n.x) * 0.06;
         n.y += (targetY - n.y) * 0.06;
         if (n.age < 1) n.age = Math.min(1, n.age + 0.018);
@@ -370,7 +377,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         ctx.strokeStyle = `${n.color}1a`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
+        ctx.moveTo(pcx, pcy);
         ctx.lineTo(n.x, n.y);
         ctx.stroke();
       }
@@ -437,25 +444,25 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         }
       }
 
-      // NAVI core (pulsing)
+      // NAVI core (pulsing) — follows pan
       const pulse = 1 + Math.sin(t * 1.4) * 0.12;
       const coreR = 32 * pulse;
-      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+      const coreGrad = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, coreR);
       coreGrad.addColorStop(0,   "rgba(0,212,255,0.50)");
       coreGrad.addColorStop(0.4, "rgba(201,162,39,0.22)");
       coreGrad.addColorStop(1,   "rgba(0,0,0,0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+      ctx.arc(pcx, pcy, coreR, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "rgba(0,212,255,0.95)";
       ctx.beginPath();
-      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.arc(pcx, pcy, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,1)";
       ctx.beginPath();
-      ctx.arc(cx, cy, 2.8, 0, Math.PI * 2);
+      ctx.arc(pcx, pcy, 2.8, 0, Math.PI * 2);
       ctx.fill();
 
       // Nodes
@@ -764,9 +771,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   }, [selectedCluster, items, userContext]);
 
   const handlePointer = useCallback((clientX: number, clientY: number) => {
-    // Suppress taps that arrive right after a pinch — mobile fires onClick
-    // after a multi-touch gesture and we don't want to open random nodes
+    // Suppress taps after a pinch or drag gesture
     if (Date.now() - lastPinchEndRef.current < 350) return;
+    if (Date.now() - lastDragEndRef.current < 350) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -976,10 +983,17 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", touchAction: "none" }}>
         <canvas
           ref={canvasRef}
-          onClick={(e) => handlePointer(e.clientX, e.clientY)}
-          // ── Pinch-to-zoom (two-finger touch) ─────────────────────────────
+          onClick={(e) => {
+            // Desktop clicks only — on touch devices taps are handled in touchEnd
+            if (Date.now() - lastDragEndRef.current < 400) return;
+            if (Date.now() - lastPinchEndRef.current < 400) return;
+            handlePointer(e.clientX, e.clientY);
+          }}
+          // ── Touch: 1-finger drag to pan, 2-finger pinch to zoom ──────────
           onTouchStart={(e) => {
             if (e.touches.length === 2) {
+              // Start pinch
+              dragRef.current = null;
               const t1 = e.touches[0];
               const t2 = e.touches[1];
               const dx = t1.clientX - t2.clientX;
@@ -987,10 +1001,21 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               const dist = Math.sqrt(dx * dx + dy * dy);
               pinchStartRef.current = { dist, zoom: zoomRef.current };
               e.preventDefault();
+            } else if (e.touches.length === 1) {
+              // Record start for potential drag or tap
+              const t = e.touches[0];
+              dragRef.current = {
+                startX: t.clientX,
+                startY: t.clientY,
+                panX: panRef.current.x,
+                panY: panRef.current.y,
+                moved: false,
+              };
             }
           }}
           onTouchMove={(e) => {
             if (e.touches.length === 2 && pinchStartRef.current) {
+              // Pinch zoom
               const t1 = e.touches[0];
               const t2 = e.touches[1];
               const dx = t1.clientX - t2.clientX;
@@ -1001,12 +1026,36 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               zoomRef.current = next;
               setZoom(next);
               e.preventDefault();
+            } else if (e.touches.length === 1 && dragRef.current && !pinchStartRef.current) {
+              // Single-finger drag → pan
+              const t = e.touches[0];
+              const dx = t.clientX - dragRef.current.startX;
+              const dy = t.clientY - dragRef.current.startY;
+              if (!dragRef.current.moved && Math.sqrt(dx * dx + dy * dy) > 8) {
+                dragRef.current.moved = true;
+              }
+              if (dragRef.current.moved) {
+                panRef.current = {
+                  x: dragRef.current.panX + dx,
+                  y: dragRef.current.panY + dy,
+                };
+                e.preventDefault();
+              }
             }
           }}
           onTouchEnd={(e) => {
             if (e.touches.length < 2 && pinchStartRef.current) {
               pinchStartRef.current = null;
               lastPinchEndRef.current = Date.now();
+            }
+            if (dragRef.current) {
+              if (!dragRef.current.moved) {
+                // It was a tap, not a drag — select node/cluster
+                handlePointer(dragRef.current.startX, dragRef.current.startY);
+              } else {
+                lastDragEndRef.current = Date.now();
+              }
+              dragRef.current = null;
             }
           }}
           // ── Desktop: ctrl/⌘ + wheel zooms (matches browser convention) ───
@@ -1023,9 +1072,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         />
 
         {/* Zoom indicator + reset (only visible when zoom != 1) */}
-        {Math.abs(zoom - 1) > 0.02 && (
+        {(Math.abs(zoom - 1) > 0.02 || Math.abs(panRef.current.x) > 5 || Math.abs(panRef.current.y) > 5) && (
           <button
-            onClick={() => { zoomRef.current = 1; setZoom(1); }}
+            onClick={() => { zoomRef.current = 1; setZoom(1); panRef.current = { x: 0, y: 0 }; }}
             style={{
               position: "absolute", top: 12, left: 12, zIndex: 2,
               padding: "6px 10px", borderRadius: 8,
