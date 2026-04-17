@@ -88,6 +88,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   culture:       "#8b5cf6",
   health:        "#2dd4bf",
   civic:         "#3b82f6",
+  local:         "#f97316",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -103,6 +104,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   culture:       "Culture",
   health:        "Health",
   civic:         "Civic",
+  local:         "Local",
 };
 
 function timeAgo(ts: number): string {
@@ -179,8 +181,12 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
 
-  // Location detection for safety + opportunity awareness
+  // Location detection for safety + opportunity + civic awareness
   const [userCity,  setUserCity]  = useState<string | null>(null);
+  const [locationInput, setLocationInput] = useState("");
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [localItems, setLocalItems] = useState<NewsItem[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
   const [safetyBannerOpen,      setSafetyBannerOpen]      = useState(true);
   const [opportunityBannerOpen, setOpportunityBannerOpen] = useState(true);
 
@@ -249,6 +255,14 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Merged items: national + local (deduplicated by id)
+  const mergedItems = (() => {
+    if (localItems.length === 0) return items;
+    const ids = new Set(items.map((i) => i.id));
+    const unique = localItems.filter((li) => !ids.has(li.id));
+    return [...unique, ...items];
+  })();
+
   // ── Build/refresh nodes when items, clusters, or size change ──────────────
   useEffect(() => {
     if (size.w === 0 || size.h === 0) return;
@@ -261,7 +275,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     const clusterMap = new Map<string, NewsItem[]>();
     for (const c of clusters) clusterMap.set(c.id, []);
     const singletons: NewsItem[] = [];
-    for (const it of items) {
+    for (const it of mergedItems) {
       if (it.clusterId && clusterMap.has(it.clusterId)) {
         clusterMap.get(it.clusterId)!.push(it);
       } else {
@@ -335,7 +349,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     }
 
     nodesRef.current = newNodes;
-  }, [items, clusters, size.w, size.h]);
+  }, [mergedItems, clusters, size.w, size.h]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Animation loop ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -652,12 +666,29 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     );
   }, []);
 
+  // ── Fetch local news when city is known ─────────────────────────────────
+  useEffect(() => {
+    if (!userCity) { setLocalItems([]); return; }
+    let cancelled = false;
+    setLocalLoading(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/news/local?city=${encodeURIComponent(userCity)}`);
+        if (cancelled) return;
+        const json = await res.json();
+        if (Array.isArray(json.items)) setLocalItems(json.items);
+      } catch { /* silent */ }
+      finally { if (!cancelled) setLocalLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [userCity]);
+
   // ── Auto-fetch safety overview when safety items exist ─────────────────
   // Integrated into the main web (not a separate tab). Fires when items
   // change and at least one is safety-flagged. Includes the user's detected
   // city so the AI can tailor advice to their area.
   useEffect(() => {
-    const safetyItems = items.filter(isSafetyItem);
+    const safetyItems = mergedItems.filter(isSafetyItem);
     if (safetyItems.length === 0) {
       setSafetyInsight(null);
       setSafetyInsightLoading(false);
@@ -704,7 +735,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
 
   // ── Auto-fetch opportunity insight when opportunity items exist ──────────
   useEffect(() => {
-    const opItems = items.filter(isOpportunityItem);
+    const opItems = mergedItems.filter(isOpportunityItem);
     if (opItems.length === 0) {
       setOpInsight(null);
       setOpInsightLoading(false);
@@ -749,7 +780,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
 
   // ── Auto-fetch civic insight when civic items exist ─────────────────────
   useEffect(() => {
-    const civicItems = items.filter(isCivicItem);
+    const civicItems = mergedItems.filter(isCivicItem);
     if (civicItems.length === 0) {
       setCivicInsight(null);
       setCivicInsightLoading(false);
@@ -804,7 +835,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     setClusterInsight(null);
     setClusterInsightError(null);
     setClusterInsightLoading(true);
-    const memberItems = items.filter((it) => selectedCluster.itemIds.includes(it.id));
+    const memberItems = mergedItems.filter((it) => selectedCluster.itemIds.includes(it.id));
     const articles = memberItems.slice(0, 10).map((it) => ({
       title:   it.title,
       summary: it.summary,
@@ -923,8 +954,89 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         </div>
       </div>
 
+      {/* ── Location bar ──────────────────────────────────────────────── */}
+      <div style={{
+        padding: "6px 16px", flexShrink: 0,
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        background: "rgba(2,2,8,0.75)",
+        display: "flex", alignItems: "center", gap: 8,
+        zIndex: 4,
+      }}>
+        <span style={{ fontSize: 12, flexShrink: 0 }}>📍</span>
+        {!showLocationSearch ? (
+          <>
+            <button
+              onClick={() => { setShowLocationSearch(true); setLocationInput(userCity ?? ""); }}
+              style={{
+                flex: 1, textAlign: "left", padding: 0,
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "monospace",
+              }}
+            >
+              <span style={{ fontSize: 11, color: userCity ? "#f1f5f9" : "#64748b", fontWeight: userCity ? 600 : 400 }}>
+                {userCity ?? "Detecting location…"}
+              </span>
+              {localLoading && <span style={{ fontSize: 8, color: "#f97316", marginLeft: 6 }}>loading local…</span>}
+              {!localLoading && localItems.length > 0 && (
+                <span style={{ fontSize: 8, color: "#f97316", marginLeft: 6 }}>{localItems.length} local</span>
+              )}
+            </button>
+            <button
+              onClick={() => { setShowLocationSearch(true); setLocationInput(""); }}
+              style={{
+                padding: "4px 8px", borderRadius: 6, flexShrink: 0,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#64748b", fontSize: 9, fontFamily: "monospace",
+                cursor: "pointer",
+              }}
+            >
+              Change
+            </button>
+          </>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const city = locationInput.trim();
+              if (city) {
+                setUserCity(city);
+                setShowLocationSearch(false);
+              }
+            }}
+            style={{ flex: 1, display: "flex", gap: 6 }}
+          >
+            <input
+              autoFocus
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              placeholder="City, State (e.g. Wilmington, NC)"
+              style={{
+                flex: 1, padding: "6px 10px", borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(249,115,22,0.25)",
+                color: "#e2e8f0", fontSize: 11, fontFamily: "monospace",
+                outline: "none",
+              }}
+            />
+            <button type="submit" style={{
+              padding: "6px 12px", borderRadius: 8,
+              background: "rgba(249,115,22,0.15)",
+              border: "1px solid rgba(249,115,22,0.35)",
+              color: "#f97316", fontSize: 10, fontWeight: 700,
+              fontFamily: "monospace", cursor: "pointer",
+            }}>Go</button>
+            <button type="button" onClick={() => setShowLocationSearch(false)} style={{
+              padding: "6px 8px", borderRadius: 8,
+              background: "none", border: "1px solid rgba(255,255,255,0.08)",
+              color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer",
+            }}>✕</button>
+          </form>
+        )}
+      </div>
+
       {/* ── Safety awareness banner — location-based, inline ─────────── */}
-      {items.filter(isSafetyItem).length > 0 && safetyBannerOpen && (
+      {mergedItems.filter(isSafetyItem).length > 0 && safetyBannerOpen && (
         <div style={{
           padding: "8px 16px", flexShrink: 0,
           borderBottom: "1px solid rgba(239,68,68,0.10)",
@@ -942,7 +1054,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
               color: "#ef4444", fontWeight: 700, marginBottom: 3,
             }}>
-              🛡️ Safety Awareness{userCity ? ` — ${userCity}` : ""} · {items.filter(isSafetyItem).length} flagged
+              🛡️ Safety Awareness{userCity ? ` — ${userCity}` : ""} · {mergedItems.filter(isSafetyItem).length} flagged
             </div>
             {safetyInsightLoading && (
               <div style={{ fontSize: 10, color: "#64748b" }}>Analyzing safety patterns…</div>
@@ -976,7 +1088,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       )}
 
       {/* ── Opportunity awareness banner — location-based, inline ───── */}
-      {items.filter(isOpportunityItem).length > 0 && opportunityBannerOpen && (
+      {mergedItems.filter(isOpportunityItem).length > 0 && opportunityBannerOpen && (
         <div style={{
           padding: "8px 16px", flexShrink: 0,
           borderBottom: "1px solid rgba(52,211,153,0.10)",
@@ -994,7 +1106,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
               color: "#34d399", fontWeight: 700, marginBottom: 3,
             }}>
-              💡 Opportunities{userCity ? ` — ${userCity}` : ""} · {items.filter(isOpportunityItem).length} detected
+              💡 Opportunities{userCity ? ` — ${userCity}` : ""} · {mergedItems.filter(isOpportunityItem).length} detected
             </div>
             {opInsightLoading && (
               <div style={{ fontSize: 10, color: "#64748b" }}>Scanning for opportunities…</div>
@@ -1052,7 +1164,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       )}
 
       {/* ── Civic engagement banner — location-based, inline ────────── */}
-      {items.filter(isCivicItem).length > 0 && civicBannerOpen && (
+      {mergedItems.filter(isCivicItem).length > 0 && civicBannerOpen && (
         <div style={{
           padding: "8px 16px", flexShrink: 0,
           borderBottom: "1px solid rgba(59,130,246,0.10)",
@@ -1070,7 +1182,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
               fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
               color: "#3b82f6", fontWeight: 700, marginBottom: 3,
             }}>
-              🏛️ Civic Pulse{userCity ? ` — ${userCity}` : ""} · {items.filter(isCivicItem).length} stories
+              🏛️ Civic Pulse{userCity ? ` — ${userCity}` : ""} · {mergedItems.filter(isCivicItem).length} stories
             </div>
             {civicInsightLoading && (
               <div style={{ fontSize: 10, color: "#64748b" }}>Scanning civic activity…</div>
@@ -1456,7 +1568,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
       {/* Cluster trend detail panel */}
       {selectedCluster && (() => {
         const accent = CATEGORY_COLORS[selectedCluster.category ?? ""] ?? "#00d4ff";
-        const memberItems = items.filter((it) => selectedCluster.itemIds.includes(it.id));
+        const memberItems = mergedItems.filter((it) => selectedCluster.itemIds.includes(it.id));
         return (
           <div style={{
             position: "absolute", left: 0, right: 0, bottom: 0,
