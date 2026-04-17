@@ -139,7 +139,27 @@ function isCivicItem(item: NewsItem): boolean {
   return CIVIC_KEYWORDS.test(item.title) || CIVIC_KEYWORDS.test(item.summary ?? "");
 }
 
-// Single unified view — safety, opportunity, and civic awareness are integrated inline.
+// ── Policing transparency keyword detection ─────────────────────────────────
+const POLICING_KEYWORDS = /\b(police department|police chief|officer involved|use of force|excessive force|body cam|bodycam|police reform|police oversight|police misconduct|police shooting|officer shoot|deputy shoot|internal affairs|citizen complaint|police union|law enforcement|police budget|police account|police train|police review board|civilian oversight|consent decree|department of justice|doj investigation|racial profil|traffic stop|no.knock|qualified immunity|police brutality|police transparency|badge|trooper|sheriff department|police data|arrest rate|incarceration|sentencing|bail reform|prison reform|criminal justice reform|police commission)\b/i;
+
+function isPolicingItem(item: NewsItem): boolean {
+  if (isSafetyItem(item)) return false;
+  if (isOpportunityItem(item)) return false;
+  if (isCivicItem(item)) return false;
+  return POLICING_KEYWORDS.test(item.title) || POLICING_KEYWORDS.test(item.summary ?? "");
+}
+
+// ── Know Your Rights content (verified, general guidance) ───────────────────
+const KNOW_YOUR_RIGHTS = [
+  { title: "You have the right to remain silent", body: "You do not have to answer questions about where you are going, where you are from, or what you are doing. Say: \"I am exercising my right to remain silent.\"" },
+  { title: "You have the right to refuse consent to a search", body: "Police cannot search you or your belongings without a warrant or your consent. Say: \"I do not consent to this search.\" Do not physically resist." },
+  { title: "You have the right to record police", body: "In all 50 states, you have the right to record police officers in public as long as you do not interfere with their duties." },
+  { title: "You have the right to ask if you are free to leave", body: "If you are not under arrest, you have the right to calmly leave. Ask: \"Am I being detained, or am I free to go?\"" },
+  { title: "You have the right to an attorney", body: "If you are arrested, you have the right to speak with a lawyer before answering any questions. Say: \"I want to speak to a lawyer.\"" },
+  { title: "Stay calm and document everything", body: "Remember badge numbers, patrol car numbers, and agency. Write down everything as soon as possible. File a complaint with the department's internal affairs division or civilian oversight board." },
+];
+
+// Single unified view — safety, opportunity, civic, and policing awareness are integrated inline.
 
 interface NewsWebPanelProps {
   onClose:   () => void;
@@ -205,6 +225,13 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [civicInsight,          setCivicInsight]          = useState<Insight | null>(null);
   const [civicInsightLoading,   setCivicInsightLoading]   = useState(false);
   const [civicInsightError,     setCivicInsightError]     = useState<string | null>(null);
+
+  // Policing transparency insight
+  const [policingBannerOpen,    setPolicingBannerOpen]    = useState(true);
+  const [policingInsight,       setPolicingInsight]       = useState<Insight | null>(null);
+  const [policingInsightLoading, setPolicingInsightLoading] = useState(false);
+  const [policingInsightError,  setPolicingInsightError]  = useState<string | null>(null);
+  const [showRights,            setShowRights]            = useState(false);
 
   // Single-article insight state
   const [insight,        setInsight]        = useState<Insight | null>(null);
@@ -503,6 +530,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         const safety = isSafetyItem(n);
         const opportunity = !safety && isOpportunityItem(n);
         const civic = !safety && !opportunity && isCivicItem(n);
+        const policing = !safety && !opportunity && !civic && isPolicingItem(n);
         // Safety ring — subtle pulsing red outline
         if (safety) {
           const ringAlpha = 0.4 + Math.sin(t * 2.5 + n.driftPhase) * 0.2;
@@ -525,6 +553,15 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
         if (civic) {
           const ringAlpha = 0.4 + Math.sin(t * 1.8 + n.driftPhase) * 0.2;
           ctx.strokeStyle = `rgba(59,130,246,${ringAlpha})`;
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Policing ring — pulsing amber outline
+        if (policing) {
+          const ringAlpha = 0.4 + Math.sin(t * 2.2 + n.driftPhase) * 0.2;
+          ctx.strokeStyle = `rgba(245,158,11,${ringAlpha})`;
           ctx.lineWidth = 1.3;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
@@ -823,6 +860,51 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => { cancelled = true; };
   }, [items, userCity, userContext]);
 
+  // ── Auto-fetch policing transparency insight ────────────────────────────
+  useEffect(() => {
+    const polItems = mergedItems.filter(isPolicingItem);
+    if (polItems.length === 0) {
+      setPolicingInsight(null);
+      setPolicingInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPolicingInsight(null);
+    setPolicingInsightError(null);
+    setPolicingInsightLoading(true);
+    const articles = polItems.slice(0, 10).map((it) => ({
+      title: it.title, summary: it.summary, source: it.source,
+    }));
+    const locationCtx = userCity ? { ...userContext, location: userCity } : userContext;
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId: `policing-${userCity || "general"}`,
+            clusterName: userCity
+              ? `Policing & Accountability — ${userCity}`
+              : "Policing & Criminal Justice",
+            keywords: ["police", "use of force", "accountability", "oversight", "reform", "transparency"],
+            articles,
+            userContext: locationCtx,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) { setPolicingInsightError("Could not generate policing overview."); return; }
+        const json = await res.json() as { insight?: Insight };
+        if (json.insight) setPolicingInsight(json.insight);
+        else setPolicingInsightError("No overview generated.");
+      } catch {
+        if (!cancelled) setPolicingInsightError("Could not reach the insight service.");
+      } finally {
+        if (!cancelled) setPolicingInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [mergedItems, userCity, userContext]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Fetch NAVI cluster trend insight when a cluster is selected ──────────
   useEffect(() => {
     if (!selectedCluster) {
@@ -953,6 +1035,89 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 13 }} aria-label="Close">✕</button>
         </div>
       </div>
+
+      {/* ── Policing transparency banner ──────────────────────────────── */}
+      {mergedItems.filter(isPolicingItem).length > 0 && policingBannerOpen && (
+        <div style={{
+          padding: "8px 16px", flexShrink: 0,
+          borderBottom: "1px solid rgba(245,158,11,0.10)",
+          background: "rgba(245,158,11,0.03)",
+          display: "flex", alignItems: "flex-start", gap: 10,
+          zIndex: 4,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", marginTop: 4, flexShrink: 0,
+            background: "#f59e0b", boxShadow: "0 0 8px #f59e0b",
+            animation: policingInsightLoading ? "pulseDot 1.2s ease-in-out infinite" : "none",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
+              color: "#f59e0b", fontWeight: 700, marginBottom: 3,
+            }}>
+              ⚖️ Policing Transparency{userCity ? ` — ${userCity}` : ""} · {mergedItems.filter(isPolicingItem).length} stories
+            </div>
+            {policingInsightLoading && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>Analyzing policing data…</div>
+            )}
+            {!policingInsightLoading && policingInsightError && (
+              <div style={{ fontSize: 10, color: "#fbbf24" }}>{policingInsightError}</div>
+            )}
+            {!policingInsightLoading && policingInsight && (
+              <>
+                <div style={{ fontSize: 10, color: "#fbbf24", lineHeight: 1.55, fontWeight: 600, marginBottom: 2 }}>
+                  {policingInsight.whatsHappening}
+                </div>
+                <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.55, marginBottom: 4 }}>
+                  {policingInsight.whatYouShouldDo}
+                </div>
+              </>
+            )}
+
+            {/* Know Your Rights toggle */}
+            <button
+              onClick={() => setShowRights(!showRights)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "4px 10px", borderRadius: 6, marginTop: 2,
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.22)",
+                color: "#f59e0b", fontSize: 9, fontWeight: 700,
+                fontFamily: "monospace", cursor: "pointer",
+              }}
+            >
+              📋 Know Your Rights {showRights ? "▲" : "▼"}
+            </button>
+
+            {showRights && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                {KNOW_YOUR_RIGHTS.map((r) => (
+                  <div key={r.title} style={{
+                    padding: "8px 10px", borderRadius: 8,
+                    background: "rgba(245,158,11,0.04)",
+                    border: "1px solid rgba(245,158,11,0.12)",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#fbbf24", marginBottom: 3 }}>
+                      {r.title}
+                    </div>
+                    <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.55 }}>
+                      {r.body}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.5, padding: "4px 0" }}>
+                  This is general guidance based on established U.S. constitutional rights. For legal advice specific to your situation, consult a licensed attorney.
+                </div>
+              </div>
+            )}
+          </div>
+          <button onClick={() => setPolicingBannerOpen(false)}
+            style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: "none", background: "transparent", color: "#475569", fontSize: 10, cursor: "pointer" }}
+            aria-label="Dismiss policing banner">
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Location bar ──────────────────────────────────────────────── */}
       <div style={{
