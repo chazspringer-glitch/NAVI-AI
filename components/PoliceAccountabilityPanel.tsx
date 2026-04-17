@@ -30,7 +30,11 @@ interface NationalData {
 }
 
 const RACE_LABELS: Record<string, string> = {
-  W: "White", B: "Black", H: "Hispanic", A: "Asian", N: "Native American", O: "Other", Unknown: "Unknown",
+  White: "White", Black: "Black", Hispanic: "Hispanic", Asian: "Asian",
+  "Native American": "Native American", Multiracial: "Multiracial",
+  Other: "Other", Unknown: "Unknown",
+  // Legacy codes (in case API returns raw)
+  W: "White", B: "Black", H: "Hispanic", A: "Asian", N: "Native American", O: "Other",
 };
 
 const COMPLAINT_STEPS = [

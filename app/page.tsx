@@ -831,6 +831,7 @@ export default function HomePage() {
   const [showStartHereIntro, setShowStartHereIntro]     = useState(false);
   const [showAccountability, setShowAccountability]     = useState(false);
   const [accountabilityState, setAccountabilityState]   = useState("");
+  const [showAccountabilityIntro, setShowAccountabilityIntro] = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -2197,7 +2198,8 @@ export default function HomePage() {
         break;
       case "policeAccountability":
         setAccountabilityState("");
-        setShowAccountability(true);
+        if (hasSeenIntro("accountability")) { setShowAccountability(true); }
+        else { markIntroSeen("accountability"); setShowAccountabilityIntro(true); }
         setMenuOpen(false);
         break;
       case "blackHistory":
@@ -3031,7 +3033,8 @@ export default function HomePage() {
           onClose={() => setShowNewsWeb(false)}
           onOpenAccountability={(state) => {
             setAccountabilityState(state);
-            setShowAccountability(true);
+            if (hasSeenIntro("accountability")) { setShowAccountability(true); }
+            else { markIntroSeen("accountability"); setShowAccountabilityIntro(true); }
           }}
           onAction={(feature) => {
             // Close News Web first so the next overlay doesn't sit on top of it
@@ -5569,7 +5572,12 @@ export default function HomePage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
-                  {toolBtn("🔍", "Police Accountability", "#f59e0b", () => { setAccountabilityState(""); setShowAccountability(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🔍", "Police Accountability", "#f59e0b", () => {
+                    setAccountabilityState("");
+                    if (hasSeenIntro("accountability")) { setShowAccountability(true); }
+                    else { markIntroSeen("accountability"); setShowAccountabilityIntro(true); }
+                    setMenuOpen(false);
+                  }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
                   {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => {
@@ -6864,6 +6872,65 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* Police Accountability Cinematic Intro */}
+    {showAccountabilityIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "25%", right: "18%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(245,158,11,0.45))" }}>⚖️</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#f59e0b", marginBottom: 10 }}>
+            Verified Public Data
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(245,158,11,0.20)" }}>
+            Police Accountability
+          </div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 10 }}>
+            Transparency is the first step toward accountability. This dashboard uses verified data from the Washington Post to show policing patterns — nationally and in your community.
+          </div>
+          <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 22 }}>
+            Know the facts. Know your rights. Know how to act.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "📊", label: "National statistics since 2015", color: "#f59e0b" },
+              { icon: "📍", label: "State and city-level breakdowns", color: "#f59e0b" },
+              { icon: "📋", label: "Know Your Rights during encounters", color: "#fbbf24" },
+              { icon: "✊", label: "How to file complaints + transparency resources", color: "#fbbf24" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.6, marginBottom: 20, padding: "0 10px" }}>
+            Source: Washington Post Fatal Police Shootings Database (public). No individual officers identified. Aggregated data only.
+          </div>
+
+          <button onClick={() => { setShowAccountabilityIntro(false); setShowAccountability(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "#08080f", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(245,158,11,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            View the Data →
+          </button>
+          <button onClick={() => setShowAccountabilityIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
 
     {/* Police Accountability Dashboard */}
     {showAccountability && (

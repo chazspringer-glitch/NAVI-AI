@@ -45,40 +45,77 @@ interface StateDetail {
   recentIncidents:     { date: string; city: string; race: string; armed: string; bodyCamera: boolean }[];
 }
 
+function clean(s: string): string {
+  return (s ?? "").replace(/^["']|["']$/g, "").trim();
+}
+
+const RACE_MAP: Record<string, string> = {
+  W: "White", B: "Black", H: "Hispanic", A: "Asian",
+  N: "Native American", O: "Other",
+};
+
+function normalizeRace(raw: string): string {
+  const c = clean(raw).toUpperCase();
+  if (RACE_MAP[c]) return RACE_MAP[c];
+  // Multi-race codes like "W;B" → use first
+  const first = c.split(/[;,]/)[0]?.trim();
+  if (RACE_MAP[first]) return "Multiracial";
+  if (!c || c === "UNKNOWN" || c === "MALE" || c === "FEMALE") return "Unknown";
+  return "Other";
+}
+
 function parseCSV(csv: string): Incident[] {
   const lines = csv.split("\n");
   if (lines.length < 2) return [];
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
 
-  const idx = (name: string) => {
-    const i = header.indexOf(name);
-    return i >= 0 ? i : header.findIndex((h) => h.includes(name));
+  // Build header index from first line
+  const headerLine = lines[0];
+  const headers = headerLine.split(",").map((h) => clean(h).toLowerCase());
+  const col = (name: string): number => {
+    const exact = headers.indexOf(name);
+    if (exact >= 0) return exact;
+    return headers.findIndex((h) => h.includes(name));
   };
 
-  const dateIdx   = idx("date");
-  const cityIdx   = idx("city");
-  const stateIdx  = idx("state");
-  const raceIdx   = idx("race");
-  const armedIdx  = idx("armed_with");
-  const cameraIdx = idx("body_camera");
-  const ageIdx    = idx("age");
-  const genderIdx = idx("gender");
+  const dateIdx   = col("date");
+  const cityIdx   = col("city");
+  const stateIdx  = col("state");
+  const raceIdx   = col("race");
+  const armedIdx  = col("armed_with");
+  const cameraIdx = col("body_camera");
+  const ageIdx    = col("age");
+  const genderIdx = col("gender");
+
+  if (dateIdx < 0 || stateIdx < 0) return [];
 
   const incidents: Incident[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
-    if (cols.length < 5) continue;
-    const date = cols[dateIdx]?.trim() ?? "";
-    if (!date) continue;
+    const line = lines[i];
+    if (!line || line.trim().length < 5) continue;
+
+    // Simple CSV split that respects quoted fields
+    const cols: string[] = [];
+    let cur = "", inQ = false;
+    for (let j = 0; j < line.length; j++) {
+      const ch = line[j];
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; continue; }
+      cur += ch;
+    }
+    cols.push(cur.trim());
+
+    const date = clean(cols[dateIdx] ?? "");
+    if (!date || date.length < 8) continue;
+
     incidents.push({
       date,
-      city:       cols[cityIdx]?.trim() ?? "",
-      state:      cols[stateIdx]?.trim() ?? "",
-      race:       cols[raceIdx]?.trim() ?? "Unknown",
-      armed:      cols[armedIdx]?.trim() ?? "Unknown",
-      bodyCamera: cols[cameraIdx]?.trim().toLowerCase() === "true",
-      age:        parseInt(cols[ageIdx]?.trim() ?? "0", 10) || 0,
-      gender:     cols[genderIdx]?.trim() ?? "",
+      city:       clean(cols[cityIdx] ?? ""),
+      state:      clean(cols[stateIdx] ?? ""),
+      race:       normalizeRace(cols[raceIdx] ?? ""),
+      armed:      clean(cols[armedIdx] ?? "Unknown"),
+      bodyCamera: clean(cols[cameraIdx] ?? "").toLowerCase() === "true",
+      age:        parseInt(clean(cols[ageIdx] ?? "0"), 10) || 0,
+      gender:     clean(cols[genderIdx] ?? ""),
     });
   }
   return incidents;
