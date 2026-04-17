@@ -43,6 +43,7 @@ export default function NaviLivePanel({ onClose }: { onClose: () => void }) {
   const [composing, setComposing] = useState(false);
   const [content, setContent] = useState("");
   const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [authDisplayName, setAuthDisplayName] = useState("");
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
@@ -85,6 +86,7 @@ export default function NaviLivePanel({ onClose }: { onClose: () => void }) {
   const handlePost = async () => {
     if (!content.trim() || posting) return;
     setPosting(true);
+    setPostError(null);
     try {
       const res = await fetch("/api/community", {
         method: "POST",
@@ -99,9 +101,15 @@ export default function NaviLivePanel({ onClose }: { onClose: () => void }) {
         setContent("");
         setComposing(false);
         await loadPosts();
+      } else {
+        const json = await res.json().catch(() => ({ error: "Post failed" }));
+        setPostError(json.error || `Failed (${res.status})`);
       }
-    } catch { /* silent */ }
-    finally { setPosting(false); }
+    } catch (err) {
+      setPostError("Could not reach the server. Try again.");
+    } finally {
+      setPosting(false);
+    }
   };
 
   // Like
@@ -221,6 +229,11 @@ export default function NaviLivePanel({ onClose }: { onClose: () => void }) {
                 outline: "none", resize: "none",
               }}
             />
+            {postError && (
+              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.20)", fontSize: 10, color: "#f87171" }}>
+                {postError}
+              </div>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
               <span style={{ fontSize: 8, color: content.length > 450 ? "#f87171" : "#475569" }}>
                 {content.length}/500
