@@ -89,6 +89,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   health:        "#2dd4bf",
   civic:         "#3b82f6",
   local:         "#f97316",
+  crime:         "#dc2626",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -105,6 +106,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   health:        "Health",
   civic:         "Civic",
   local:         "Local",
+  crime:         "Crime",
 };
 
 function timeAgo(ts: number): string {
@@ -207,6 +209,8 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
   const [showLocationSearch, setShowLocationSearch] = useState(false);
   const [localItems, setLocalItems] = useState<NewsItem[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
+  const [crimeItems, setCrimeItems] = useState<NewsItem[]>([]);
+  const [crimeLoading, setCrimeLoading] = useState(false);
   const [safetyBannerOpen,      setSafetyBannerOpen]      = useState(true);
   const [opportunityBannerOpen, setOpportunityBannerOpen] = useState(true);
 
@@ -287,16 +291,32 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Merged items: national + local (deduplicated by id), then filtered by category
+  // ── Fetch crime data when city is known (refreshes every 60s) ───────────
+  useEffect(() => {
+    if (!userCity) { setCrimeItems([]); return; }
+    let cancelled = false;
+    const fetchCrime = async () => {
+      setCrimeLoading(true);
+      try {
+        const res = await fetch(`/api/news/crime?city=${encodeURIComponent(userCity)}`);
+        if (cancelled) return;
+        const json = await res.json();
+        if (Array.isArray(json.items)) setCrimeItems(json.items);
+      } catch { /* silent */ }
+      finally { if (!cancelled) setCrimeLoading(false); }
+    };
+    fetchCrime();
+    const interval = setInterval(fetchCrime, 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [userCity]);
+
+  // Merged items: national + local + crime (deduplicated by id), then filtered by category
   const mergedItems = (() => {
-    let merged: NewsItem[];
-    if (localItems.length === 0) {
-      merged = items;
-    } else {
-      const ids = new Set(items.map((i) => i.id));
-      const unique = localItems.filter((li) => !ids.has(li.id));
-      merged = [...unique, ...items];
-    }
+    const ids = new Set(items.map((i) => i.id));
+    const uniqueLocal = localItems.filter((li) => !ids.has(li.id));
+    uniqueLocal.forEach((li) => ids.add(li.id));
+    const uniqueCrime = crimeItems.filter((ci) => !ids.has(ci.id));
+    let merged = [...uniqueCrime, ...uniqueLocal, ...items];
     if (categoryFilter !== "all") {
       merged = merged.filter((it) => it.category === categoryFilter);
     }
@@ -540,10 +560,32 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
       for (const n of nodes) {
         const sz = n.size * n.age;
         if (sz < 0.5) continue;
-        const safety = isSafetyItem(n);
-        const opportunity = !safety && isOpportunityItem(n);
-        const civic = !safety && !opportunity && isCivicItem(n);
-        const policing = !safety && !opportunity && !civic && isPolicingItem(n);
+        const isCrime = n.category === "crime";
+        const safety = !isCrime && isSafetyItem(n);
+        const opportunity = !isCrime && !safety && isOpportunityItem(n);
+        const civic = !isCrime && !safety && !opportunity && isCivicItem(n);
+        const policing = !isCrime && !safety && !opportunity && !civic && isPolicingItem(n);
+
+        // Crime node — recency-based pulse: fast + bright when <1hr, slower as it ages
+        if (isCrime) {
+          const ageHours = Math.max(0, (Date.now() - n.timestamp) / (3600 * 1000));
+          const urgency = Math.max(0.3, 1 - ageHours / 24); // 1.0 at 0hr → 0.3 at 24hr
+          const pulseRate = 2.5 + urgency * 2; // 4.5Hz recent → 2.5Hz old
+          const ringAlpha = (0.3 + urgency * 0.4) + Math.sin(t * pulseRate + n.driftPhase) * 0.2;
+          ctx.strokeStyle = `rgba(220,38,38,${ringAlpha})`;
+          ctx.lineWidth = 1.5 + urgency * 0.5;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 4.2, 0, Math.PI * 2);
+          ctx.stroke();
+          // Second outer glow for high-urgency items
+          if (urgency > 0.7) {
+            ctx.strokeStyle = `rgba(220,38,38,${ringAlpha * 0.3})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, sz * 5.5, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
         // Safety ring — subtle pulsing red outline
         if (safety) {
           const ringAlpha = 0.4 + Math.sin(t * 2.5 + n.driftPhase) * 0.2;
@@ -1240,6 +1282,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
               {localLoading && <span style={{ fontSize: 8, color: "#f97316", marginLeft: 6 }}>loading local…</span>}
               {!localLoading && localItems.length > 0 && (
                 <span style={{ fontSize: 8, color: "#f97316", marginLeft: 6 }}>{localItems.length} local</span>
+              )}
+              {!crimeLoading && crimeItems.length > 0 && (
+                <span style={{ fontSize: 8, color: "#dc2626", marginLeft: 4 }}>{crimeItems.length} crime</span>
               )}
             </button>
             <button
