@@ -42,6 +42,7 @@ const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel")
 const NaviLibraryPanel        = dynamic(() => import("@/components/NaviLibraryPanel"),        { ssr: false });
 const NewsWebPanel            = dynamic(() => import("@/components/NewsWebPanel"),            { ssr: false });
 const StartHerePanel          = dynamic(() => import("@/components/StartHerePanel"),          { ssr: false });
+const OnboardingWalkthrough   = dynamic(() => import("@/components/OnboardingWalkthrough"),   { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -827,6 +828,7 @@ export default function HomePage() {
   const [showPartnersIntro,  setShowPartnersIntro]      = useState(false);
   const [showStartHere,      setShowStartHere]          = useState(false);
   const [showStartHereIntro, setShowStartHereIntro]     = useState(false);
+  const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -1129,6 +1131,14 @@ export default function HomePage() {
     }
 
     setMounted(true);
+
+    // Auto-show walkthrough for first-time visitors (after a brief delay
+    // so the app finishes rendering first).
+    import("@/components/OnboardingWalkthrough").then(({ hasCompletedWalkthrough }) => {
+      if (!hasCompletedWalkthrough()) {
+        setTimeout(() => setShowWalkthrough(true), 800);
+      }
+    }).catch(() => { /* ignore */ });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check Supabase auth for "My Business" tab visibility
@@ -6832,6 +6842,11 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* First-time user walkthrough — sits above everything */}
+    {showWalkthrough && (
+      <OnboardingWalkthrough onComplete={() => setShowWalkthrough(false)} />
+    )}
     </>
     </DiagnosticProvider>
   );
