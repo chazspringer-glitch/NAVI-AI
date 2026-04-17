@@ -110,6 +110,9 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 40); return () => clearTimeout(t); }, []);
 
+  // Auto-load results on mount so the panel opens with content visible
+  useEffect(() => { setResults(generateEntries(era, topic)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSearch = () => {
     setResults(generateEntries(era, topic));
   };
