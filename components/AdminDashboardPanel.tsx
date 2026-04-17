@@ -1,44 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
-/* ── Static mock data ─────────────────────────────────────────────────────── */
+/* ── Static mock data (used only for dashboard activity feed fallback) ───── */
 
-const STATS = [
-  { label: "Total Clients",   value: "48",      change: "+6 this month",    icon: "👥", accent: "#C9A227" },
-  { label: "Active Projects",  value: "17",      change: "3 pending review", icon: "📂", accent: "#00d4ff" },
-  { label: "Revenue (MTD)",   value: "$28,400",  change: "+12% vs last mo",  icon: "💰", accent: "#34d399" },
-  { label: "Completion Rate",  value: "94%",     change: "Above target",     icon: "✅", accent: "#a855f7" },
+const ACTIVITY_FALLBACK = [
+  { id: 1, text: "Dashboard connected — **live data active**", time: "just now", dot: "#34d399" },
 ];
 
-const ACTIVITY = [
-  { id: 1, text: "New client onboarded — **Luxe Beauty Bar**",         time: "12 min ago", dot: "#34d399" },
-  { id: 2, text: "Work order delivered — **TrueGrit Fitness** (Logo)", time: "1 hr ago",   dot: "#C9A227" },
-  { id: 3, text: "Ad campaign launched — **SolShine Candles**",        time: "3 hrs ago",  dot: "#00d4ff" },
-  { id: 4, text: "Invoice paid — **UrbanRoots Co.** ($600)",          time: "5 hrs ago",  dot: "#34d399" },
-  { id: 5, text: "Content batch uploaded — **NovaTech Solutions**",    time: "Yesterday",  dot: "#a855f7" },
-  { id: 6, text: "Strategy call completed — **Pinnacle Realty**",      time: "Yesterday",  dot: "#C9A227" },
-  { id: 7, text: "New inquiry received — **FreshPlate Meals**",        time: "2 days ago", dot: "#00d4ff" },
-];
-
-const CLIENTS = [
-  { name: "Luxe Beauty Bar",    service: "Startup Launch Package", status: "Active",    revenue: "$600"   },
-  { name: "TrueGrit Fitness",   service: "Logo Generator",        status: "Delivered", revenue: "$250"   },
-  { name: "SolShine Candles",   service: "Targeted Ads",          status: "Active",    revenue: "$800"   },
-  { name: "UrbanRoots Co.",     service: "Social Media",          status: "Active",    revenue: "$600"   },
-  { name: "NovaTech Solutions", service: "AI Content",            status: "Active",    revenue: "$1,200" },
-  { name: "Pinnacle Realty",    service: "Consulting",            status: "Completed", revenue: "$400"   },
-  { name: "FreshPlate Meals",   service: "Startup Launch Package", status: "Pending",   revenue: "$600"   },
-];
-
-const CONTENT_QUEUE = [
-  { client: "Luxe Beauty Bar",    type: "Video Post", platform: "Instagram", due: "Today",    status: "In Progress" },
-  { client: "Luxe Beauty Bar",    type: "Image Post", platform: "Facebook",  due: "Today",    status: "Ready"       },
-  { client: "UrbanRoots Co.",     type: "Story",      platform: "Instagram", due: "Today",    status: "Scheduled"   },
-  { client: "SolShine Candles",   type: "Video Post", platform: "Instagram", due: "Tomorrow", status: "In Progress" },
-  { client: "NovaTech Solutions", type: "Image Post", platform: "LinkedIn",  due: "Tomorrow", status: "Draft"       },
-  { client: "UrbanRoots Co.",     type: "Video Post", platform: "TikTok",    due: "Apr 15",   status: "Draft"       },
-];
+// CONTENT_QUEUE mock removed — Content tab now shows live System Health
 
 type AdminTab = "dashboard" | "clients" | "orders" | "food" | "content" | "analytics" | "settings";
 
@@ -64,6 +35,14 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
+
+function timeAgoShort(iso: string): string {
+  const diff = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60)    return "just now";
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
 function renderBold(text: string) {
   const parts = text.split(/\*\*(.*?)\*\*/g);
@@ -226,12 +205,76 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
     }
   };
 
-  // Dynamic stats — update Total Clients from live data
-  const liveStats = STATS.map((s) =>
-    s.label === "Total Clients" && !dbLoading
-      ? { ...s, value: String(dbClients.length), change: dbClients.length > 0 ? "Live from Supabase" : "No clients yet" }
-      : s
-  );
+  // ── Status update handlers ──────────────────────────────────────────────
+  const updateWorkOrderStatus = useCallback(async (id: string, status: string) => {
+    try {
+      await fetch("/api/work-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      await loadWorkOrders();
+    } catch { /* silent */ }
+  }, [loadWorkOrders]);
+
+  const updateFoodOrderStatus = useCallback(async (id: string, status: string) => {
+    try {
+      await fetch("/api/food-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      await loadFoodOrders();
+    } catch { /* silent */ }
+  }, [loadFoodOrders]);
+
+  // ── Leaderboard + user counts ────────────────────────────────────────────
+  const [leaderboardCount, setLeaderboardCount] = useState(0);
+  const [registeredUsers, setRegisteredUsers] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { count } = await supabase.from("leaderboard").select("id", { count: "exact", head: true });
+        if (typeof count === "number") setLeaderboardCount(count);
+      } catch { /* silent */ }
+      try {
+        const { count } = await supabase.from("leaderboard").select("id", { count: "exact", head: true });
+        if (typeof count === "number") setRegisteredUsers(count);
+      } catch { /* silent */ }
+    })();
+  }, []);
+
+  // ── Dynamic stats from live data ──────────────────────────────────────────
+  const liveStats = [
+    { label: "Registered Users", value: String(registeredUsers), change: "From leaderboard", icon: "👥", accent: "#C9A227" },
+    { label: "Work Orders",      value: String(workOrders.length), change: workOrders.filter((o) => o.status === "new" || o.status === "pending").length + " pending", icon: "📋", accent: "#00d4ff" },
+    { label: "Clients",          value: String(dbClients.length), change: dbClients.length > 0 ? "Live from Supabase" : "No clients yet", icon: "📂", accent: "#34d399" },
+    { label: "Leaderboard",      value: String(leaderboardCount), change: "Active users with XP", icon: "🏆", accent: "#a855f7" },
+  ];
+
+  // ── Activity feed from real data ──────────────────────────────────────────
+  const realActivity = [
+    ...workOrders.slice(0, 3).map((o, i) => ({
+      id: 100 + i,
+      text: `Work order — **${o.client_name}** (${o.service})`,
+      time: timeAgoShort(o.created_at),
+      dot: o.status === "complete" ? "#34d399" : o.status === "in_progress" ? "#00d4ff" : "#C9A227",
+    })),
+    ...foodOrders.slice(0, 2).map((o, i) => ({
+      id: 200 + i,
+      text: `Food order — **${o.name}** (${o.bundle_name})`,
+      time: timeAgoShort(o.created_at),
+      dot: "#34d399",
+    })),
+    ...dbClients.slice(0, 2).map((c, i) => ({
+      id: 300 + i,
+      text: `Client added — **${c.name}** (${c.service_type})`,
+      time: timeAgoShort(c.created_at),
+      dot: "#C9A227",
+    })),
+  ];
+  const activityFeed = realActivity.length > 0 ? realActivity : ACTIVITY_FALLBACK;
 
   return (
     <div style={{
@@ -357,7 +400,7 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
               Recent Activity
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {ACTIVITY.map(({ id, text, time, dot }, i) => (
+              {activityFeed.map(({ id, text, time, dot }, i) => (
                 <div key={id} style={{
                   display: "flex", alignItems: "flex-start", gap: 10,
                   padding: "10px 0",
@@ -639,7 +682,22 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
                 </span>
               </div>
               <div style={{ fontSize: 9, color: "#C9A227" }}>{o.service}</div>
-              <div style={{ fontSize: 8, color: "#475569", marginTop: 2 }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                <div style={{ fontSize: 8, color: "#475569" }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                <div style={{ display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
+                  {["new", "in_progress", "complete"].map((s) => (
+                    <button key={s} onClick={() => updateWorkOrderStatus(o.id, s)}
+                      style={{
+                        padding: "2px 7px", borderRadius: 5, fontSize: 7, fontFamily: "monospace", fontWeight: 600, cursor: "pointer",
+                        background: o.status === s ? (s === "complete" ? "rgba(52,211,153,0.18)" : s === "in_progress" ? "rgba(0,212,255,0.12)" : "rgba(201,162,39,0.12)") : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${o.status === s ? (s === "complete" ? "rgba(52,211,153,0.35)" : s === "in_progress" ? "rgba(0,212,255,0.25)" : "rgba(201,162,39,0.25)") : "rgba(255,255,255,0.06)"}`,
+                        color: o.status === s ? (s === "complete" ? "#34d399" : s === "in_progress" ? "#00d4ff" : "#C9A227") : "#475569",
+                      }}>
+                      {s === "new" ? "New" : s === "in_progress" ? "Working" : "Done"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -784,13 +842,30 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
               <div style={{ fontSize: 10, color: "#34d399", fontWeight: 600, marginBottom: 2 }}>{o.bundle_name} x{o.quantity}</div>
               <div style={{ fontSize: 9, color: "#64748b" }}>📞 {o.phone}</div>
               {o.notes && <div style={{ fontSize: 9, color: "#475569", marginTop: 2 }}>Notes: {o.notes}</div>}
-              <div style={{ fontSize: 8, color: "#334155", marginTop: 3 }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 5 }}>
+                <div style={{ fontSize: 8, color: "#334155" }}>{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {["new", "confirmed", "delivered"].map((s) => (
+                    <button key={s} onClick={() => updateFoodOrderStatus(o.id, s)}
+                      style={{
+                        padding: "2px 7px", borderRadius: 5, fontSize: 7, fontFamily: "monospace", fontWeight: 600, cursor: "pointer",
+                        background: o.status === s ? (s === "delivered" ? "rgba(168,85,247,0.15)" : s === "confirmed" ? "rgba(201,162,39,0.12)" : "rgba(52,211,153,0.12)") : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${o.status === s ? (s === "delivered" ? "rgba(168,85,247,0.30)" : s === "confirmed" ? "rgba(201,162,39,0.25)" : "rgba(52,211,153,0.25)") : "rgba(255,255,255,0.06)"}`,
+                        color: o.status === s ? (s === "delivered" ? "#a855f7" : s === "confirmed" ? "#C9A227" : "#34d399") : "#475569",
+                      }}>
+                      {s === "new" ? "New" : s === "confirmed" ? "Confirmed" : "Delivered"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {tab === "content" && (
+      {tab === "content" && (() => {
+        // Content tab → System Health (replaces mock content queue)
+        return (
         <div style={{
           borderRadius: 12,
           background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
@@ -798,96 +873,62 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
           overflow: "hidden",
         }}>
           <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>Content Queue</div>
-            <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>Upcoming posts & deliverables</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227" }}>System Health</div>
+            <div style={{ fontSize: 9, color: "#64748b", marginTop: 2 }}>Live service diagnostics</div>
           </div>
-          {CONTENT_QUEUE.map(({ client, type, platform, due, status }, i) => (
-            <div key={`${client}-${type}-${i}`} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "12px 16px",
-              borderBottom: i < CONTENT_QUEUE.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 }}>{client}</div>
-                <div style={{ fontSize: 9, color: "#64748b" }}>{type} · {platform}</div>
-              </div>
-              <span style={{
-                fontSize: 9, fontWeight: due === "Today" ? 600 : 400,
-                color: due === "Today" ? "#C9A227" : "#64748b",
-                flexShrink: 0,
-              }}>
-                {due}
-              </span>
-              <span style={{
-                padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
-                color: STATUS_COLOR[status] || "#64748b",
-                background: `${STATUS_COLOR[status] || "#64748b"}15`,
-                border: `1px solid ${STATUS_COLOR[status] || "#64748b"}30`,
-                flexShrink: 0,
-              }}>
-                {status}
-              </span>
-            </div>
-          ))}
+          <SystemHealthInline />
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Analytics ──────────────────────────────────────────────────── */}
-      {tab === "analytics" && (
+      {tab === "analytics" && (() => {
+        // Compute real metrics from loaded data
+        const serviceCount: Record<string, number> = {};
+        workOrders.forEach((o) => { serviceCount[o.service] = (serviceCount[o.service] ?? 0) + 1; });
+        const serviceEntries = Object.entries(serviceCount).sort((a, b) => b[1] - a[1]);
+        const maxCount = Math.max(1, ...serviceEntries.map(([, c]) => c));
+
+        const completedOrders = workOrders.filter((o) => o.status === "complete").length;
+        const pendingOrders   = workOrders.filter((o) => o.status === "new" || o.status === "pending").length;
+        const inProgressOrders = workOrders.filter((o) => o.status === "in_progress").length;
+        const completionRate  = workOrders.length > 0 ? Math.round((completedOrders / workOrders.length) * 100) : 0;
+
+        const foodNew       = foodOrders.filter((o) => o.status === "new").length;
+        const foodConfirmed = foodOrders.filter((o) => o.status === "confirmed").length;
+        const foodDelivered = foodOrders.filter((o) => o.status === "delivered").length;
+
+        return (
         <>
-          {/* Revenue by Service */}
-          <div style={{
-            padding: "16px 16px",
-            borderRadius: 12,
-            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-            border: "1px solid rgba(201,162,39,0.10)",
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 14 }}>
-              Revenue by Service
-            </div>
-            {[
-              { service: "Startup Launch Package", amount: "$7,200",  pct: 25 },
-              { service: "Social Media",           amount: "$6,000",  pct: 21 },
-              { service: "AI Content",             amount: "$4,800",  pct: 17 },
-              { service: "Targeted Ads",           amount: "$4,000",  pct: 14 },
-              { service: "Consulting",             amount: "$3,200",  pct: 11 },
-              { service: "Other",                  amount: "$3,200",  pct: 12 },
-            ].map(({ service, amount, pct }) => (
+          {/* Orders by Service (live) */}
+          <div style={{ padding: "16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(201,162,39,0.10)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 14 }}>Orders by Service</div>
+            {serviceEntries.length === 0 && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>No work orders yet</div>
+            )}
+            {serviceEntries.map(([service, count]) => (
               <div key={service} style={{ marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 10, color: "#94a3b8" }}>{service}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: "#f1f5f9" }}>{amount}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#f1f5f9" }}>{count}</span>
                 </div>
-                <div style={{
-                  height: 5, borderRadius: 3,
-                  background: "rgba(201,162,39,0.08)", overflow: "hidden",
-                }}>
-                  <div style={{
-                    width: `${pct}%`, height: "100%", borderRadius: 3,
-                    background: "linear-gradient(90deg, #C9A227, #a07818)",
-                  }} />
+                <div style={{ height: 5, borderRadius: 3, background: "rgba(201,162,39,0.08)", overflow: "hidden" }}>
+                  <div style={{ width: `${Math.round((count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #C9A227, #a07818)" }} />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Monthly Metrics */}
-          <div style={{
-            padding: "16px 16px",
-            borderRadius: 12,
-            background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)",
-            border: "1px solid rgba(201,162,39,0.10)",
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 12 }}>
-              Monthly Metrics
-            </div>
+          {/* Live Metrics */}
+          <div style={{ padding: "16px", borderRadius: 12, background: "linear-gradient(160deg, rgba(16,16,26,0.95) 0%, rgba(12,12,22,0.95) 100%)", border: "1px solid rgba(201,162,39,0.10)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#C9A227", marginBottom: 12 }}>Live Metrics</div>
             {[
-              { label: "New Clients",            value: "6",       trend: "+50% vs Mar" },
-              { label: "Churn Rate",             value: "2.1%",    trend: "Below target" },
-              { label: "Avg. Project Value",      value: "$593",    trend: "+8% vs Mar" },
-              { label: "Client Satisfaction",     value: "4.8/5",   trend: "98% positive" },
-              { label: "Content Pieces Shipped",  value: "142",     trend: "+18 vs Mar" },
-              { label: "Ad Spend Managed",       value: "$12,400", trend: "+22% vs Mar" },
+              { label: "Registered Users",      value: String(registeredUsers),       trend: "From leaderboard" },
+              { label: "Leaderboard Entries",    value: String(leaderboardCount),      trend: "Users with XP" },
+              { label: "Total Work Orders",      value: String(workOrders.length),     trend: `${pendingOrders} pending · ${inProgressOrders} active` },
+              { label: "Completion Rate",        value: `${completionRate}%`,          trend: `${completedOrders} of ${workOrders.length} complete` },
+              { label: "Total Clients",          value: String(dbClients.length),      trend: "Live from Supabase" },
+              { label: "Food Orders",            value: String(foodOrders.length),     trend: `${foodNew} new · ${foodConfirmed} confirmed · ${foodDelivered} delivered` },
             ].map(({ label, value, trend }, i) => (
               <div key={label} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -903,7 +944,8 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
             ))}
           </div>
         </>
-      )}
+        );
+      })()}
 
       {/* ── Settings ───────────────────────────────────────────────────── */}
       {tab === "settings" && (
@@ -968,6 +1010,56 @@ export default function AdminDashboardPanel({ onClose }: { onClose: () => void }
       )}
 
       </div>{/* end scrollable content */}
+    </div>
+  );
+}
+
+// ── Inline System Health for Content tab ────────────────────────────────────
+function SystemHealthInline() {
+  const [health, setHealth] = useState<Record<string, { healthy?: boolean; configured?: boolean; label?: string; error?: string; latencyMs?: number }> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/health");
+        const json = await res.json();
+        setHealth(json.services ?? null);
+      } catch { /* silent */ }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  if (loading) return <div style={{ padding: "16px", fontSize: 10, color: "#C9A227" }}>Checking services...</div>;
+  if (!health) return <div style={{ padding: "16px", fontSize: 10, color: "#f87171" }}>Could not reach health endpoint</div>;
+
+  const services = Object.entries(health);
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {services.map(([key, svc], i) => {
+        const ok = svc.healthy !== false;
+        const color = ok ? "#34d399" : "#f87171";
+        return (
+          <div key={key} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 16px",
+            borderBottom: i < services.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 6px ${color}`, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9" }}>{svc.label || key}</div>
+              {svc.error && <div style={{ fontSize: 8, color: "#f87171", marginTop: 1 }}>{svc.error}</div>}
+              {svc.latencyMs !== undefined && <div style={{ fontSize: 8, color: "#475569", marginTop: 1 }}>{svc.latencyMs}ms</div>}
+            </div>
+            <span style={{
+              padding: "2px 8px", borderRadius: 5, fontSize: 8, fontWeight: 600,
+              color, background: `${color}15`, border: `1px solid ${color}30`,
+            }}>
+              {ok ? "Healthy" : "Down"}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -56,3 +56,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { id, status } = await req.json() as { id?: string; status?: string };
+    if (!id || !status) {
+      return NextResponse.json({ error: "id and status required" }, { status: 400 });
+    }
+    const { error } = await supabase
+      .from("food_orders")
+      .update({ status })
+      .eq("id", id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[api/food-orders] PATCH error:", err);
+    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+  }
+}
