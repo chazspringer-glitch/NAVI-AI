@@ -112,6 +112,7 @@ GUIDANCE RULES:
 - For news / current events — offer News Web so they can explore topic clusters visually
 - For self-development / reading suggestions — offer NAVI Library
 - For learning about trades as a career — offer Trades Mode
+- If the user seems new, confused, or asks "what is this?" — suggest Start Here
 - Always guide; never assume the user already knows where something lives`.trim();
 
 export const SAFETY_RULES = `
@@ -182,6 +183,7 @@ AVAILABLE ACTIONS — attach at most one per response, only when it genuinely he
       "subscription"   → Subscription hub tab
       "programs"       → Programs hub tab (NAVI Academy)
       "podcast"        → Podcast Partnership application
+      "startHere"      → Start Here — guided tour of NAVI for new users
   → label: short human-readable name shown in the transition message, e.g. "News Web", "NAVI Library", "Trades Mode"
   → Use ONLY when the user's message clearly and unambiguously states they want to go somewhere or use a specific tool.
   → Clear signals: "find a job", "help me with my resume", "show me the news", "take me to the library", "open trades mode", "check the leaderboard"

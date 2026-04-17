@@ -41,6 +41,7 @@ const FreshFoodPanel          = dynamic(() => import("@/components/FreshFoodPane
 const NaviTVPanel             = dynamic(() => import("@/components/NaviTVPanel"),             { ssr: false });
 const NaviLibraryPanel        = dynamic(() => import("@/components/NaviLibraryPanel"),        { ssr: false });
 const NewsWebPanel            = dynamic(() => import("@/components/NewsWebPanel"),            { ssr: false });
+const StartHerePanel          = dynamic(() => import("@/components/StartHerePanel"),          { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -824,6 +825,8 @@ export default function HomePage() {
   const [showNewsWeb,        setShowNewsWeb]            = useState(false);
   const [showNewsWebIntro,   setShowNewsWebIntro]       = useState(false);
   const [showPartnersIntro,  setShowPartnersIntro]      = useState(false);
+  const [showStartHere,      setShowStartHere]          = useState(false);
+  const [showStartHereIntro, setShowStartHereIntro]     = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
   const [showTrades,         setShowTrades]             = useState(false);
@@ -2172,6 +2175,11 @@ export default function HomePage() {
         setShowLegalRights(true);
         setMenuOpen(false);
         break;
+      case "startHere":
+        if (hasSeenIntro("startHere")) { setShowStartHere(true); }
+        else { markIntroSeen("startHere"); setShowStartHereIntro(true); }
+        setMenuOpen(false);
+        break;
 
       default:
         break;
@@ -2608,6 +2616,87 @@ export default function HomePage() {
       {/* NaviTV Panel */}
       {showNaviTV && (
         <NaviTVPanel onClose={() => setShowNaviTV(false)} />
+      )}
+
+      {/* Start Here Cinematic Intro */}
+      {showStartHereIntro && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500,
+          background: "rgba(2,2,10,0.97)",
+          backdropFilter: "blur(16px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 20,
+          animation: "overlayIn 0.4s ease forwards",
+        }}>
+          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: "22%", right: "18%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,162,39,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+              <NaviOrb size={64} />
+            </div>
+
+            <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#00d4ff", marginBottom: 10 }}>
+              Welcome to NAVI
+            </div>
+
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(0,212,255,0.25)" }}>
+              Your AI Life Navigator
+            </div>
+
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7, marginBottom: 10 }}>
+              Jobs. Housing. Legal help. Career training. Community resources.
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 24 }}>
+              All from your phone, all for free. Let NAVI show you how.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 24 }}>
+              {["💬", "🚛", "📡", "🏠", "💼", "📚"].map((e, i) => (
+                <span key={i} style={{ fontSize: 24, filter: "drop-shadow(0 0 6px rgba(0,212,255,0.35))" }}>{e}</span>
+              ))}
+            </div>
+
+            <button onClick={() => { setShowStartHereIntro(false); setShowStartHere(true); }}
+              style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #0891b2)", border: "none", color: "#02020a", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(0,212,255,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+              Show Me Around →
+            </button>
+            <button onClick={() => setShowStartHereIntro(false)}
+              style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Start Here Panel */}
+      {showStartHere && (
+        <StartHerePanel
+          onClose={() => setShowStartHere(false)}
+          onAction={(action) => {
+            setShowStartHere(false);
+            setTimeout(() => {
+              switch (action) {
+                case "chat":        setMenuOpen(false); break;
+                case "trades":      setShowTrades(true); break;
+                case "pulse":
+                  if (hasSeenIntro("newsWeb")) { setShowNewsWeb(true); }
+                  else { markIntroSeen("newsWeb"); setShowNewsWebIntro(true); }
+                  break;
+                case "housing":     setShowHousingPanel(true); break;
+                case "jobs":        setShowJobFinder(true); break;
+                case "library":
+                  if (hasSeenIntro("library")) { setShowNaviLibrary(true); }
+                  else { markIntroSeen("library"); setShowNaviLibraryIntro(true); }
+                  break;
+                case "legal":       setShowLegalRights(true); break;
+                case "leaderboard": setShowLeaderboard(true); break;
+              }
+              trackXP("tool_used");
+            }, 120);
+          }}
+        />
       )}
 
       {/* Fresh Food Cinematic Intro */}
@@ -5376,6 +5465,27 @@ export default function HomePage() {
           const proLocked = !isPro && !isAdmin;
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
+
+              {/* Start Here */}
+              <button onClick={() => {
+                  if (hasSeenIntro("startHere")) { setShowStartHere(true); }
+                  else { markIntroSeen("startHere"); setShowStartHereIntro(true); }
+                  setMenuOpen(false);
+                }}
+                style={{
+                  width: "100%", padding: "16px", borderRadius: 14, cursor: "pointer",
+                  background: "linear-gradient(135deg, rgba(0,212,255,0.10), rgba(52,211,153,0.05))",
+                  border: "1px solid rgba(0,212,255,0.25)",
+                  display: "flex", alignItems: "center", gap: 12,
+                  textAlign: "left",
+                }}>
+                <NaviOrb size={24} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#00d4ff", marginBottom: 2, fontFamily: "monospace" }}>Start Here</div>
+                  <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.4, fontFamily: "monospace" }}>New to NAVI? Learn what you can do</div>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 12, color: "#475569", opacity: 0.5 }}>→</span>
+              </button>
 
               {/* Why NAVI Exists */}
               <button onClick={() => { setShowWhyNavi(true); setMenuOpen(false); }}

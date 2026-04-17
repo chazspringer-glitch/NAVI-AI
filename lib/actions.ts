@@ -45,7 +45,8 @@ export type NavigateDestination =
   | "rewards"        // ⭐ Rewards hub tab
   | "subscription"   // 💎 Subscription hub tab
   | "programs"       // 🎓 Programs hub tab (Academy)
-  | "podcast";       // 🎙️ Podcast Partnership
+  | "podcast"        // 🎙️ Podcast Partnership
+  | "startHere";     // 🧭 Start Here guide
 
 export interface NavigateAction {
   type: "navigate";
@@ -96,7 +97,7 @@ export function parseAction(raw: unknown): AgentAction | null {
     "homeworkHelper", "truthRoom", "partners", "housingFinder", "stemLesson", "aiSkillsLesson",
     "newsWeb", "library", "trades", "leaderboard", "whyNavi", "autoFinder",
     "jobFinder", "familySupport", "legalRights", "naviTV",
-    "rewards", "subscription", "programs", "podcast",
+    "rewards", "subscription", "programs", "podcast", "startHere",
   ];
   if (t === "navigate" && typeof a.destination === "string" && VALID_DESTINATIONS.includes(a.destination as NavigateDestination)) {
     return {
