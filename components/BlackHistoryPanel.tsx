@@ -1,6 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import NaviOrb from "./NaviOrb";
+
+const QUOTES = [
+  { text: "A people without the knowledge of their past history, origin and culture is like a tree without roots.", author: "Marcus Garvey" },
+  { text: "The most common way people give up their power is by thinking they don't have any.", author: "Alice Walker" },
+  { text: "If there is no struggle, there is no progress.", author: "Frederick Douglass" },
+  { text: "I am no longer accepting the things I cannot change. I am changing the things I cannot accept.", author: "Angela Davis" },
+  { text: "Injustice anywhere is a threat to justice everywhere.", author: "Martin Luther King Jr." },
+  { text: "Every great dream begins with a dreamer.", author: "Harriet Tubman" },
+  { text: "Hold fast to dreams, for if dreams die, life is a broken-winged bird that cannot fly.", author: "Langston Hughes" },
+  { text: "Success is to be measured not so much by the position that one has reached in life as by the obstacles which he has overcome.", author: "Booker T. Washington" },
+];
 
 const ERAS = [
   "Any Era",
@@ -93,6 +105,10 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
   const [era, setEra] = useState("Any Era");
   const [topic, setTopic] = useState("Any Topic");
   const [results, setResults] = useState<HistoryEntry[] | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
+
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 40); return () => clearTimeout(t); }, []);
 
   const handleSearch = () => {
     setResults(generateEntries(era, topic));
@@ -125,10 +141,28 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* NAVI intro */}
-        <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
-          <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-            <span style={{ color: "#f87171", fontWeight: 700 }}>NAVI:</span> History they didn{"'"}t teach you in school. Explore the real stories of Black achievement, resistance, innovation, and culture — from ancient Africa to today. Knowledge is power.
+        {/* Cinematic hero */}
+        <div style={{
+          textAlign: "center", padding: "24px 18px",
+          borderRadius: 18,
+          background: "linear-gradient(160deg, rgba(16,16,26,0.98) 0%, rgba(10,10,20,0.98) 100%)",
+          border: "1px solid rgba(239,68,68,0.15)",
+          boxShadow: "0 0 48px rgba(239,68,68,0.06), 0 12px 40px rgba(0,0,0,0.5)",
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "translateY(0)" : "translateY(8px)",
+          transition: "opacity 700ms ease, transform 700ms ease",
+        }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+            <NaviOrb size={52} />
+          </div>
+          <div style={{ fontSize: 9, letterSpacing: "0.32em", textTransform: "uppercase", color: "#f87171", marginBottom: 10 }}>
+            Our History. Our Power.
+          </div>
+          <div style={{ fontSize: 14, color: "#e2e8f0", lineHeight: 1.7, fontStyle: "italic", marginBottom: 6, maxWidth: 320, margin: "0 auto 6px" }}>
+            {"\u201C"}{QUOTES[quoteIdx].text}{"\u201D"}
+          </div>
+          <div style={{ fontSize: 10, color: "#C9A227", fontWeight: 700 }}>
+            — {QUOTES[quoteIdx].author}
           </div>
         </div>
 
