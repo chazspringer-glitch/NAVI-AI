@@ -43,6 +43,7 @@ const NaviLibraryPanel        = dynamic(() => import("@/components/NaviLibraryPa
 const NewsWebPanel            = dynamic(() => import("@/components/NewsWebPanel"),            { ssr: false });
 const StartHerePanel          = dynamic(() => import("@/components/StartHerePanel"),          { ssr: false });
 const OnboardingWalkthrough   = dynamic(() => import("@/components/OnboardingWalkthrough"),   { ssr: false });
+const PoliceAccountabilityPanel = dynamic(() => import("@/components/PoliceAccountabilityPanel"), { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -828,6 +829,8 @@ export default function HomePage() {
   const [showPartnersIntro,  setShowPartnersIntro]      = useState(false);
   const [showStartHere,      setShowStartHere]          = useState(false);
   const [showStartHereIntro, setShowStartHereIntro]     = useState(false);
+  const [showAccountability, setShowAccountability]     = useState(false);
+  const [accountabilityState, setAccountabilityState]   = useState("");
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -3017,6 +3020,10 @@ export default function HomePage() {
       {showNewsWeb && (
         <NewsWebPanel
           onClose={() => setShowNewsWeb(false)}
+          onOpenAccountability={(state) => {
+            setAccountabilityState(state);
+            setShowAccountability(true);
+          }}
           onAction={(feature) => {
             // Close News Web first so the next overlay doesn't sit on top of it
             setShowNewsWeb(false);
@@ -6847,6 +6854,14 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* Police Accountability Dashboard */}
+    {showAccountability && (
+      <PoliceAccountabilityPanel
+        onClose={() => setShowAccountability(false)}
+        userState={accountabilityState || undefined}
+      />
+    )}
 
     {/* First-time user walkthrough — sits above everything */}
     {showWalkthrough && (

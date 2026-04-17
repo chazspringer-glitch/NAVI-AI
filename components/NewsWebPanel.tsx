@@ -163,13 +163,12 @@ const KNOW_YOUR_RIGHTS = [
 
 interface NewsWebPanelProps {
   onClose:   () => void;
-  /** Open another NAVI feature when an insight action button is tapped. */
   onAction?: (feature: FeatureId) => void;
-  /** Optional context shipped with insight requests for personalized advice. */
   userContext?: { location?: string; interests?: string[] };
+  onOpenAccountability?: (state: string) => void;
 }
 
-export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWebPanelProps) {
+export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAccountability }: NewsWebPanelProps) {
   const canvasRef         = useRef<HTMLCanvasElement>(null);
   const containerRef      = useRef<HTMLDivElement>(null);
   const nodesRef          = useRef<NodeT[]>([]);
@@ -1152,6 +1151,23 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
             )}
             {policingDataLoading && (
               <div style={{ fontSize: 9, color: "#64748b", marginTop: 4 }}>Loading public data…</div>
+            )}
+
+            {/* View Full Report */}
+            {onOpenAccountability && (
+              <button
+                onClick={() => onOpenAccountability(userCity?.split(",").pop()?.trim() ?? "")}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "6px 12px", borderRadius: 6, marginTop: 2, marginRight: 6,
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))",
+                  border: "1px solid rgba(245,158,11,0.30)",
+                  color: "#f59e0b", fontSize: 9, fontWeight: 700,
+                  fontFamily: "monospace", cursor: "pointer",
+                }}
+              >
+                📊 View Full Report
+              </button>
             )}
 
             {/* Know Your Rights toggle */}
