@@ -1371,9 +1371,11 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
           const color = key === "all" ? "#00d4ff" : (CATEGORY_COLORS[key] ?? "#64748b");
           // Count items in this category from merged (unfiltered) set
           const allMerged = (() => {
-            if (localItems.length === 0) return items;
             const ids = new Set(items.map((i) => i.id));
-            return [...localItems.filter((li) => !ids.has(li.id)), ...items];
+            const uLocal = localItems.filter((li) => !ids.has(li.id));
+            uLocal.forEach((li) => ids.add(li.id));
+            const uCrime = crimeItems.filter((ci) => !ids.has(ci.id));
+            return [...uCrime, ...uLocal, ...items];
           })();
           const count = key === "all" ? allMerged.length : allMerged.filter((i) => i.category === key).length;
           if (key !== "all" && count === 0) return null;
