@@ -196,6 +196,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
   const [items,    setItems]    = useState<NewsItem[]>([]);
   const [clusters, setClusters] = useState<NewsCluster[]>([]);
   const [selected, setSelected] = useState<NewsItem | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<{ item: NewsItem; x: number; y: number } | null>(null);
   const [selectedCluster, setSelectedCluster] = useState<NewsCluster | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
@@ -1045,6 +1046,25 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
     return () => { cancelled = true; };
   }, [selectedCluster, items, userContext]);
 
+  // ── Hover hit-test — shows tooltip preview without clicking ─────────────
+  const handleHover = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    for (const n of nodesRef.current) {
+      const dx = n.x - x;
+      const dy = n.y - y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < Math.max(n.size * 3, 18)) {
+        setHoveredNode({ item: n, x: n.x, y: n.y });
+        return;
+      }
+    }
+    setHoveredNode(null);
+  }, []);
+
   const handlePointer = useCallback((clientX: number, clientY: number) => {
     // Suppress taps after a pinch or drag gesture
     if (Date.now() - lastPinchEndRef.current < 350) return;
@@ -1629,7 +1649,10 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
       <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden", touchAction: "none" }}>
         <canvas
           ref={canvasRef}
+          onMouseMove={(e) => handleHover(e.clientX, e.clientY)}
+          onMouseLeave={() => setHoveredNode(null)}
           onClick={(e) => {
+            setHoveredNode(null);
             // Desktop clicks only — on touch devices taps are handled in touchEnd
             if (Date.now() - lastDragEndRef.current < 400) return;
             if (Date.now() - lastPinchEndRef.current < 400) return;
@@ -1737,6 +1760,64 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
             <span style={{ opacity: 0.6 }}>· RESET</span>
           </button>
         )}
+
+        {/* Hover tooltip preview */}
+        {hoveredNode && !selected && !selectedCluster && (() => {
+          const it = hoveredNode.item;
+          const accentColor = CATEGORY_COLORS[it.category] ?? "#94a3b8";
+          // Position tooltip above the node, clamped to viewport
+          let tipX = hoveredNode.x;
+          let tipY = hoveredNode.y - 20;
+          const tipW = 220;
+          if (tipX - tipW / 2 < 8) tipX = tipW / 2 + 8;
+          if (tipX + tipW / 2 > size.w - 8) tipX = size.w - 8 - tipW / 2;
+          if (tipY < 60) tipY = hoveredNode.y + 30;
+          return (
+            <div style={{
+              position: "absolute",
+              left: tipX - tipW / 2,
+              top: tipY,
+              width: tipW,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "rgba(10,10,20,0.92)",
+              border: `1px solid ${accentColor}40`,
+              boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 12px ${accentColor}15`,
+              backdropFilter: "blur(8px)",
+              pointerEvents: "none",
+              zIndex: 10,
+              fontFamily: "monospace",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6, marginBottom: 5,
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: accentColor, flexShrink: 0,
+                }} />
+                <span style={{ fontSize: 8, color: accentColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  {CATEGORY_LABEL[it.category] ?? it.category}
+                </span>
+                <span style={{ fontSize: 8, color: "#475569", marginLeft: "auto" }}>
+                  {it.source}
+                </span>
+              </div>
+              <div style={{
+                fontSize: 11, fontWeight: 600, color: "#f1f5f9",
+                lineHeight: 1.35,
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+              }}>
+                {it.title}
+              </div>
+              <div style={{ fontSize: 8, color: "#475569", marginTop: 4 }}>
+                {timeAgo(it.timestamp)} · tap to read more
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Loading overlay */}
         {loading && (
