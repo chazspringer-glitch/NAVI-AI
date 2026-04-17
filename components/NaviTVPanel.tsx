@@ -14,13 +14,41 @@ interface Video {
   category: string;
 }
 
+interface YTVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+  publishedAt: string;
+  description: string;
+  viewCount?: string;
+  duration?: string;
+}
+
+interface YTChannel {
+  channelId: string;
+  name: string;
+  thumbnail: string;
+  subscriberCount: string;
+  videoCount: string;
+  videos: YTVideo[];
+}
+
+// Channel config — add new channels here
+const CHANNELS = [
+  { handle: "@thequantumpen",     label: "The Truth Room",        accent: "#f87171", icon: "🎥", category: "Education · History · Culture",       fallbackEmbed: "https://www.youtube.com/embed/Q8mE1aq4GMo" },
+  { handle: "@DrusWorldCartoon",  label: "Drus World Cartoon",    accent: "#fb923c", icon: "🎨", category: "Animation · Kids · Entertainment",    fallbackEmbed: "https://www.youtube.com/embed/Xnw-emPozQU" },
+];
+
 export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
   const [dbVideos, setDbVideos] = useState<Video[]>([]);
   const [playing, setPlaying] = useState<Video | null>(null);
   const [showPodcastApp, setShowPodcastApp] = useState(false);
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
+  const [ytChannels, setYtChannels] = useState<Record<string, YTChannel>>({});
+  const [ytLoading, setYtLoading] = useState(true);
+  const [ytError, setYtError] = useState(false);
 
-  // Load any future DB videos
+  // Load DB videos
   const loadVideos = useCallback(async () => {
     try {
       const res = await fetch("/api/videos");
@@ -28,8 +56,36 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
       if (Array.isArray(json.videos)) setDbVideos(json.videos);
     } catch { /* silent */ }
   }, []);
-
   useEffect(() => { loadVideos(); }, [loadVideos]);
+
+  // Load YouTube channel data
+  useEffect(() => {
+    let cancelled = false;
+    setYtLoading(true);
+    (async () => {
+      const results: Record<string, YTChannel> = {};
+      let anySuccess = false;
+      for (const ch of CHANNELS) {
+        try {
+          const res = await fetch(`/api/youtube?handle=${encodeURIComponent(ch.handle)}`);
+          if (cancelled) return;
+          if (res.ok) {
+            const json = await res.json();
+            if (json.channel) {
+              results[ch.handle] = json.channel;
+              anySuccess = true;
+            }
+          }
+        } catch { /* silent */ }
+      }
+      if (!cancelled) {
+        setYtChannels(results);
+        setYtError(!anySuccess);
+        setYtLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div style={{
@@ -108,94 +164,123 @@ export default function NaviTVPanel({ onClose }: { onClose: () => void }) {
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* ── Channels ──────────────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {[
-            {
-              name: "The Truth Room",
-              by: "QuantumPen",
-              icon: "🎥",
-              category: "Education · History · Culture",
-              desc: "Real stories, real knowledge. Educational content that elevates your mind.",
-              accent: "#f87171",
-              channelUrl: "https://youtube.com/@thequantumpen",
-              videoTitle: "Featured — The Truth Room",
-              videoEmbed: "https://www.youtube.com/embed/Q8mE1aq4GMo",
-            },
-            {
-              name: "Drus World Cartoon",
-              by: "Dru's World",
-              icon: "🎨",
-              category: "Animation · Kids · Entertainment",
-              desc: "Creative animated stories full of personality, imagination, and fun storytelling.",
-              accent: "#fb923c",
-              channelUrl: "https://m.youtube.com/@DrusWorldCartoon",
-              videoTitle: "Dru's World – Episode 1",
-              videoEmbed: "https://www.youtube.com/embed/Xnw-emPozQU",
-            },
-          ].map((ch) => (
-            <div key={ch.name} style={{
-              borderRadius: 14,
-              background: `linear-gradient(135deg, ${ch.accent}0a, rgba(168,85,247,0.04))`,
-              border: `1px solid ${ch.accent}28`,
-              padding: "14px 16px",
-            }}>
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: `${ch.accent}22`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 18,
-                }}>
-                  {ch.icon}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{ch.name}</div>
-                  <div style={{ fontSize: 7, letterSpacing: "0.14em", textTransform: "uppercase", color: ch.accent, fontWeight: 700, marginTop: 1 }}>
-                    {ch.category}
+        {/* ── Channels (YouTube API or fallback) ─────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {CHANNELS.map((cfg) => {
+            const yt = ytChannels[cfg.handle];
+            const channelUrl = `https://youtube.com/${cfg.handle}`;
+            return (
+              <div key={cfg.handle} style={{
+                borderRadius: 14,
+                background: `linear-gradient(135deg, ${cfg.accent}0a, rgba(168,85,247,0.04))`,
+                border: `1px solid ${cfg.accent}28`,
+                padding: "14px 16px",
+              }}>
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  {yt?.thumbnail ? (
+                    <img src={yt.thumbnail} alt="" style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: `${cfg.accent}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+                      {cfg.icon}
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{yt?.name ?? cfg.label}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 1 }}>
+                      <div style={{ fontSize: 7, letterSpacing: "0.14em", textTransform: "uppercase", color: cfg.accent, fontWeight: 700 }}>
+                        {cfg.category}
+                      </div>
+                      {yt && (
+                        <div style={{ fontSize: 8, color: "#64748b" }}>
+                          {yt.subscriberCount} subs · {yt.videoCount} videos
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Video grid (from YouTube API) or fallback buttons */}
+                {yt && yt.videos.length > 0 ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                    {yt.videos.slice(0, 4).map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setEmbedUrl(`https://www.youtube.com/embed/${v.id}`)}
+                        style={{
+                          borderRadius: 10, overflow: "hidden", cursor: "pointer",
+                          background: "rgba(0,0,0,0.3)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          padding: 0, textAlign: "left",
+                        }}
+                      >
+                        <div style={{ position: "relative" }}>
+                          <img src={v.thumbnail} alt="" style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} />
+                          <div style={{ position: "absolute", bottom: 4, right: 4, padding: "1px 5px", borderRadius: 4, background: "rgba(0,0,0,0.75)", fontSize: 8, color: "#fff", fontFamily: "monospace" }}>
+                            {v.duration || "▶"}
+                          </div>
+                          {v.viewCount && (
+                            <div style={{ position: "absolute", bottom: 4, left: 4, padding: "1px 5px", borderRadius: 4, background: "rgba(0,0,0,0.75)", fontSize: 7, color: "#94a3b8", fontFamily: "monospace" }}>
+                              {v.viewCount} views
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ padding: "6px 8px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 600, color: "#e2e8f0", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                            {v.title}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 10 }}>
+                    {ytLoading ? (
+                      <div style={{ fontSize: 9, color: "#64748b", padding: "8px 0" }}>Loading videos…</div>
+                    ) : (
+                      <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6, marginBottom: 8 }}>
+                        Tap Watch Now to see the latest from this channel.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      const latestId = yt?.videos?.[0]?.id;
+                      setEmbedUrl(latestId ? `https://www.youtube.com/embed/${latestId}` : cfg.fallbackEmbed);
+                    }}
+                    style={{
+                      flex: 1, padding: "10px", borderRadius: 10,
+                      background: `linear-gradient(135deg, ${cfg.accent}, ${cfg.accent}cc)`,
+                      border: "none", color: "#08080f",
+                      fontSize: 11, fontFamily: "monospace", fontWeight: 700,
+                      cursor: "pointer", letterSpacing: "0.04em",
+                      boxShadow: `0 0 12px ${cfg.accent}40`,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    }}
+                  >
+                    ▶ {yt ? "Latest" : "Watch Now"}
+                  </button>
+                  <a href={channelUrl} target="_blank" rel="noopener noreferrer"
+                    style={{
+                      flex: 1, padding: "10px", borderRadius: 10,
+                      background: `${cfg.accent}10`,
+                      border: `1px solid ${cfg.accent}30`,
+                      color: cfg.accent,
+                      fontSize: 11, fontFamily: "monospace", fontWeight: 700,
+                      textDecoration: "none", letterSpacing: "0.04em",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    }}
+                  >
+                    Full Channel ↗
+                  </a>
+                </div>
               </div>
-              {/* Description */}
-              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6, marginBottom: 10 }}>
-                {ch.desc}
-              </div>
-              {/* Action buttons — same size, same layout for every card */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  onClick={() => setEmbedUrl(ch.videoEmbed)}
-                  style={{
-                    flex: 1, padding: "10px", borderRadius: 10,
-                    background: `linear-gradient(135deg, ${ch.accent}, ${ch.accent}cc)`,
-                    border: "none", color: "#08080f",
-                    fontSize: 11, fontFamily: "monospace", fontWeight: 700,
-                    cursor: "pointer", letterSpacing: "0.04em",
-                    boxShadow: `0 0 12px ${ch.accent}40`,
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                  }}
-                >
-                  ▶ Watch Now
-                </button>
-                <a
-                  href={ch.channelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    flex: 1, padding: "10px", borderRadius: 10,
-                    background: `${ch.accent}10`,
-                    border: `1px solid ${ch.accent}30`,
-                    color: ch.accent,
-                    fontSize: 11, fontFamily: "monospace", fontWeight: 700,
-                    textDecoration: "none", letterSpacing: "0.04em",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                  }}
-                >
-                  Full Channel ↗
-                </a>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ── Podcast Partnership ─────────────────────────────────────── */}
