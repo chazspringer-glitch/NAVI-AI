@@ -279,16 +279,31 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
     return () => clearInterval(interval);
   }, [fetchNews]);
 
-  // ── Track container size for canvas ───────────────────────────────────────
+  // ── Track container size for canvas (debounced to prevent banner-load thrash)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const update = () => {
-      const el = containerRef.current;
-      if (!el) return;
-      setSize({ w: el.clientWidth, h: el.clientHeight });
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        setSize((prev) => (prev.w === w && prev.h === h) ? prev : { w, h });
+      }, 150);
     };
-    update();
+    // Initial measure after a short delay so banners have time to mount
+    const initTimer = setTimeout(update, 300);
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // Also observe the container itself for height changes from banners
+    const observer = new ResizeObserver(update);
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => {
+      clearTimeout(initTimer);
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("resize", update);
+      observer.disconnect();
+    };
   }, []);
 
   // ── Fetch crime data when city is known (refreshes every 60s) ───────────
