@@ -135,23 +135,53 @@ export default function PoliceAccountabilityPanel({ onClose, userState }: Props)
         {/* ── National Overview ─────────────────────────────────────────── */}
         {!loading && activeSection === "overview" && national && (
           <>
-            {/* Big stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              {[
-                { val: national.totalIncidents.toLocaleString(), label: "Total since 2015" },
-                { val: String(national.thisYear), label: "This year" },
-                { val: `${national.bodyCameraRate}%`, label: "Body cam rate" },
-              ].map(({ val, label }) => (
-                <div key={label} style={{ padding: "14px 10px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)", textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: "#fbbf24" }}>{val}</div>
-                  <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 3 }}>{label}</div>
-                </div>
-              ))}
+            {/* Context explainer */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02))",
+              border: "1px solid rgba(245,158,11,0.15)",
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 6 }}>
+                What is this data?
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7 }}>
+                This dashboard tracks <span style={{ color: "#fbbf24", fontWeight: 600 }}>every fatal police shooting</span> in the United States since January 2015, compiled by the Washington Post from news reports, public records, and law enforcement data. It is one of the most comprehensive and cited police accountability databases in the country.
+              </div>
             </div>
 
-            {/* Race breakdown */}
+            {/* Big stats with explanations */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ padding: "16px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#fbbf24", marginBottom: 2 }}>{national.totalIncidents.toLocaleString()}</div>
+                <div style={{ fontSize: 10, color: "#f1f5f9", fontWeight: 600, marginBottom: 4 }}>People killed by police since 2015</div>
+                <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55 }}>
+                  This is the total number of fatal shootings by on-duty police officers across all 50 states. The actual number may be higher — not all incidents are reported.
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>{String(national.thisYear) === "0" ? "—" : national.thisYear}</div>
+                  <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>This year so far</div>
+                  <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>
+                    {String(national.thisYear) === "0" ? "Data for this year hasn't been published yet." : "Fatal police shootings reported this calendar year."}
+                  </div>
+                </div>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>{national.bodyCameraRate}%</div>
+                  <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>Had body cameras on</div>
+                  <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>
+                    Percentage of fatal shootings where the officer was wearing an active body camera. Higher is better for transparency.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Race breakdown with context */}
             <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>Demographics</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>Who is affected?</div>
+              <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55, marginBottom: 12 }}>
+                Racial breakdown of people killed in fatal police shootings. Black Americans are killed at 2–3x the rate of white Americans relative to population size — this is one of the most studied disparities in criminal justice.
+              </div>
               {Object.entries(national.byRace)
                 .sort((a, b) => b[1] - a[1])
                 .map(([race, count]) => {
@@ -170,9 +200,12 @@ export default function PoliceAccountabilityPanel({ onClose, userState }: Props)
                 })}
             </div>
 
-            {/* Year trend */}
+            {/* Year trend with context */}
             <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>Year-Over-Year Trend</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>Is it getting better or worse?</div>
+              <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55, marginBottom: 12 }}>
+                Year-over-year count of fatal police shootings. A rising trend means more people are being killed each year. Reform advocates use this data to push for de-escalation training, accountability measures, and policy changes.
+              </div>
               {Object.entries(national.byYear)
                 .sort((a, b) => a[0].localeCompare(b[0]))
                 .slice(-6)
@@ -209,23 +242,54 @@ export default function PoliceAccountabilityPanel({ onClose, userState }: Props)
               </div>
             ) : (
               <>
-                {/* State stats */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                  {[
-                    { val: String(stateDetail.total), label: `Total in ${userState}` },
-                    { val: String(stateDetail.thisYear), label: "This year" },
-                    { val: String(stateDetail.unarmedCount), label: "Unarmed" },
-                  ].map(({ val, label }) => (
-                    <div key={label} style={{ padding: "14px 10px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)", textAlign: "center" }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fbbf24" }}>{val}</div>
-                      <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 3 }}>{label}</div>
+                {/* State context */}
+                <div style={{
+                  padding: "14px 16px", borderRadius: 14,
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02))",
+                  border: "1px solid rgba(245,158,11,0.15)",
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 6 }}>
+                    Your state: {userState}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7 }}>
+                    This is the policing data for your state. It shows how many people have been killed by police, which cities have the most incidents, and whether officers were wearing body cameras. Use this to understand patterns in your community.
+                  </div>
+                </div>
+
+                {/* State stats with explanations */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>{stateDetail.total}</div>
+                      <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>Total in {userState}</div>
+                      <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>Fatal police shootings recorded in your state since 2015.</div>
                     </div>
-                  ))}
+                    <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: stateDetail.unarmedCount > 0 ? "#ef4444" : "#fbbf24" }}>{stateDetail.unarmedCount}</div>
+                      <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>Were unarmed</div>
+                      <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>People who were not carrying a weapon when killed by police.</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>{stateDetail.thisYear === 0 ? "—" : stateDetail.thisYear}</div>
+                      <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>This year</div>
+                      <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>{stateDetail.thisYear === 0 ? "No data published yet for this year." : "Incidents reported this calendar year."}</div>
+                    </div>
+                    <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24" }}>{stateDetail.bodyCameraRate}%</div>
+                      <div style={{ fontSize: 9, color: "#f1f5f9", fontWeight: 600, marginBottom: 3 }}>Body cam rate</div>
+                      <div style={{ fontSize: 8, color: "#64748b", lineHeight: 1.5 }}>Officers wearing active body cameras during fatal incidents.</div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Top cities */}
                 <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>Top Cities in {userState}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>Which cities have the most incidents?</div>
+                  <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55, marginBottom: 10 }}>
+                    Top 10 cities in {userState} ranked by total fatal police shootings. Higher numbers may indicate larger population, higher crime rates, or policing concerns that warrant community attention.
+                  </div>
                   {stateDetail.byCity.map(({ city, count }) => {
                     const pct = Math.round((count / stateDetail.total) * 100);
                     return (
@@ -242,7 +306,10 @@ export default function PoliceAccountabilityPanel({ onClose, userState }: Props)
 
                 {/* State demographics */}
                 <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>Demographics — {userState}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>Who is affected in {userState}?</div>
+                  <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55, marginBottom: 10 }}>
+                    Racial breakdown of people killed by police in your state. Compare these percentages to your state{"'"}s population demographics to identify disproportionate impact.
+                  </div>
                   {Object.entries(stateDetail.byRace).sort((a, b) => b[1] - a[1]).map(([race, count]) => {
                     const pct = Math.round((count / stateDetail.total) * 100);
                     return (
@@ -257,7 +324,10 @@ export default function PoliceAccountabilityPanel({ onClose, userState }: Props)
                 {/* Recent incidents */}
                 {stateDetail.recentIncidents.length > 0 && (
                   <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>Recent Incidents — {userState} ({new Date().getFullYear()})</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>Recent incidents in {userState}</div>
+                    <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.55, marginBottom: 10 }}>
+                      The most recent fatal police shootings reported in your state this year. Showing date, city, and whether the officer had an active body camera. No individual names are displayed.
+                    </div>
                     {stateDetail.recentIncidents.map((inc, i) => (
                       <div key={`${inc.date}-${i}`} style={{
                         display: "flex", alignItems: "center", gap: 8, padding: "6px 0",
