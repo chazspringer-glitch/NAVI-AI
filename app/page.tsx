@@ -44,6 +44,7 @@ const NewsWebPanel            = dynamic(() => import("@/components/NewsWebPanel"
 const StartHerePanel          = dynamic(() => import("@/components/StartHerePanel"),          { ssr: false });
 const OnboardingWalkthrough   = dynamic(() => import("@/components/OnboardingWalkthrough"),   { ssr: false });
 const PoliceAccountabilityPanel = dynamic(() => import("@/components/PoliceAccountabilityPanel"), { ssr: false });
+const NaviLivePanel            = dynamic(() => import("@/components/NaviLivePanel"),            { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -832,6 +833,8 @@ export default function HomePage() {
   const [showAccountability, setShowAccountability]     = useState(false);
   const [accountabilityState, setAccountabilityState]   = useState("");
   const [showAccountabilityIntro, setShowAccountabilityIntro] = useState(false);
+  const [showNaviLive,       setShowNaviLive]       = useState(false);
+  const [showNaviLiveIntro,  setShowNaviLiveIntro]  = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -2204,6 +2207,11 @@ export default function HomePage() {
         break;
       case "blackHistory":
         setShowBlackHistory(true);
+        setMenuOpen(false);
+        break;
+      case "naviLive":
+        if (hasSeenIntro("naviLive")) { setShowNaviLive(true); }
+        else { markIntroSeen("naviLive"); setShowNaviLiveIntro(true); }
         setMenuOpen(false);
         break;
 
@@ -5573,6 +5581,11 @@ export default function HomePage() {
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
                   {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🔴", "NAVI Live", "#ef4444", () => {
+                    if (hasSeenIntro("naviLive")) { setShowNaviLive(true); }
+                    else { markIntroSeen("naviLive"); setShowNaviLiveIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
                   {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
                   <button onClick={() => {
                       if (hasSeenIntro("library")) { setShowNaviLibrary(true); }
@@ -6866,6 +6879,66 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* NAVI Live Cinematic Intro */}
+    {showNaviLiveIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "20%", right: "20%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(239,68,68,0.45))" }}>🔴</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#ef4444", marginBottom: 10 }}>
+            Real-Time Community
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(239,68,68,0.20)" }}>
+            NAVI Live
+          </div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 10 }}>
+            Your community{"'"}s voice in real time. Share what{"'"}s happening, see what others are reporting, and stay connected.
+          </div>
+          <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginBottom: 22 }}>
+            All posts auto-delete after 24 hours. Every post is labeled for transparency.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "💬", label: "Post what's happening in your community", color: "#00d4ff" },
+              { icon: "⏳", label: "Posts expire after 24 hours — always fresh", color: "#f59e0b" },
+              { icon: "🏷️", label: "Truth labels: Community Report · Verified · Unconfirmed", color: "#34d399" },
+              { icon: "❤️", label: "Like and reply to conversations", color: "#f472b6" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: `${color}06`, border: `1px solid ${color}18` }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => { setShowNaviLiveIntro(false); setShowNaviLive(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(239,68,68,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Go Live →
+          </button>
+          <button onClick={() => setShowNaviLiveIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* NAVI Live Panel */}
+    {showNaviLive && (
+      <NaviLivePanel onClose={() => setShowNaviLive(false)} />
+    )}
 
     {/* Police Accountability Cinematic Intro */}
     {showAccountabilityIntro && (
