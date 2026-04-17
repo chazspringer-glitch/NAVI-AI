@@ -581,70 +581,60 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
         const civic = !isCrime && !safety && !opportunity && isCivicItem(n);
         const policing = !isCrime && !safety && !opportunity && !civic && isPolicingItem(n);
 
-        // Crime node — recency-based pulse: fast + bright when <1hr, slower as it ages
+        // All awareness rings use slow, gentle breathing — NOT rapid pulsing.
+        // This keeps the canvas calm and readable.
+
+        // Crime node — steady ring, slightly brighter when recent
         if (isCrime) {
           const ageHours = Math.max(0, (Date.now() - n.timestamp) / (3600 * 1000));
-          const urgency = Math.max(0.3, 1 - ageHours / 24); // 1.0 at 0hr → 0.3 at 24hr
-          const pulseRate = 2.5 + urgency * 2; // 4.5Hz recent → 2.5Hz old
-          const ringAlpha = (0.3 + urgency * 0.4) + Math.sin(t * pulseRate + n.driftPhase) * 0.2;
+          const urgency = Math.max(0.3, 1 - ageHours / 24);
+          const ringAlpha = 0.25 + urgency * 0.25;
           ctx.strokeStyle = `rgba(220,38,38,${ringAlpha})`;
-          ctx.lineWidth = 1.5 + urgency * 0.5;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, sz * 4.2, 0, Math.PI * 2);
-          ctx.stroke();
-          // Second outer glow for high-urgency items
-          if (urgency > 0.7) {
-            ctx.strokeStyle = `rgba(220,38,38,${ringAlpha * 0.3})`;
-            ctx.lineWidth = 0.8;
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, sz * 5.5, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-        // Safety ring — subtle pulsing red outline
-        if (safety) {
-          const ringAlpha = 0.4 + Math.sin(t * 2.5 + n.driftPhase) * 0.2;
-          ctx.strokeStyle = `rgba(239,68,68,${ringAlpha})`;
           ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
         }
-        // Opportunity ring — pulsing green outline
+        // Safety ring — static red outline
+        if (safety) {
+          ctx.strokeStyle = "rgba(239,68,68,0.35)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Opportunity ring — static green outline
         if (opportunity) {
-          const ringAlpha = 0.45 + Math.sin(t * 2.0 + n.driftPhase) * 0.2;
-          ctx.strokeStyle = `rgba(52,211,153,${ringAlpha})`;
-          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = "rgba(52,211,153,0.35)";
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
         }
-        // Civic ring — pulsing blue outline
+        // Civic ring — static blue outline
         if (civic) {
-          const ringAlpha = 0.4 + Math.sin(t * 1.8 + n.driftPhase) * 0.2;
-          ctx.strokeStyle = `rgba(59,130,246,${ringAlpha})`;
-          ctx.lineWidth = 1.3;
+          ctx.strokeStyle = "rgba(59,130,246,0.30)";
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
         }
-        // Policing ring — pulsing amber outline
+        // Policing ring — static amber outline
         if (policing) {
-          const ringAlpha = 0.4 + Math.sin(t * 2.2 + n.driftPhase) * 0.2;
-          ctx.strokeStyle = `rgba(245,158,11,${ringAlpha})`;
-          ctx.lineWidth = 1.3;
+          ctx.strokeStyle = "rgba(245,158,11,0.30)";
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
           ctx.stroke();
         }
-        // Glow
-        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, sz * 3.2);
-        g.addColorStop(0,   `${n.color}cc`);
-        g.addColorStop(0.5, `${n.color}33`);
+        // Glow (compact to reduce overlap flicker)
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, sz * 2.2);
+        g.addColorStop(0,   `${n.color}aa`);
+        g.addColorStop(0.6, `${n.color}22`);
         g.addColorStop(1,   `${n.color}00`);
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, sz * 3.2, 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, sz * 2.2, 0, Math.PI * 2);
         ctx.fill();
         // Solid
         ctx.fillStyle = n.color;
