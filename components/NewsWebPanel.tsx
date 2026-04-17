@@ -200,6 +200,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
   const [error,    setError]    = useState<string | null>(null);
   const [size,     setSize]     = useState({ w: 0, h: 0 });
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Location detection for safety + opportunity + civic awareness
   const [userCity,  setUserCity]  = useState<string | null>(null);
@@ -282,12 +283,20 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Merged items: national + local (deduplicated by id)
+  // Merged items: national + local (deduplicated by id), then filtered by category
   const mergedItems = (() => {
-    if (localItems.length === 0) return items;
-    const ids = new Set(items.map((i) => i.id));
-    const unique = localItems.filter((li) => !ids.has(li.id));
-    return [...unique, ...items];
+    let merged: NewsItem[];
+    if (localItems.length === 0) {
+      merged = items;
+    } else {
+      const ids = new Set(items.map((i) => i.id));
+      const unique = localItems.filter((li) => !ids.has(li.id));
+      merged = [...unique, ...items];
+    }
+    if (categoryFilter !== "all") {
+      merged = merged.filter((it) => it.category === categoryFilter);
+    }
+    return merged;
   })();
 
   // ── Build/refresh nodes when items, clusters, or size change ──────────────
@@ -376,7 +385,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
     }
 
     nodesRef.current = newNodes;
-  }, [mergedItems, clusters, size.w, size.h]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mergedItems, clusters, categoryFilter, size.w, size.h]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Animation loop ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1198,6 +1207,64 @@ export default function NewsWebPanel({ onClose, onAction, userContext }: NewsWeb
             }}>✕</button>
           </form>
         )}
+      </div>
+
+      {/* ── Category filter bar ───────────────────────────────────────── */}
+      <div style={{
+        display: "flex", gap: 5, padding: "6px 16px",
+        overflowX: "auto", flexShrink: 0,
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        background: "rgba(2,2,8,0.75)",
+        zIndex: 4,
+      }}>
+        {[
+          { key: "all", label: "All" },
+          ...Object.entries(CATEGORY_LABEL).map(([key, label]) => ({ key, label })),
+        ].map(({ key, label }) => {
+          const active = categoryFilter === key;
+          const color = key === "all" ? "#00d4ff" : (CATEGORY_COLORS[key] ?? "#64748b");
+          // Count items in this category from merged (unfiltered) set
+          const allMerged = (() => {
+            if (localItems.length === 0) return items;
+            const ids = new Set(items.map((i) => i.id));
+            return [...localItems.filter((li) => !ids.has(li.id)), ...items];
+          })();
+          const count = key === "all" ? allMerged.length : allMerged.filter((i) => i.category === key).length;
+          if (key !== "all" && count === 0) return null;
+          return (
+            <button
+              key={key}
+              onClick={() => {
+                setCategoryFilter(key);
+                setSelected(null);
+                setSelectedCluster(null);
+                // Reset pan/zoom when switching categories for a clean view
+                panRef.current = { x: 0, y: 0 };
+                zoomRef.current = 1;
+                setZoom(1);
+              }}
+              style={{
+                padding: "5px 10px", borderRadius: 999, whiteSpace: "nowrap",
+                fontSize: 9, fontFamily: "monospace", cursor: "pointer",
+                fontWeight: active ? 700 : 400,
+                background: active ? `${color}18` : "rgba(255,255,255,0.03)",
+                border: active ? `1px solid ${color}45` : "1px solid rgba(255,255,255,0.06)",
+                color: active ? color : "#64748b",
+                transition: "all 0.15s ease",
+                display: "flex", alignItems: "center", gap: 4,
+              }}
+            >
+              {key !== "all" && (
+                <span style={{
+                  width: 5, height: 5, borderRadius: "50%",
+                  background: color, flexShrink: 0,
+                }} />
+              )}
+              {label}
+              <span style={{ fontSize: 7, opacity: 0.7 }}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Safety awareness banner — location-based, inline ─────────── */}
