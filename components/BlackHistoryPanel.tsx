@@ -14,6 +14,35 @@ const QUOTES = [
   { text: "Success is to be measured not so much by the position that one has reached in life as by the obstacles which he has overcome.", author: "Booker T. Washington" },
 ];
 
+// ── "Today in History" entries keyed by MM-DD ────────────────────────────────
+const TODAY_ENTRIES: Record<string, { title: string; year: string; desc: string }> = {
+  "01-01": { title: "Emancipation Proclamation takes effect", year: "1863", desc: "President Lincoln's executive order freed enslaved people in Confederate states, transforming the Civil War into a fight for freedom." },
+  "01-15": { title: "Martin Luther King Jr. born", year: "1929", desc: "Born in Atlanta, Georgia. Went on to become the most iconic civil rights leader in American history." },
+  "01-20": { title: "Barack Obama inaugurated as 44th President", year: "2009", desc: "First Black President of the United States, making history watched by millions worldwide." },
+  "02-01": { title: "First day of Black History Month", year: "1976", desc: "Officially recognized by President Gerald Ford. Grew from Carter G. Woodson's 'Negro History Week' (1926)." },
+  "02-21": { title: "Malcolm X assassinated", year: "1965", desc: "Civil rights leader and minister shot in New York. His autobiography remains one of the most influential books in American history." },
+  "02-25": { title: "Hiram Revels becomes first Black U.S. Senator", year: "1870", desc: "Represented Mississippi — just 5 years after the end of slavery." },
+  "03-07": { title: "Bloody Sunday — Selma to Montgomery March", year: "1965", desc: "State troopers attacked peaceful marchers on the Edmund Pettus Bridge. Led directly to the Voting Rights Act." },
+  "04-04": { title: "Martin Luther King Jr. assassinated", year: "1968", desc: "Shot in Memphis, Tennessee at age 39. Sparked nationwide grief and uprisings." },
+  "04-16": { title: "Letter from Birmingham Jail", year: "1963", desc: "MLK wrote his famous defense of nonviolent civil disobedience while imprisoned in Alabama." },
+  "05-17": { title: "Brown v. Board of Education decided", year: "1954", desc: "Supreme Court unanimously ruled school segregation unconstitutional." },
+  "05-25": { title: "George Floyd killed in Minneapolis", year: "2020", desc: "His murder by police sparked the largest civil rights protests in U.S. history." },
+  "06-19": { title: "Juneteenth — Freedom Day", year: "1865", desc: "Union soldiers arrived in Galveston, Texas with news that enslaved people were free — two years after the Emancipation Proclamation." },
+  "07-02": { title: "Civil Rights Act signed into law", year: "1964", desc: "Outlawed discrimination based on race, color, religion, sex, or national origin." },
+  "08-28": { title: "March on Washington — 'I Have a Dream'", year: "1963", desc: "250,000 people gathered at the Lincoln Memorial. MLK delivered the most famous speech in American history." },
+  "09-15": { title: "16th Street Baptist Church bombing", year: "1963", desc: "Four young girls killed in a Klan bombing in Birmingham, Alabama. Galvanized support for civil rights legislation." },
+  "10-16": { title: "Million Man March", year: "1995", desc: "Hundreds of thousands of Black men gathered in Washington D.C. for unity, atonement, and community responsibility." },
+  "11-05": { title: "Barack Obama elected President", year: "2008", desc: "Won 365 electoral votes. 'Yes We Can' became a defining moment in American history." },
+  "12-01": { title: "Rosa Parks refuses to give up her seat", year: "1955", desc: "Her arrest in Montgomery, Alabama ignited the Montgomery Bus Boycott — a 381-day protest that changed America." },
+  "12-05": { title: "Montgomery Bus Boycott begins", year: "1955", desc: "Led by a 26-year-old MLK. The boycott lasted over a year and ended bus segregation." },
+};
+
+function getTodayEntry(): { title: string; year: string; desc: string } | null {
+  const now = new Date();
+  const key = `${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return TODAY_ENTRIES[key] ?? null;
+}
+
 const ERAS = [
   "Any Era",
   "Ancient Africa & Pre-Colonial",
@@ -168,6 +197,31 @@ export default function BlackHistoryPanel({ onClose }: { onClose: () => void }) 
             — {QUOTES[quoteIdx].author}
           </div>
         </div>
+
+        {/* Today in History */}
+        {(() => {
+          const today = getTodayEntry();
+          if (!today) return null;
+          return (
+            <div style={{
+              padding: "14px 16px", borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(201,162,39,0.08), rgba(201,162,39,0.03))",
+              border: "1px solid rgba(201,162,39,0.20)",
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 600ms ease 200ms, transform 600ms ease 200ms",
+            }}>
+              <div style={{ fontSize: 8, letterSpacing: "0.24em", textTransform: "uppercase", color: "#C9A227", fontWeight: 700, marginBottom: 6 }}>
+                📅 Today in Black History
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", lineHeight: 1.3 }}>{today.title}</div>
+                <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 9, fontWeight: 600, color: "#C9A227", background: "rgba(201,162,39,0.10)", border: "1px solid rgba(201,162,39,0.20)", flexShrink: 0 }}>{today.year}</span>
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.65 }}>{today.desc}</div>
+            </div>
+          );
+        })()}
 
         {/* Era pills */}
         <div>
