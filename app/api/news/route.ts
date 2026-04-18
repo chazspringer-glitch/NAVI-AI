@@ -31,6 +31,10 @@ const SOURCES: { url: string; name: string; category: string }[] = [
   { url: "https://www.propublica.org/feeds/propublica/main",                  name: "ProPublica",      category: "civic"         },
   { url: "https://feeds.npr.org/1014/rss.xml",                               name: "NPR Politics",    category: "civic"         },
   { url: "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",        name: "NYT Politics",    category: "civic"         },
+  // ── Economic / Entrepreneur ───────────────────────────────────────────────
+  { url: "https://feeds.npr.org/1017/rss.xml",                               name: "NPR Economy",     category: "economic"      },
+  { url: "https://www.sba.gov/blogs.xml",                                    name: "SBA",             category: "economic"      },
+  { url: "https://www.entrepreneur.com/latest.rss",                          name: "Entrepreneur",    category: "economic"      },
 ];
 
 interface NewsItem {

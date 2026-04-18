@@ -90,6 +90,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   civic:         "#3b82f6",
   local:         "#f97316",
   crime:         "#dc2626",
+  economic:      "#22d3ee",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -107,6 +108,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   civic:         "Civic",
   local:         "Local",
   crime:         "Crime",
+  economic:      "Economic",
 };
 
 function timeAgo(ts: number): string {
@@ -161,7 +163,18 @@ const KNOW_YOUR_RIGHTS = [
   { title: "Stay calm and document everything", body: "Remember badge numbers, patrol car numbers, and agency. Write down everything as soon as possible. File a complaint with the department's internal affairs division or civilian oversight board." },
 ];
 
-// Single unified view — safety, opportunity, civic, and policing awareness are integrated inline.
+// ── Economic / Entrepreneur keyword detection ───────────────────────────────
+const ECONOMIC_KEYWORDS = /\b(grant|funding|venture|capital|investor|seed round|series [a-d]|startup fund|small business loan|SBA loan|microlo|crowdfund|pitch competition|accelerator|incubator|angel investor|business grant|minority.owned|black.owned|woman.owned|CDFI|community development|economic develop|enterprise zone|opportunity zone|SBIR|STTR|MBDA|minority business|economic empowerment|entrepreneur|business plan competition|revolving loan|tax incentive|subsidy|business credit|line of credit|venture capital|private equity|impact invest|social enterprise|cooperative|co.op fund|procurement|supplier diversity|set.aside|HUBZone|disadvantaged business|8\(a\) program)\b/i;
+
+function isEconomicItem(item: NewsItem): boolean {
+  if (isSafetyItem(item)) return false;
+  if (isOpportunityItem(item)) return false;
+  if (isCivicItem(item)) return false;
+  if (isPolicingItem(item)) return false;
+  return ECONOMIC_KEYWORDS.test(item.title) || ECONOMIC_KEYWORDS.test(item.summary ?? "");
+}
+
+// Single unified view — all awareness layers integrated inline.
 
 interface NewsWebPanelProps {
   onClose:   () => void;
@@ -237,6 +250,12 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
   const [policingInsightLoading, setPolicingInsightLoading] = useState(false);
   const [policingInsightError,  setPolicingInsightError]  = useState<string | null>(null);
   const [showRights,            setShowRights]            = useState(false);
+
+  // Economic / entrepreneur insight
+  const [economicBannerOpen,    setEconomicBannerOpen]    = useState(true);
+  const [economicInsight,       setEconomicInsight]       = useState<Insight | null>(null);
+  const [economicInsightLoading, setEconomicInsightLoading] = useState(false);
+  const [economicInsightError,  setEconomicInsightError]  = useState<string | null>(null);
   const [policingData, setPolicingData] = useState<{
     national: { totalIncidents: number; thisYear: number; bodyCameraRate: number; byRace: Record<string, number>; lastUpdated: string; source: string };
     stateStats: { state: string; total: number; recentThisYear: { date: string; city: string }[] } | null;
@@ -591,6 +610,7 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
         const opportunity = !isCrime && !safety && isOpportunityItem(n);
         const civic = !isCrime && !safety && !opportunity && isCivicItem(n);
         const policing = !isCrime && !safety && !opportunity && !civic && isPolicingItem(n);
+        const economic = !isCrime && !safety && !opportunity && !civic && !policing && isEconomicItem(n);
 
         // All awareness rings use slow, gentle breathing — NOT rapid pulsing.
         // This keeps the canvas calm and readable.
@@ -633,6 +653,14 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
         // Policing ring — static amber outline
         if (policing) {
           ctx.strokeStyle = "rgba(245,158,11,0.30)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // Economic ring — static cyan outline
+        if (economic) {
+          ctx.strokeStyle = "rgba(34,211,238,0.35)";
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(n.x, n.y, sz * 3.8, 0, Math.PI * 2);
@@ -931,6 +959,51 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
     return () => { cancelled = true; };
   }, [items, userCity, userContext]);
 
+  // ── Auto-fetch economic/entrepreneur insight ────────────────────────────
+  useEffect(() => {
+    const ecoItems = mergedItems.filter(isEconomicItem);
+    if (ecoItems.length === 0) {
+      setEconomicInsight(null);
+      setEconomicInsightLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setEconomicInsight(null);
+    setEconomicInsightError(null);
+    setEconomicInsightLoading(true);
+    const articles = ecoItems.slice(0, 10).map((it) => ({
+      title: it.title, summary: it.summary, source: it.source,
+    }));
+    const locationCtx = userCity ? { ...userContext, location: userCity } : userContext;
+    (async () => {
+      try {
+        const res = await fetch("/api/news/insight/cluster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clusterId: `economic-${userCity || "general"}`,
+            clusterName: userCity
+              ? `Funding & Business Opportunities — ${userCity}`
+              : "Grants, Funding & Entrepreneur Resources",
+            keywords: ["grants", "funding", "small business", "entrepreneur", "startup", "SBA", "minority-owned"],
+            articles,
+            userContext: locationCtx,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) { setEconomicInsightError("Could not generate economic overview."); return; }
+        const json = await res.json() as { insight?: Insight };
+        if (json.insight) setEconomicInsight(json.insight);
+        else setEconomicInsightError("No overview generated.");
+      } catch {
+        if (!cancelled) setEconomicInsightError("Could not reach the insight service.");
+      } finally {
+        if (!cancelled) setEconomicInsightLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [mergedItems, userCity, userContext]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Fetch real policing data from Washington Post database ──────────────
   useEffect(() => {
     let cancelled = false;
@@ -1145,6 +1218,72 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 13 }} aria-label="Close">✕</button>
         </div>
       </div>
+
+      {/* ── Economic / Entrepreneur banner ──────────────────────────────── */}
+      {mergedItems.filter(isEconomicItem).length > 0 && economicBannerOpen && (
+        <div style={{
+          padding: "8px 16px", flexShrink: 0,
+          borderBottom: "1px solid rgba(34,211,238,0.10)",
+          background: "rgba(34,211,238,0.03)",
+          display: "flex", alignItems: "flex-start", gap: 10,
+          zIndex: 4,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", marginTop: 4, flexShrink: 0,
+            background: "#22d3ee", boxShadow: "0 0 8px #22d3ee",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 9, letterSpacing: "0.20em", textTransform: "uppercase",
+              color: "#22d3ee", fontWeight: 700, marginBottom: 3,
+            }}>
+              💰 Economic Pulse{userCity ? ` — ${userCity}` : ""} · {mergedItems.filter(isEconomicItem).length} stories
+            </div>
+            {economicInsightLoading && (
+              <div style={{ fontSize: 10, color: "#64748b" }}>Scanning for funding opportunities…</div>
+            )}
+            {!economicInsightLoading && economicInsightError && (
+              <div style={{ fontSize: 10, color: "#67e8f9" }}>{economicInsightError}</div>
+            )}
+            {!economicInsightLoading && economicInsight && (
+              <>
+                <div style={{ fontSize: 10, color: "#67e8f9", lineHeight: 1.55, fontWeight: 600, marginBottom: 2 }}>
+                  {economicInsight.whatsHappening}
+                </div>
+                <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.55 }}>
+                  {economicInsight.whatYouShouldDo}
+                </div>
+                {economicInsight.suggestedFeatures.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 5 }}>
+                    {economicInsight.suggestedFeatures.map((fid) => {
+                      const meta = FEATURE_META[fid];
+                      if (!meta) return null;
+                      return (
+                        <button key={fid} onClick={() => { onAction?.(fid); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "4px 8px", borderRadius: 6,
+                            background: "rgba(34,211,238,0.08)",
+                            border: "1px solid rgba(34,211,238,0.25)",
+                            color: "#22d3ee", fontSize: 8, fontWeight: 700,
+                            fontFamily: "monospace", cursor: "pointer",
+                          }}>
+                          {meta.icon} {meta.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <button onClick={() => setEconomicBannerOpen(false)}
+            style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: "none", background: "transparent", color: "#475569", fontSize: 10, cursor: "pointer" }}
+            aria-label="Dismiss economic banner">
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Policing transparency banner ──────────────────────────────── */}
       {mergedItems.filter(isPolicingItem).length > 0 && policingBannerOpen && (
