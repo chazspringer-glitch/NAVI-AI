@@ -2227,6 +2227,11 @@ export default function HomePage() {
         else { markIntroSeen("foodIntel"); setShowFoodIntelIntro(true); }
         setMenuOpen(false);
         break;
+      case "bigKids":
+        if (hasSeenIntro("bigKids")) { setShowBigKids(true); }
+        else { markIntroSeen("bigKids"); setShowBigKidsIntro(true); }
+        setMenuOpen(false);
+        break;
       case "naviLive":
         if (hasSeenIntro("naviLive")) { setShowNaviLive(true); }
         else { markIntroSeen("naviLive"); setShowNaviLiveIntro(true); }

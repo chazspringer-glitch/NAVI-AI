@@ -50,7 +50,8 @@ export type NavigateDestination =
   | "policeAccountability"   // 🔍 Police Accountability dashboard
   | "blackHistory"           // ✊ Black History panel
   | "naviLive"              // 🔴 NAVI Live community feed
-  | "foodIntel";            // 🥗 Food Intelligence
+  | "foodIntel"             // 🥗 Food Intelligence
+  | "bigKids";              // 🎮 NAVI Big Kids
 
 export interface NavigateAction {
   type: "navigate";
@@ -102,7 +103,7 @@ export function parseAction(raw: unknown): AgentAction | null {
     "newsWeb", "library", "trades", "leaderboard", "whyNavi", "autoFinder",
     "jobFinder", "familySupport", "legalRights", "naviTV",
     "rewards", "subscription", "programs", "podcast", "startHere",
-    "policeAccountability", "blackHistory", "naviLive", "foodIntel",
+    "policeAccountability", "blackHistory", "naviLive", "foodIntel", "bigKids",
   ];
   if (t === "navigate" && typeof a.destination === "string" && VALID_DESTINATIONS.includes(a.destination as NavigateDestination)) {
     return {
