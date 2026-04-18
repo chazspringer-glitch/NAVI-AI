@@ -48,6 +48,7 @@ const NaviLivePanel            = dynamic(() => import("@/components/NaviLivePane
 const LegalNavigatorPanel      = dynamic(() => import("@/components/LegalNavigatorPanel"),      { ssr: false });
 const FoodIntelPanel           = dynamic(() => import("@/components/FoodIntelPanel"),           { ssr: false });
 const NaviStreamsPanel          = dynamic(() => import("@/components/NaviStreamsPanel"),          { ssr: false });
+const BigKidsPanel             = dynamic(() => import("@/components/BigKidsPanel"),             { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -844,6 +845,8 @@ export default function HomePage() {
   const [showFoodIntelIntro, setShowFoodIntelIntro] = useState(false);
   const [showStreams,        setShowStreams]         = useState(false);
   const [showStreamsIntro,   setShowStreamsIntro]    = useState(false);
+  const [showBigKids,       setShowBigKids]        = useState(false);
+  const [showBigKidsIntro,  setShowBigKidsIntro]   = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -5667,6 +5670,11 @@ export default function HomePage() {
                     setMenuOpen(false); trackXP("tool_used");
                   }, false)}
                   {toolBtn("📚", "Homework Helper", "#00d4ff", () => { if (proLocked) { setProGateFeature("Homework Helper"); return; } setShowHomeworkHelper(true); setMenuOpen(false); }, proLocked)}
+                  {toolBtn("🎮", "NAVI Big Kids", "#00d4ff", () => {
+                    if (hasSeenIntro("bigKids")) { setShowBigKids(true); }
+                    else { markIntroSeen("bigKids"); setShowBigKidsIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
                   <button onClick={() => { showSwitching("NAVI Academy"); track("hub_tab_switch", { tab: "programs" }); setHubTab("programs"); }}
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, cursor: "pointer", background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.15)", color: "#00d4ff", fontSize: 12, fontFamily: "monospace" }}>
                     <span style={{ fontSize: 16 }}>🎓</span><span style={{ fontWeight: 600 }}>Academy (STEM · AI Skills)</span><span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
@@ -6912,6 +6920,51 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* NAVI Big Kids Cinematic Intro */}
+    {showBigKidsIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translate(-50%, -50%)", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,255,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "22%", right: "18%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(0,212,255,0.45))" }}>🎮</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#00d4ff", marginBottom: 10 }}>Ages 7–12</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(0,212,255,0.20)" }}>NAVI Big Kids</div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 22 }}>
+            Learning quests, mini challenges, and rewards — all guided by NAVI. Pick a subject, complete quests, earn XP, and level up!
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 24 }}>
+            {["🔢", "📖", "🌟", "🧩"].map((e, i) => (
+              <span key={i} style={{ fontSize: 28, filter: "drop-shadow(0 0 8px rgba(0,212,255,0.35))" }}>{e}</span>
+            ))}
+          </div>
+
+          <button onClick={() => { setShowBigKidsIntro(false); setShowBigKids(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #00d4ff, #0891b2)", border: "none", color: "#02020a", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(0,212,255,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Start Exploring →
+          </button>
+          <button onClick={() => setShowBigKidsIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* NAVI Big Kids Panel */}
+    {showBigKids && (
+      <BigKidsPanel onClose={() => setShowBigKids(false)} />
+    )}
 
     {/* NAVI Streams Cinematic Intro */}
     {showStreamsIntro && (
