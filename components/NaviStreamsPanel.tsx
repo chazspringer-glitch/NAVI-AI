@@ -281,11 +281,21 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {/* Camera preview */}
-                <div style={{ borderRadius: 10, overflow: "hidden", background: "#000", position: "relative" }}>
+                <div style={{ borderRadius: 12, overflow: "hidden", background: "#000", position: "relative", display: "flex", justifyContent: "center" }}>
                   {cameraActive ? (
-                    <video ref={cameraRef} autoPlay muted playsInline style={{ width: "100%", height: 160, objectFit: "cover", display: "block", transform: "scaleX(-1)" }} />
+                    <div style={{ position: "relative", width: "100%", maxWidth: 320 }}>
+                      <video ref={cameraRef} autoPlay muted playsInline style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block", borderRadius: 12, transform: "scaleX(-1)" }} />
+                      <button onClick={stopCamera} style={{
+                        position: "absolute", top: 8, right: 8, padding: "4px 10px", borderRadius: 8,
+                        background: "rgba(0,0,0,0.75)", border: "1px solid rgba(239,68,68,0.30)",
+                        color: "#f87171", fontSize: 9, fontWeight: 600,
+                        fontFamily: "monospace", cursor: "pointer",
+                      }}>
+                        ✕ Close
+                      </button>
+                    </div>
                   ) : (
-                    <div style={{ height: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                       <button onClick={startCamera} style={{
                         padding: "10px 20px", borderRadius: 10,
                         background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.30)",
@@ -295,15 +305,6 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
                       </button>
                       <div style={{ fontSize: 8, color: "#475569" }}>Check your camera before going live</div>
                     </div>
-                  )}
-                  {cameraActive && (
-                    <button onClick={stopCamera} style={{
-                      position: "absolute", top: 6, right: 6, padding: "3px 8px", borderRadius: 6,
-                      background: "rgba(0,0,0,0.7)", border: "none", color: "#f87171", fontSize: 8,
-                      fontFamily: "monospace", cursor: "pointer",
-                    }}>
-                      ✕ Close cam
-                    </button>
                   )}
                 </div>
 
