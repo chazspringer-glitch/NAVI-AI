@@ -49,6 +49,7 @@ const LegalNavigatorPanel      = dynamic(() => import("@/components/LegalNavigat
 const FoodIntelPanel           = dynamic(() => import("@/components/FoodIntelPanel"),           { ssr: false });
 const NaviStreamsPanel          = dynamic(() => import("@/components/NaviStreamsPanel"),          { ssr: false });
 const BigKidsPanel             = dynamic(() => import("@/components/BigKidsPanel"),             { ssr: false });
+const GunViolencePanel         = dynamic(() => import("@/components/GunViolencePanel"),         { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -847,6 +848,8 @@ export default function HomePage() {
   const [showStreamsIntro,   setShowStreamsIntro]    = useState(false);
   const [showBigKids,       setShowBigKids]        = useState(false);
   const [showBigKidsIntro,  setShowBigKidsIntro]   = useState(false);
+  const [showGunViolence,   setShowGunViolence]    = useState(false);
+  const [showGunViolenceIntro, setShowGunViolenceIntro] = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -5613,6 +5616,11 @@ export default function HomePage() {
                     setMenuOpen(false);
                   }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🕊️", "Gun Violence Awareness", "#ef4444", () => {
+                    if (hasSeenIntro("gunViolence")) { setShowGunViolence(true); }
+                    else { markIntroSeen("gunViolence"); setShowGunViolenceIntro(true); }
+                    setMenuOpen(false);
+                  }, false)}
                   {toolBtn("🎬", "NAVI Streams", "#a855f7", () => {
                     if (hasSeenIntro("streams")) { setShowStreams(true); }
                     else { markIntroSeen("streams"); setShowStreamsIntro(true); }
@@ -6925,6 +6933,58 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* Gun Violence Awareness Cinematic Intro */}
+    {showGunViolenceIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "25%", left: "50%", transform: "translate(-50%, -50%)", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🕊️</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#ef4444", marginBottom: 10 }}>NAVI Safety</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9", marginBottom: 10 }}>Gun Violence Awareness</div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 22 }}>
+            Stay informed with verified reports. Understand patterns. Know what to do. Access community resources. Every number is a life — we approach this with respect and purpose.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "📋", label: "Verified incident reports — no graphic details", color: "#ef4444" },
+              { icon: "📊", label: "National patterns and community impact data", color: "#f59e0b" },
+              { icon: "🛡️", label: "Safety guidance — what to do in an emergency", color: "#34d399" },
+              { icon: "🤝", label: "Crisis hotlines, advocacy, and community resources", color: "#00d4ff" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: `${color}06`, border: `1px solid ${color}18` }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => { setShowGunViolenceIntro(false); setShowGunViolence(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(239,68,68,0.25)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Open Awareness Center →
+          </button>
+          <button onClick={() => setShowGunViolenceIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Gun Violence Awareness Panel */}
+    {showGunViolence && (
+      <GunViolencePanel onClose={() => setShowGunViolence(false)} />
+    )}
 
     {/* NAVI Big Kids Cinematic Intro */}
     {showBigKidsIntro && (
