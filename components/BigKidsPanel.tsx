@@ -52,6 +52,58 @@ const TRYAGAINS = [
   "Almost! Try again 💪", "So close! One more shot 🎯", "Not quite — you got this! 🌟", "Keep going! 🚀",
 ];
 
+// ── Reading quest content ───────────────────────────────────────────────────
+const READING_PASSAGES = [
+  {
+    title: "The Clever Fox",
+    text: "A fox saw grapes hanging high on a vine. She jumped and jumped but couldn't reach them. Finally, she walked away saying, \"Those grapes are probably sour anyway.\" Sometimes when we can't get what we want, we pretend we didn't want it.",
+    question: "Why did the fox say the grapes were sour?",
+    choices: ["She tasted them", "She couldn't reach them", "Someone told her", "They were green"],
+    answer: 1,
+    difficulty: 1,
+  },
+  {
+    title: "Water Cycle",
+    text: "Water moves in a cycle. The sun heats water in oceans and lakes, turning it into vapor that rises into the sky. Up high, the vapor cools and forms clouds. When clouds get heavy with water, it falls back down as rain or snow. Then the cycle starts again.",
+    question: "What makes water turn into vapor?",
+    choices: ["The moon", "The wind", "The sun's heat", "The clouds"],
+    answer: 2,
+    difficulty: 1,
+  },
+  {
+    title: "Ruby Bridges",
+    text: "In 1960, six-year-old Ruby Bridges became the first Black child to attend an all-white elementary school in the South. Federal marshals walked her to school every day because angry crowds gathered outside. Ruby was brave and never missed a day of school that year.",
+    question: "Why did federal marshals walk Ruby to school?",
+    choices: ["She was late", "The school was far away", "Angry crowds gathered outside", "Her parents asked them to"],
+    answer: 2,
+    difficulty: 2,
+  },
+  {
+    title: "Saving Money",
+    text: "Marcus gets $5 allowance every week. He wants to buy a basketball that costs $25. If he saves his entire allowance, he'll have enough in 5 weeks. But Marcus also wants snacks. He decides to save $3 each week and spend $2 on snacks. Now it will take longer, but he's learning to balance wants and needs.",
+    question: "How many weeks will it take Marcus to buy the basketball if he saves $3 per week?",
+    choices: ["5 weeks", "7 weeks", "9 weeks", "10 weeks"],
+    answer: 2,
+    difficulty: 2,
+  },
+  {
+    title: "Photosynthesis",
+    text: "Plants make their own food through a process called photosynthesis. They use sunlight, water from the soil, and carbon dioxide from the air. Inside their leaves, these ingredients combine to create glucose — a type of sugar that gives the plant energy. Oxygen is released as a byproduct, which is what we breathe.",
+    question: "What do plants produce that humans need to breathe?",
+    choices: ["Carbon dioxide", "Glucose", "Water", "Oxygen"],
+    answer: 3,
+    difficulty: 3,
+  },
+  {
+    title: "The Underground Railroad",
+    text: "The Underground Railroad wasn't a real railroad — it was a secret network of safe houses and routes that helped enslaved people escape to freedom before the Civil War. Brave people called \"conductors\" guided travelers at night, using the North Star for direction. Harriet Tubman was the most famous conductor, making 13 trips and freeing about 70 people.",
+    question: "What did conductors on the Underground Railroad use for direction at night?",
+    choices: ["A compass", "A map", "The North Star", "Lanterns"],
+    answer: 2,
+    difficulty: 3,
+  },
+];
+
 export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
@@ -67,6 +119,33 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     setMathProblem(generateMathProblem(mathDifficulty));
     setMathFeedback(null);
   }, [mathDifficulty]);
+
+  // Reading quest state
+  const [readingIdx, setReadingIdx] = useState(0);
+  const [readingFeedback, setReadingFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [readingScore, setReadingScore] = useState(0);
+  const [readingTotal, setReadingTotal] = useState(0);
+  const [readingStarted, setReadingStarted] = useState(false);
+
+  const currentPassage = READING_PASSAGES[readingIdx % READING_PASSAGES.length];
+
+  const checkReadingAnswer = (choiceIdx: number) => {
+    if (readingFeedback) return;
+    const correct = choiceIdx === currentPassage.answer;
+    if (correct) {
+      const pts = currentPassage.difficulty * 15;
+      setReadingScore((s) => s + pts);
+      setReadingFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
+    } else {
+      setReadingFeedback({ correct: false, message: TRYAGAINS[Math.floor(Math.random() * TRYAGAINS.length)] });
+    }
+    setReadingTotal((t) => t + 1);
+  };
+
+  const nextPassage = () => {
+    setReadingIdx((i) => i + 1);
+    setReadingFeedback(null);
+  };
 
   const checkMathAnswer = (choice: number) => {
     if (!mathProblem || mathFeedback) return;
@@ -294,8 +373,115 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
                 </>
               )}
 
-              {/* Placeholder for other subjects (Parts 3+) */}
-              {selectedSubject !== "math" && (
+              {/* ── Reading Quests ────────────────────────────────────────── */}
+              {selectedSubject === "reading" && (
+                <>
+                  {/* Score bar */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 10, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)" }}>
+                    <div style={{ fontSize: 9, color: "#64748b" }}>Story {(readingIdx % READING_PASSAGES.length) + 1} of {READING_PASSAGES.length}</div>
+                    <div style={{ fontSize: 10, color: "#34d399", fontWeight: 700 }}>⭐ {readingScore} XP</div>
+                  </div>
+
+                  {!readingStarted ? (
+                    <button onClick={() => setReadingStarted(true)} style={{
+                      width: "100%", padding: "20px", borderRadius: 16, cursor: "pointer",
+                      background: "linear-gradient(135deg, rgba(52,211,153,0.12), rgba(168,85,247,0.06))",
+                      border: "2px solid rgba(52,211,153,0.25)",
+                      fontFamily: "monospace", textAlign: "center",
+                    }}>
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>📖</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#34d399" }}>Start Reading Quest!</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>Read stories and answer questions</div>
+                    </button>
+                  ) : (
+                    <div style={{
+                      padding: "18px 16px", borderRadius: 18,
+                      background: "linear-gradient(160deg, rgba(16,16,28,0.95) 0%, rgba(10,10,20,0.95) 100%)",
+                      border: `2px solid ${readingFeedback ? (readingFeedback.correct ? "#34d39960" : "#f8717160") : "#34d39930"}`,
+                    }}>
+                      {/* Story title */}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#34d399", marginBottom: 10 }}>
+                        📖 {currentPassage.title}
+                      </div>
+
+                      {/* Passage text */}
+                      <div style={{
+                        fontSize: 12, color: "#e2e8f0", lineHeight: 1.8, marginBottom: 16,
+                        padding: "12px 14px", borderRadius: 12,
+                        background: "rgba(52,211,153,0.04)",
+                        border: "1px solid rgba(52,211,153,0.10)",
+                      }}>
+                        {currentPassage.text}
+                      </div>
+
+                      {/* Question */}
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 12 }}>
+                        {currentPassage.question}
+                      </div>
+
+                      {/* Choices */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                        {currentPassage.choices.map((c, i) => {
+                          let bg = "rgba(255,255,255,0.04)";
+                          let border = "1px solid rgba(255,255,255,0.10)";
+                          let color = "#f1f5f9";
+                          if (readingFeedback) {
+                            if (i === currentPassage.answer) { bg = "rgba(52,211,153,0.15)"; border = "1px solid #34d399"; color = "#34d399"; }
+                            else if (!readingFeedback.correct) { bg = "rgba(248,113,113,0.06)"; color = "#64748b"; }
+                          }
+                          return (
+                            <button key={i} onClick={() => checkReadingAnswer(i)} disabled={!!readingFeedback}
+                              style={{
+                                width: "100%", padding: "12px 14px", borderRadius: 12, cursor: readingFeedback ? "default" : "pointer",
+                                background: bg, border, fontFamily: "monospace",
+                                fontSize: 11, fontWeight: 500, color, textAlign: "left",
+                                display: "flex", alignItems: "center", gap: 8,
+                              }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#475569", flexShrink: 0 }}>{String.fromCharCode(65 + i)}.</span>
+                              {c}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Feedback */}
+                      {readingFeedback && (
+                        <div style={{ textAlign: "center", marginBottom: 12 }}>
+                          <div style={{
+                            fontSize: 14, fontWeight: 700,
+                            color: readingFeedback.correct ? "#34d399" : "#f87171",
+                          }}>
+                            {readingFeedback.message}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Next */}
+                      {readingFeedback && (
+                        <div style={{ textAlign: "center" }}>
+                          <button onClick={nextPassage} style={{
+                            padding: "12px 28px", borderRadius: 12,
+                            background: "linear-gradient(135deg, #34d399, #10b981)",
+                            border: "none", color: "#08080f",
+                            fontSize: 13, fontWeight: 700, fontFamily: "monospace", cursor: "pointer",
+                          }}>
+                            Next Story →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {readingTotal > 0 && (
+                    <div style={{ textAlign: "center", fontSize: 9, color: "#64748b" }}>
+                      {readingTotal} questions answered
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Placeholder for other subjects (Parts 4+) */}
+              {selectedSubject !== "math" && selectedSubject !== "reading" && (
                 <div style={{ textAlign: "center", padding: "30px 0" }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}>🚀</div>
                   <div style={{ fontSize: 12, color: subj.color, fontWeight: 700 }}>Quests loading soon!</div>
