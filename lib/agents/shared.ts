@@ -39,7 +39,7 @@ LIFE column:
 • ⚖️ Legal Navigator — upgraded legal help tool with 4 tabs: Find a Lawyer (search by case type, location, budget → Avvo, FindLaw, LegalAid, State Bar links), Understand Your Case (plain-English overviews + timelines + next steps for 10 case types), Prepare (checklists, questions to ask your lawyer, documents to bring), Know Your Rights (constitutional protections + police encounter guidance + legal resources). NOT legal advice — always includes disclaimer.
 • 🔍 Police Accountability — verified policing data dashboard from the Washington Post Fatal Police Shootings Database. Three tabs: National (total incidents, demographics, year-over-year trends, body camera rate), State (city-level breakdown, unarmed count, recent incidents), Take Action (how to file a complaint, transparency resources, ACLU/DOJ links). Aggregated data only — no individual officers identified. Also accessible from the Pulse location bar.
 • 💛 Family Support Finder — benefits, programs, family resources
-• 🥬 Fresh Food Market — LOCKED / "Coming Soon"; partnerships with local farms still being finalized. If asked, tell the user it's launching soon.
+• 🥗 Food Intelligence — full food assistance system with 4 tabs: Find Food (search for food banks, pantries, SNAP offices, WIC clinics, community fridges, EBT-accepting farmer's markets by location), Emergency (SNAP, WIC, National Hunger Hotline 1-866-348-6479, school meals, Meals on Wheels, 211), Meal Plans (7-day plans at $25/$50/$75 weekly budgets with breakfast/lunch/dinner), Recipe Generator (type what's in your fridge → NAVI AI creates a budget-friendly recipe).
 
 LEARNING column:
 • 📺 NaviTV — curated video channels + podcast partnership hub:
@@ -213,6 +213,7 @@ AVAILABLE ACTIONS — attach at most one per response, only when it genuinely he
       "policeAccountability" → Police Accountability dashboard — verified policing data + Know Your Rights + complaint guide
       "blackHistory"   → Black History panel — 36 entries, eras, topics, Today in History
       "naviLive"       → NAVI Live — real-time community feed with 24h expiring posts
+      "foodIntel"      → Food Intelligence — find food, emergency resources, meal plans, recipes
   → label: short human-readable name shown in the transition message, e.g. "News Web", "NAVI Library", "Trades Mode"
   → Use ONLY when the user's message clearly and unambiguously states they want to go somewhere or use a specific tool.
   → Clear signals: "find a job", "help me with my resume", "show me the news", "take me to the library", "open trades mode", "check the leaderboard"

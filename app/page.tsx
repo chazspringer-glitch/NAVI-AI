@@ -46,6 +46,7 @@ const OnboardingWalkthrough   = dynamic(() => import("@/components/OnboardingWal
 const PoliceAccountabilityPanel = dynamic(() => import("@/components/PoliceAccountabilityPanel"), { ssr: false });
 const NaviLivePanel            = dynamic(() => import("@/components/NaviLivePanel"),            { ssr: false });
 const LegalNavigatorPanel      = dynamic(() => import("@/components/LegalNavigatorPanel"),      { ssr: false });
+const FoodIntelPanel           = dynamic(() => import("@/components/FoodIntelPanel"),           { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -838,6 +839,8 @@ export default function HomePage() {
   const [showNaviLiveIntro,  setShowNaviLiveIntro]  = useState(false);
   const [showLegalNav,       setShowLegalNav]       = useState(false);
   const [showLegalNavIntro,  setShowLegalNavIntro]  = useState(false);
+  const [showFoodIntel,      setShowFoodIntel]      = useState(false);
+  const [showFoodIntelIntro, setShowFoodIntelIntro] = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -2211,6 +2214,11 @@ export default function HomePage() {
         break;
       case "blackHistory":
         setShowBlackHistory(true);
+        setMenuOpen(false);
+        break;
+      case "foodIntel":
+        if (hasSeenIntro("foodIntel")) { setShowFoodIntel(true); }
+        else { markIntroSeen("foodIntel"); setShowFoodIntelIntro(true); }
         setMenuOpen(false);
         break;
       case "naviLive":
@@ -5594,7 +5602,11 @@ export default function HomePage() {
                     else { markIntroSeen("naviLive"); setShowNaviLiveIntro(true); }
                     setMenuOpen(false); trackXP("tool_used");
                   }, false)}
-                  {toolBtn("🥬", "Fresh Food Market 🔒", "#34d399", () => { setShowFreshFoodIntro(true); setMenuOpen(false); trackXP("tool_used"); }, false)}
+                  {toolBtn("🥗", "Food Intelligence", "#34d399", () => {
+                    if (hasSeenIntro("foodIntel")) { setShowFoodIntel(true); }
+                    else { markIntroSeen("foodIntel"); setShowFoodIntelIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
                   <button onClick={() => {
                       if (hasSeenIntro("library")) { setShowNaviLibrary(true); }
                       else { markIntroSeen("library"); setShowNaviLibraryIntro(true); }
@@ -6887,6 +6899,58 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* Food Intelligence Cinematic Intro */}
+    {showFoodIntelIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(52,211,153,0.45))" }}>🥗</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#34d399", marginBottom: 10 }}>NAVI Food</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(52,211,153,0.20)" }}>Food Intelligence</div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 22 }}>
+            Find affordable food near you. Plan meals on any budget. Access emergency resources. Cook with what you have. No one should go hungry.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "📍", label: "Find food banks, pantries, and SNAP offices nearby", color: "#34d399" },
+              { icon: "🆘", label: "Emergency food resources — SNAP, WIC, hotlines", color: "#ef4444" },
+              { icon: "🍽️", label: "Budget meal plans — $25, $50, $75/week", color: "#f59e0b" },
+              { icon: "👨‍🍳", label: "Recipe generator — cook with what you have", color: "#C9A227" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: `${color}06`, border: `1px solid ${color}18` }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => { setShowFoodIntelIntro(false); setShowFoodIntel(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #34d399, #10b981)", border: "none", color: "#08080f", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(52,211,153,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Find Food →
+          </button>
+          <button onClick={() => setShowFoodIntelIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Food Intelligence Panel */}
+    {showFoodIntel && (
+      <FoodIntelPanel onClose={() => setShowFoodIntel(false)} />
+    )}
 
     {/* Legal Navigator Cinematic Intro */}
     {showLegalNavIntro && (

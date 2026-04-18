@@ -49,7 +49,8 @@ export type NavigateDestination =
   | "startHere"              // 🧭 Start Here guide
   | "policeAccountability"   // 🔍 Police Accountability dashboard
   | "blackHistory"           // ✊ Black History panel
-  | "naviLive";              // 🔴 NAVI Live community feed
+  | "naviLive"              // 🔴 NAVI Live community feed
+  | "foodIntel";            // 🥗 Food Intelligence
 
 export interface NavigateAction {
   type: "navigate";
@@ -101,7 +102,7 @@ export function parseAction(raw: unknown): AgentAction | null {
     "newsWeb", "library", "trades", "leaderboard", "whyNavi", "autoFinder",
     "jobFinder", "familySupport", "legalRights", "naviTV",
     "rewards", "subscription", "programs", "podcast", "startHere",
-    "policeAccountability", "blackHistory", "naviLive",
+    "policeAccountability", "blackHistory", "naviLive", "foodIntel",
   ];
   if (t === "navigate" && typeof a.destination === "string" && VALID_DESTINATIONS.includes(a.destination as NavigateDestination)) {
     return {
