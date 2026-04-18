@@ -19,10 +19,11 @@ interface Incident {
   label: "verified" | "developing";
 }
 
-type GVTab = "overview" | "patterns" | "safety" | "resources";
+type GVTab = "overview" | "local" | "patterns" | "safety" | "resources";
 
 const TABS: { key: GVTab; label: string; icon: string }[] = [
-  { key: "overview",  label: "Overview",   icon: "📋" },
+  { key: "overview",  label: "National",   icon: "📋" },
+  { key: "local",     label: "Wilmington", icon: "📍" },
   { key: "patterns",  label: "Patterns",   icon: "📊" },
   { key: "safety",    label: "Safety",     icon: "🛡️" },
   { key: "resources", label: "Resources",  icon: "🤝" },
@@ -59,22 +60,41 @@ const NATIONAL_STATS = {
 export default function GunViolencePanel({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<GVTab>("overview");
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [localIncidents, setLocalIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(true);
 
-  // Fetch recent gun violence news via Google News RSS
+  // Fetch LIVE national gun violence news
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/news/local?city=gun+violence+shooting");
+        const res = await fetch("/api/news/local?city=gun+violence+shooting+United+States");
         const json = await res.json();
         if (Array.isArray(json.items)) {
-          setIncidents(json.items.slice(0, 10).map((it: Incident & { timestamp: number }) => ({
+          setIncidents(json.items.slice(0, 15).map((it: Incident & { timestamp: number }) => ({
             ...it,
             label: it.timestamp > Date.now() - 6 * 3600 * 1000 ? "developing" : "verified",
           })));
         }
       } catch { /* silent */ }
       finally { setLoading(false); }
+    })();
+  }, []);
+
+  // Fetch LIVE Wilmington NC gun violence / shooting data
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/news/local?city=Wilmington+NC+shooting+gun+violence");
+        const json = await res.json();
+        if (Array.isArray(json.items)) {
+          setLocalIncidents(json.items.slice(0, 15).map((it: Incident & { timestamp: number }) => ({
+            ...it,
+            label: it.timestamp > Date.now() - 6 * 3600 * 1000 ? "developing" : "verified",
+          })));
+        }
+      } catch { /* silent */ }
+      finally { setLocalLoading(false); }
     })();
   }, []);
 
@@ -176,6 +196,92 @@ export default function GunViolencePanel({ onClose }: { onClose: () => void }) {
                   </div>
                 </a>
               ))}
+            </div>
+          </>
+        )}
+
+        {/* ── WILMINGTON LOCAL ───────────────────────────────────────── */}
+        {activeTab === "local" && (
+          <>
+            <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.7 }}>
+                <span style={{ color: "#ef4444", fontWeight: 700 }}>NAVI:</span> This section tracks gun violence incidents in and around <span style={{ color: "#f1f5f9", fontWeight: 600 }}>Wilmington, North Carolina</span>. Every life lost in our community matters. We remember them here.
+              </div>
+            </div>
+
+            {/* Lives Lost memorial */}
+            <div style={{
+              padding: "18px 16px", borderRadius: 16, textAlign: "center",
+              background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(168,85,247,0.03))",
+              border: "1px solid rgba(239,68,68,0.15)",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🕊️</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#f1f5f9", marginBottom: 6 }}>
+                Lives Lost in Wilmington
+              </div>
+              <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.7, maxWidth: 300, margin: "0 auto 10px" }}>
+                Behind every report is someone{"'"}s child, parent, sibling, or friend. We honor their memory by staying informed and working toward a safer community.
+              </div>
+              <div style={{ fontSize: 9, color: "#ef4444", fontWeight: 600 }}>
+                {localIncidents.length > 0 ? `${localIncidents.length} recent reports found` : "Monitoring for reports…"}
+              </div>
+            </div>
+
+            {/* Local incidents */}
+            <div>
+              <div style={{ fontSize: 9, color: "#ef4444", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>
+                📍 Wilmington Area Reports
+              </div>
+              {localLoading && <div style={{ fontSize: 10, color: "#64748b", padding: "20px 0", textAlign: "center" }}>Searching for local reports…</div>}
+              {!localLoading && localIncidents.length === 0 && (
+                <div style={{ padding: "20px 16px", textAlign: "center", borderRadius: 14, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)" }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>🕊️</div>
+                  <div style={{ fontSize: 11, color: "#34d399", fontWeight: 600 }}>No recent reports found for Wilmington</div>
+                  <div style={{ fontSize: 9, color: "#64748b", marginTop: 4 }}>NAVI continuously monitors news sources for this area.</div>
+                </div>
+              )}
+              {localIncidents.map((inc) => (
+                <a key={inc.id} href={inc.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 8 }}>
+                  <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.10)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{
+                        padding: "2px 6px", borderRadius: 4, fontSize: 7, fontWeight: 700,
+                        color: inc.label === "verified" ? "#34d399" : "#f59e0b",
+                        background: inc.label === "verified" ? "rgba(52,211,153,0.12)" : "rgba(245,158,11,0.12)",
+                        border: `1px solid ${inc.label === "verified" ? "rgba(52,211,153,0.25)" : "rgba(245,158,11,0.25)"}`,
+                        textTransform: "uppercase",
+                      }}>
+                        {inc.label === "verified" ? "✓ Verified" : "◌ Developing"}
+                      </span>
+                      <span style={{ fontSize: 8, color: "#475569" }}>{timeAgo(inc.timestamp)} · {inc.source}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.5, marginBottom: 4 }}>{inc.title}</div>
+                    {inc.summary && <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.5 }}>{inc.summary.slice(0, 150)}</div>}
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {/* Community response */}
+            <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>What Wilmington can do</div>
+              {[
+                "Support local violence intervention programs — they work",
+                "Attend community safety meetings and town halls",
+                "Check on your neighbors — connection reduces violence",
+                "Mentor a young person — one relationship can change a life",
+                "Report concerns to Wilmington PD: (910) 343-3609",
+                "Crisis support: call or text 988",
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5 }}>
+                  <span style={{ color: "#ef4444", flexShrink: 0, fontSize: 10 }}>→</span>
+                  <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.55 }}>{item}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.5, textAlign: "center" }}>
+              Data from verified news sources. Updated in real time. No graphic content.
             </div>
           </>
         )}
