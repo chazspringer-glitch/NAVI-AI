@@ -1,19 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Food Intelligence — helps users find affordable food, plan meals on a
 // budget, and access emergency food resources.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type FoodTab = "find" | "emergency" | "meals" | "recipe";
+type FoodTab = "find" | "emergency" | "meals" | "recipe" | "market";
 
 const TABS: { key: FoodTab; label: string; icon: string }[] = [
-  { key: "find",      label: "Find Food",  icon: "📍" },
+  { key: "find",      label: "Find",       icon: "📍" },
   { key: "emergency", label: "Emergency",  icon: "🆘" },
-  { key: "meals",     label: "Meal Plans", icon: "🍽️" },
+  { key: "meals",     label: "Meals",      icon: "🍽️" },
   { key: "recipe",    label: "Recipes",    icon: "👨‍🍳" },
+  { key: "market",    label: "Market",     icon: "🥬" },
+];
+
+const BUNDLES = [
+  { name: "Family Veggie Bundle", price: "$25", desc: "Collard greens, sweet potatoes, onions, tomatoes, bell peppers, corn", serves: "Feeds a family of 4", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#34d399", icon: "🥬" },
+  { name: "Fruit Refresh Box", price: "$20", desc: "Apples, oranges, bananas, grapes, strawberries, seasonal melon", serves: "15+ servings of fresh fruit", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#f59e0b", icon: "🍎" },
+  { name: "Starter Singles Box", price: "$12", desc: "Bananas, apples, carrots, potatoes, onions — perfect for 1-2 people", serves: "Great for individuals", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#00d4ff", icon: "🥕" },
+  { name: "Smoothie Pack", price: "$15", desc: "Spinach, bananas, blueberries, strawberries, mangoes — blend-ready", serves: "Makes 8–10 smoothies", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#a855f7", icon: "🫐" },
+  { name: "Southern Roots Bundle", price: "$22", desc: "Collard greens, okra, black-eyed peas, sweet potatoes, cabbage, cornmeal", serves: "Traditional soul food staples", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#C9A227", icon: "🌽" },
+  { name: "Kids Snack Box", price: "$10", desc: "Apple slices, carrot sticks, grapes, celery, cherry tomatoes", serves: "Healthy snacks for the week", pickup: "Weekly pickup · Saturday 9AM–1PM", color: "#f472b6", icon: "🍇" },
 ];
 
 function buildFoodSearchLinks(location: string) {
@@ -84,6 +95,46 @@ export default function FoodIntelPanel({ onClose }: { onClose: () => void }) {
   const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [recipeLoading, setRecipeLoading] = useState(false);
+
+  // Market state (from original Fresh Food panel)
+  const [selectedBundle, setSelectedBundle] = useState<typeof BUNDLES[0] | null>(null);
+  const [formName, setFormName] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formQty, setFormQty] = useState("1");
+  const [formNotes, setFormNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) setUserId(session.user.id);
+    });
+  }, []);
+
+  const handleOrder = async () => {
+    if (!formName.trim() || !formPhone.trim() || !selectedBundle) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/food-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          name: formName,
+          phone: formPhone,
+          bundle_name: selectedBundle.name,
+          quantity: parseInt(formQty) || 1,
+          notes: formNotes,
+        }),
+      });
+      if (res.ok) {
+        setOrderSuccess(true);
+        setFormName(""); setFormPhone(""); setFormQty("1"); setFormNotes("");
+      }
+    } catch { /* silent */ }
+    finally { setSubmitting(false); }
+  };
 
   const handleFoodSearch = () => {
     if (!location.trim()) return;
@@ -314,6 +365,78 @@ export default function FoodIntelPanel({ onClose }: { onClose: () => void }) {
               <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.12)" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#C9A227", marginBottom: 8 }}>Your Recipe</div>
                 <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{recipe}</div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── FRESH FOOD MARKET ─────────────────────────────────────────── */}
+        {activeTab === "market" && (
+          <>
+            <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)" }}>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+                <span style={{ color: "#34d399", fontWeight: 700 }}>NAVI:</span> Affordable, farm-fresh produce delivered to your community. Pick a bundle, place your order, and pick up on Saturday.
+              </div>
+            </div>
+
+            {orderSuccess ? (
+              <div style={{ textAlign: "center", padding: "30px 0" }}>
+                <div style={{ fontSize: 36, marginBottom: 10 }}>✅</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#34d399", marginBottom: 4 }}>Order placed!</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 14 }}>You{"'"}ll receive a confirmation. See you Saturday!</div>
+                <button onClick={() => { setOrderSuccess(false); setSelectedBundle(null); }}
+                  style={{ padding: "8px 20px", borderRadius: 8, background: "rgba(52,211,153,0.10)", border: "1px solid rgba(52,211,153,0.25)", color: "#34d399", fontSize: 10, fontWeight: 700, fontFamily: "monospace", cursor: "pointer" }}>
+                  Order Another
+                </button>
+              </div>
+            ) : !selectedBundle ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {BUNDLES.map((b) => (
+                  <button key={b.name} onClick={() => setSelectedBundle(b)} style={{
+                    padding: "14px", borderRadius: 14, cursor: "pointer", textAlign: "left",
+                    background: `${b.color}06`, border: `1px solid ${b.color}18`,
+                    fontFamily: "monospace", width: "100%",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 20 }}>{b.icon}</span>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{b.name}</div>
+                      </div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: b.color }}>{b.price}</div>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5, marginBottom: 4 }}>{b.desc}</div>
+                    <div style={{ fontSize: 8, color: "#64748b" }}>{b.serves} · {b.pickup}</div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: "16px", borderRadius: 14, background: `${selectedBundle.color}06`, border: `1px solid ${selectedBundle.color}18` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{selectedBundle.icon} {selectedBundle.name}</div>
+                    <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{selectedBundle.price} · {selectedBundle.serves}</div>
+                  </div>
+                  <button onClick={() => setSelectedBundle(null)} style={{ fontSize: 9, color: "#64748b", background: "none", border: "none", cursor: "pointer", fontFamily: "monospace" }}>← Back</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
+                  <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="Phone number" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <select value={formQty} onChange={(e) => setFormQty(e.target.value)} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }}>
+                      {[1,2,3,4,5].map((n) => <option key={n} value={n}>Qty: {n}</option>)}
+                    </select>
+                  </div>
+                  <input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special notes (optional)" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
+                  <button onClick={handleOrder} disabled={submitting || !formName.trim() || !formPhone.trim()}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 12,
+                      background: formName.trim() && formPhone.trim() ? `linear-gradient(135deg, ${selectedBundle.color}, ${selectedBundle.color}cc)` : "rgba(255,255,255,0.04)",
+                      border: "none", color: formName.trim() && formPhone.trim() ? "#08080f" : "#475569",
+                      fontSize: 13, fontWeight: 700, fontFamily: "monospace", cursor: formName.trim() && formPhone.trim() ? "pointer" : "default",
+                    }}>
+                    {submitting ? "Placing order…" : `Order ${selectedBundle.name} →`}
+                  </button>
+                </div>
               </div>
             )}
           </>
