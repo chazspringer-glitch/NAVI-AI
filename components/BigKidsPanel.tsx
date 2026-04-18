@@ -104,6 +104,110 @@ const READING_PASSAGES = [
   },
 ];
 
+// ── Life Skills quest content ───────────────────────────────────────────────
+const LIFE_SKILLS_QUESTS = [
+  {
+    title: "Making Change",
+    text: "You buy a snack that costs $3.25 and you pay with a $5 bill.",
+    question: "How much change should you get back?",
+    choices: ["$1.25", "$1.75", "$2.75", "$2.25"],
+    answer: 1,
+    difficulty: 1,
+  },
+  {
+    title: "Telling Time",
+    text: "Your soccer practice starts at 4:30 PM. It takes 20 minutes to walk there and 10 minutes to get ready.",
+    question: "What time should you start getting ready?",
+    choices: ["4:00 PM", "4:10 PM", "3:50 PM", "4:00 PM"],
+    answer: 0,
+    difficulty: 1,
+  },
+  {
+    title: "Grocery Budget",
+    text: "You have $10 to buy lunch supplies for the week. Bread costs $2.50, peanut butter costs $3.00, and jelly costs $2.00. You also want chips for $2.50.",
+    question: "Can you buy everything?",
+    choices: ["Yes, with money left over", "Yes, exactly $10", "No, you're $0.50 short", "No, you're $1.00 short"],
+    answer: 2,
+    difficulty: 2,
+  },
+  {
+    title: "Emergency Numbers",
+    text: "Knowing who to call in an emergency can save a life. The most important number to remember is 911 — it connects you to police, fire, and ambulance services anywhere in the United States.",
+    question: "When should you call 911?",
+    choices: ["When you're bored", "When someone is in danger or seriously hurt", "When you need homework help", "When your friend is late"],
+    answer: 1,
+    difficulty: 1,
+  },
+  {
+    title: "Saving vs Spending",
+    text: "Jaylen earns $20 mowing lawns. He wants a video game that costs $40. His mom says if he saves half his earnings each time, she'll match what he saves.",
+    question: "How many times does Jaylen need to mow lawns to afford the game with his mom's match?",
+    choices: ["4 times", "2 times", "3 times", "5 times"],
+    answer: 1,
+    difficulty: 2,
+  },
+  {
+    title: "Reading a Recipe",
+    text: "A recipe for 4 servings of pasta needs 2 cups of noodles, 1 cup of sauce, and half a cup of cheese. You're cooking for 8 people.",
+    question: "How much sauce do you need?",
+    choices: ["1 cup", "1.5 cups", "2 cups", "3 cups"],
+    answer: 2,
+    difficulty: 3,
+  },
+];
+
+// ── Problem Solving quest content ───────────────────────────────────────────
+const PROBLEM_SOLVING_QUESTS = [
+  {
+    title: "Pattern Finder",
+    text: "Look at this pattern: 2, 4, 8, 16, ___",
+    question: "What number comes next?",
+    choices: ["18", "24", "32", "20"],
+    answer: 2,
+    difficulty: 1,
+  },
+  {
+    title: "Shape Logic",
+    text: "A square has 4 sides. A triangle has 3 sides. A pentagon has 5 sides.",
+    question: "How many sides does a hexagon have?",
+    choices: ["4", "5", "6", "7"],
+    answer: 2,
+    difficulty: 1,
+  },
+  {
+    title: "Code Breaker",
+    text: "In a secret code, A=1, B=2, C=3, and so on. Your friend sends you the message: 8-9.",
+    question: "What does 8-9 spell?",
+    choices: ["GO", "HI", "NO", "IT"],
+    answer: 1,
+    difficulty: 2,
+  },
+  {
+    title: "Logic Puzzle",
+    text: "Three friends — Mia, Noah, and Ava — each have a different pet: a cat, a dog, and a fish. Mia doesn't like dogs. Noah is allergic to cats. Ava has the fish.",
+    question: "What pet does Mia have?",
+    choices: ["Dog", "Fish", "Cat", "Bird"],
+    answer: 2,
+    difficulty: 2,
+  },
+  {
+    title: "Number Sequence",
+    text: "Look at this pattern: 1, 1, 2, 3, 5, 8, ___. Each number is the sum of the two before it.",
+    question: "What comes next?",
+    choices: ["10", "11", "13", "15"],
+    answer: 2,
+    difficulty: 3,
+  },
+  {
+    title: "The Bridge Problem",
+    text: "Four people need to cross a bridge at night with one flashlight. The bridge holds only 2 people at a time. Person A crosses in 1 minute, B in 2 minutes, C in 5 minutes, and D in 10 minutes. When two cross, they go at the slower person's speed.",
+    question: "What is the fastest everyone can cross?",
+    choices: ["17 minutes", "19 minutes", "15 minutes", "21 minutes"],
+    answer: 0,
+    difficulty: 3,
+  },
+];
+
 // ── Daily missions ──────────────────────────────────────────────────────────
 const ALL_MISSIONS = [
   { id: "math3",    label: "Solve 3 math problems",         icon: "🔢", xp: 20, subject: "math",    target: 3 },
@@ -268,6 +372,22 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
 
   const currentPassage = READING_PASSAGES[readingIdx % READING_PASSAGES.length];
 
+  // Life Skills quest state
+  const [lifeIdx, setLifeIdx] = useState(0);
+  const [lifeFeedback, setLifeFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [lifeScore, setLifeScore] = useState(0);
+  const [lifeTotal, setLifeTotal] = useState(0);
+  const [lifeStarted, setLifeStarted] = useState(false);
+  const currentLife = LIFE_SKILLS_QUESTS[lifeIdx % LIFE_SKILLS_QUESTS.length];
+
+  // Problem Solving quest state
+  const [puzzleIdx, setPuzzleIdx] = useState(0);
+  const [puzzleFeedback, setPuzzleFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [puzzleScore, setPuzzleScore] = useState(0);
+  const [puzzleTotal, setPuzzleTotal] = useState(0);
+  const [puzzleStarted, setPuzzleStarted] = useState(false);
+  const currentPuzzle = PROBLEM_SOLVING_QUESTS[puzzleIdx % PROBLEM_SOLVING_QUESTS.length];
+
   const checkReadingAnswer = (choiceIdx: number) => {
     if (readingFeedback) return;
     const correct = choiceIdx === currentPassage.answer;
@@ -285,6 +405,34 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
   const nextPassage = () => {
     setReadingIdx((i) => i + 1);
     setReadingFeedback(null);
+  };
+
+  const checkLifeAnswer = (choiceIdx: number) => {
+    if (lifeFeedback) return;
+    const correct = choiceIdx === currentLife.answer;
+    if (correct) {
+      const pts = currentLife.difficulty * 15;
+      setLifeScore((s) => s + pts);
+      addXP(pts, "life");
+      setLifeFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
+    } else {
+      setLifeFeedback({ correct: false, message: TRYAGAINS[Math.floor(Math.random() * TRYAGAINS.length)] });
+    }
+    setLifeTotal((t) => t + 1);
+  };
+
+  const checkPuzzleAnswer = (choiceIdx: number) => {
+    if (puzzleFeedback) return;
+    const correct = choiceIdx === currentPuzzle.answer;
+    if (correct) {
+      const pts = currentPuzzle.difficulty * 15;
+      setPuzzleScore((s) => s + pts);
+      addXP(pts, "problem");
+      setPuzzleFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
+    } else {
+      setPuzzleFeedback({ correct: false, message: TRYAGAINS[Math.floor(Math.random() * TRYAGAINS.length)] });
+    }
+    setPuzzleTotal((t) => t + 1);
   };
 
   const checkMathAnswer = (choice: number) => {
@@ -709,13 +857,92 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
                 </>
               )}
 
-              {/* Placeholder for other subjects (Parts 4+) */}
-              {selectedSubject !== "math" && selectedSubject !== "reading" && (
-                <div style={{ textAlign: "center", padding: "30px 0" }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>🚀</div>
-                  <div style={{ fontSize: 12, color: subj.color, fontWeight: 700 }}>Quests loading soon!</div>
-                  <div style={{ fontSize: 10, color: "#64748b", marginTop: 4 }}>Interactive {subj.label.toLowerCase()} challenges are on the way.</div>
-                </div>
+              {/* ── Life Skills Quests ─────────────────────────────────────── */}
+              {selectedSubject === "life" && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 10, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
+                    <div style={{ fontSize: 9, color: "#64748b" }}>Challenge {(lifeIdx % LIFE_SKILLS_QUESTS.length) + 1} of {LIFE_SKILLS_QUESTS.length}</div>
+                    <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700 }}>⭐ {lifeScore} XP</div>
+                  </div>
+                  {!lifeStarted ? (
+                    <button onClick={() => setLifeStarted(true)} style={{
+                      width: "100%", padding: "20px", borderRadius: 16, cursor: "pointer",
+                      background: "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(201,162,39,0.06))",
+                      border: "2px solid rgba(245,158,11,0.25)", fontFamily: "monospace", textAlign: "center",
+                    }}>
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>🌟</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#f59e0b" }}>Start Life Skills Quest!</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>Money, time, and everyday smarts</div>
+                    </button>
+                  ) : (
+                    <div style={{ padding: "18px 16px", borderRadius: 18, background: "linear-gradient(160deg, rgba(16,16,28,0.95) 0%, rgba(10,10,20,0.95) 100%)", border: `2px solid ${lifeFeedback ? (lifeFeedback.correct ? "#34d39960" : "#f8717160") : "#f59e0b30"}` }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b", marginBottom: 10 }}>🌟 {currentLife.title}</div>
+                      <div style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.8, marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.10)" }}>
+                        {currentLife.text}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 12 }}>{currentLife.question}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                        {currentLife.choices.map((c, i) => {
+                          let bg = "rgba(255,255,255,0.04)"; let border = "1px solid rgba(255,255,255,0.10)"; let color = "#f1f5f9";
+                          if (lifeFeedback) {
+                            if (i === currentLife.answer) { bg = "rgba(52,211,153,0.15)"; border = "1px solid #34d399"; color = "#34d399"; }
+                            else if (!lifeFeedback.correct) { color = "#64748b"; }
+                          }
+                          return (<button key={i} onClick={() => checkLifeAnswer(i)} disabled={!!lifeFeedback} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, cursor: lifeFeedback ? "default" : "pointer", background: bg, border, fontFamily: "monospace", fontSize: 11, color, textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "#475569", flexShrink: 0 }}>{String.fromCharCode(65 + i)}.</span>{c}
+                          </button>);
+                        })}
+                      </div>
+                      {lifeFeedback && <div style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: lifeFeedback.correct ? "#34d399" : "#f87171", marginBottom: 12 }}>{lifeFeedback.message}</div>}
+                      {lifeFeedback && <div style={{ textAlign: "center" }}><button onClick={() => { setLifeIdx((i) => i + 1); setLifeFeedback(null); }} style={{ padding: "12px 28px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "#08080f", fontSize: 13, fontWeight: 700, fontFamily: "monospace", cursor: "pointer" }}>Next Challenge →</button></div>}
+                    </div>
+                  )}
+                  {lifeTotal > 0 && <div style={{ textAlign: "center", fontSize: 9, color: "#64748b" }}>{lifeTotal} challenges answered</div>}
+                </>
+              )}
+
+              {/* ── Problem Solving Quests ──────────────────────────────────── */}
+              {selectedSubject === "problem" && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 10, background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.10)" }}>
+                    <div style={{ fontSize: 9, color: "#64748b" }}>Puzzle {(puzzleIdx % PROBLEM_SOLVING_QUESTS.length) + 1} of {PROBLEM_SOLVING_QUESTS.length}</div>
+                    <div style={{ fontSize: 10, color: "#a855f7", fontWeight: 700 }}>⭐ {puzzleScore} XP</div>
+                  </div>
+                  {!puzzleStarted ? (
+                    <button onClick={() => setPuzzleStarted(true)} style={{
+                      width: "100%", padding: "20px", borderRadius: 16, cursor: "pointer",
+                      background: "linear-gradient(135deg, rgba(168,85,247,0.12), rgba(96,165,250,0.06))",
+                      border: "2px solid rgba(168,85,247,0.25)", fontFamily: "monospace", textAlign: "center",
+                    }}>
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>🧩</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#a855f7" }}>Start Puzzle Quest!</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>Logic, patterns, and critical thinking</div>
+                    </button>
+                  ) : (
+                    <div style={{ padding: "18px 16px", borderRadius: 18, background: "linear-gradient(160deg, rgba(16,16,28,0.95) 0%, rgba(10,10,20,0.95) 100%)", border: `2px solid ${puzzleFeedback ? (puzzleFeedback.correct ? "#34d39960" : "#f8717160") : "#a855f730"}` }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#a855f7", marginBottom: 10 }}>🧩 {currentPuzzle.title}</div>
+                      <div style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.8, marginBottom: 16, padding: "12px 14px", borderRadius: 12, background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.10)" }}>
+                        {currentPuzzle.text}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9", marginBottom: 12 }}>{currentPuzzle.question}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                        {currentPuzzle.choices.map((c, i) => {
+                          let bg = "rgba(255,255,255,0.04)"; let border = "1px solid rgba(255,255,255,0.10)"; let color = "#f1f5f9";
+                          if (puzzleFeedback) {
+                            if (i === currentPuzzle.answer) { bg = "rgba(52,211,153,0.15)"; border = "1px solid #34d399"; color = "#34d399"; }
+                            else if (!puzzleFeedback.correct) { color = "#64748b"; }
+                          }
+                          return (<button key={i} onClick={() => checkPuzzleAnswer(i)} disabled={!!puzzleFeedback} style={{ width: "100%", padding: "12px 14px", borderRadius: 12, cursor: puzzleFeedback ? "default" : "pointer", background: bg, border, fontFamily: "monospace", fontSize: 11, color, textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "#475569", flexShrink: 0 }}>{String.fromCharCode(65 + i)}.</span>{c}
+                          </button>);
+                        })}
+                      </div>
+                      {puzzleFeedback && <div style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: puzzleFeedback.correct ? "#34d399" : "#f87171", marginBottom: 12 }}>{puzzleFeedback.message}</div>}
+                      {puzzleFeedback && <div style={{ textAlign: "center" }}><button onClick={() => { setPuzzleIdx((i) => i + 1); setPuzzleFeedback(null); }} style={{ padding: "12px 28px", borderRadius: 12, background: "linear-gradient(135deg, #a855f7, #7c3aed)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "monospace", cursor: "pointer" }}>Next Puzzle →</button></div>}
+                    </div>
+                  )}
+                  {puzzleTotal > 0 && <div style={{ textAlign: "center", fontSize: 9, color: "#64748b" }}>{puzzleTotal} puzzles attempted</div>}
+                </>
               )}
             </>
           );
