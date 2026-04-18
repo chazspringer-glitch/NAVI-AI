@@ -410,8 +410,60 @@ export default function LegalNavigatorPanel({ onClose }: { onClose: () => void }
             </>
           );
         })()}
+        {/* ── KNOW YOUR RIGHTS ────────────────────────────────────────── */}
         {activeTab === "rights" && (
-          <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>Know Your Rights — coming next</div>
+          <>
+            <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+                <span style={{ color: "#60a5fa", fontWeight: 700 }}>NAVI:</span> These are your fundamental rights under U.S. law. Know them before you need them.
+              </div>
+            </div>
+
+            {[
+              { title: "Right to remain silent", body: "The Fifth Amendment protects you from self-incrimination. You do not have to answer questions from police, investigators, or government agents. Say: \"I am exercising my right to remain silent.\" This applies whether you are arrested or not.", icon: "🤐", color: "#60a5fa" },
+              { title: "Right to an attorney", body: "The Sixth Amendment guarantees your right to legal counsel. If you cannot afford an attorney, one will be appointed to you (public defender). Always say: \"I want to speak to a lawyer\" before answering any questions after arrest.", icon: "👨‍⚖️", color: "#60a5fa" },
+              { title: "Right to refuse a search", body: "The Fourth Amendment protects you from unreasonable searches. Police generally need a warrant or your consent to search your home, car, or person. Say: \"I do not consent to this search.\" Do NOT physically resist — assert your rights verbally and note the violation for your attorney.", icon: "🚫", color: "#34d399" },
+              { title: "Right to record police", body: "In all 50 states, you can legally record police officers performing their duties in public. You may NOT interfere with their work while recording. Keep a safe distance and stay calm. Your recording can be critical evidence.", icon: "📹", color: "#34d399" },
+              { title: "Right to know why you're being stopped", body: "Officers must have reasonable suspicion to stop you and probable cause to arrest you. Ask: \"Am I being detained, or am I free to go?\" If detained, ask: \"What is the reason for this stop?\"", icon: "❓", color: "#C9A227" },
+              { title: "Right to due process", body: "The Fourteenth Amendment guarantees that the government cannot deprive you of life, liberty, or property without due process of law. This means fair hearings, notice of charges, and the opportunity to be heard.", icon: "⚖️", color: "#C9A227" },
+              { title: "Right to a speedy trial", body: "The Sixth Amendment guarantees your right to a speedy and public trial. You cannot be held indefinitely without being charged or tried. If you feel your case is being unreasonably delayed, your attorney can file a motion.", icon: "⏱️", color: "#a855f7" },
+              { title: "Right to equal protection", body: "The Fourteenth Amendment guarantees equal protection under the law regardless of race, gender, religion, or national origin. If you believe you've been discriminated against by a government entity, you may have a civil rights claim.", icon: "🤝", color: "#a855f7" },
+              { title: "What to do during a police encounter", body: "Stay calm. Keep your hands visible. Do not run or resist. State your rights clearly and calmly. Ask if you are free to leave. Do not consent to searches. Request an attorney before answering questions. Remember badge numbers and officer names. Write down everything as soon as possible.", icon: "🛡️", color: "#ef4444" },
+              { title: "What to do if your rights are violated", body: "Document everything immediately — date, time, location, badge numbers, witnesses. File a complaint with the department's Internal Affairs division. File a complaint with the DOJ Civil Rights Division at civilrights.justice.gov. Contact the ACLU or NAACP. Consult a civil rights attorney.", icon: "📋", color: "#ef4444" },
+            ].map((r) => (
+              <div key={r.title} style={{ padding: "14px 16px", borderRadius: 14, background: `${r.color}06`, border: `1px solid ${r.color}15` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 18 }}>{r.icon}</span>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.title}</div>
+                </div>
+                <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.65 }}>{r.body}</div>
+              </div>
+            ))}
+
+            {/* Resources */}
+            <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#60a5fa", marginBottom: 10 }}>🔗 Legal Resources</div>
+              {[
+                { label: "ACLU — Know Your Rights", url: "https://www.aclu.org/know-your-rights", desc: "Comprehensive rights guide" },
+                { label: "LawHelp.org", url: "https://www.lawhelp.org/", desc: "Free legal help by state" },
+                { label: "LegalAid.org", url: "https://www.legalaid.org/", desc: "Find free legal services" },
+                { label: "DOJ Civil Rights", url: "https://civilrights.justice.gov/", desc: "File federal complaints" },
+                { label: "ABA Free Legal Answers", url: "https://abafreelegalanswers.org/", desc: "Free attorney Q&A for qualifying individuals" },
+              ].map((r) => (
+                <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(96,165,250,0.10)" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: "#60a5fa" }}>{r.label}</div>
+                      <div style={{ fontSize: 8, color: "#64748b", marginTop: 1 }}>{r.desc}</div>
+                    </div>
+                    <span style={{ fontSize: 10, color: "#475569" }}>↗</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.6 }}>⚖️ {DISCLAIMER}</div>
+          </>
         )}
       </div>
     </div>
