@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 const SUBJECTS = [
   { id: "math",     label: "Math",            icon: "🔢", color: "#00d4ff", desc: "Numbers, counting, and puzzles" },
@@ -104,8 +104,65 @@ const READING_PASSAGES = [
   },
 ];
 
+// ── XP + Level system ───────────────────────────────────────────────────────
+const LEVELS = [
+  { level: 1,  title: "Beginner",    xpNeeded: 0,    icon: "🌱" },
+  { level: 2,  title: "Explorer",    xpNeeded: 50,   icon: "🔍" },
+  { level: 3,  title: "Adventurer",  xpNeeded: 150,  icon: "🗺️" },
+  { level: 4,  title: "Scholar",     xpNeeded: 300,  icon: "📚" },
+  { level: 5,  title: "Hero",        xpNeeded: 500,  icon: "🦸" },
+  { level: 6,  title: "Champion",    xpNeeded: 800,  icon: "🏆" },
+  { level: 7,  title: "Master",      xpNeeded: 1200, icon: "👑" },
+  { level: 8,  title: "Legend",      xpNeeded: 1800, icon: "⭐" },
+];
+
+function getLevelInfo(totalXP: number) {
+  let current = LEVELS[0];
+  let next = LEVELS[1];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (totalXP >= LEVELS[i].xpNeeded) {
+      current = LEVELS[i];
+      next = LEVELS[i + 1] ?? LEVELS[i];
+      break;
+    }
+  }
+  const xpInLevel = totalXP - current.xpNeeded;
+  const xpForNext = next.xpNeeded - current.xpNeeded;
+  const progress = xpForNext > 0 ? Math.min(100, Math.round((xpInLevel / xpForNext) * 100)) : 100;
+  return { current, next, progress, xpInLevel, xpForNext };
+}
+
+const LS_KEY_XP = "navi-bigkids-xp";
+function loadSavedXP(): number {
+  if (typeof window === "undefined") return 0;
+  try { return parseInt(localStorage.getItem(LS_KEY_XP) ?? "0", 10) || 0; } catch { return 0; }
+}
+function saveXP(xp: number) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(LS_KEY_XP, String(xp)); } catch { /* ignore */ }
+}
+
 export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [totalXP, setTotalXP] = useState(() => loadSavedXP());
+  const [levelUpMsg, setLevelUpMsg] = useState<string | null>(null);
+  const prevLevelRef = useRef(getLevelInfo(loadSavedXP()).current.level);
+
+  // Centralized XP adder — checks for level-up
+  const addXP = useCallback((pts: number) => {
+    setTotalXP((prev) => {
+      const next = prev + pts;
+      saveXP(next);
+      const newLevel = getLevelInfo(next).current.level;
+      if (newLevel > prevLevelRef.current) {
+        const info = getLevelInfo(next);
+        setLevelUpMsg(`🎉 Level ${newLevel} — ${info.current.title}! ${info.current.icon}`);
+        setTimeout(() => setLevelUpMsg(null), 3000);
+        prevLevelRef.current = newLevel;
+      }
+      return next;
+    });
+  }, []);
 
   // Math quest state
   const [mathDifficulty, setMathDifficulty] = useState(1);
@@ -135,6 +192,7 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     if (correct) {
       const pts = currentPassage.difficulty * 15;
       setReadingScore((s) => s + pts);
+      addXP(pts);
       setReadingFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
     } else {
       setReadingFeedback({ correct: false, message: TRYAGAINS[Math.floor(Math.random() * TRYAGAINS.length)] });
@@ -153,6 +211,7 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     if (correct) {
       const pts = mathDifficulty * 10;
       setMathScore((s) => s + pts);
+      addXP(pts);
       setMathStreak((s) => s + 1);
       setMathFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
       // Auto-level up after 3 streak
@@ -192,21 +251,65 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 32px", display: "flex", flexDirection: "column", gap: 14 }}>
 
+        {/* Level-up celebration */}
+        {levelUpMsg && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+            padding: "14px 16px", textAlign: "center",
+            background: "linear-gradient(135deg, rgba(0,212,255,0.20), rgba(168,85,247,0.15))",
+            borderBottom: "1px solid rgba(0,212,255,0.30)",
+            fontSize: 16, fontWeight: 800, color: "#f1f5f9",
+            animation: "overlayIn 0.3s ease",
+          }}>
+            {levelUpMsg}
+          </div>
+        )}
+
         {/* Welcome */}
-        {!selectedSubject && (
+        {!selectedSubject && (() => {
+          const lvl = getLevelInfo(totalXP);
+          return (
           <>
+            {/* XP + Level card */}
             <div style={{
-              textAlign: "center", padding: "24px 16px",
-              borderRadius: 18,
+              padding: "16px", borderRadius: 18,
               background: "linear-gradient(135deg, rgba(0,212,255,0.08), rgba(168,85,247,0.05))",
               border: "1px solid rgba(0,212,255,0.15)",
             }}>
-              <div style={{ fontSize: 48, marginBottom: 10 }}>👋</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9", marginBottom: 6 }}>
-                Hey there, explorer!
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 28 }}>{lvl.current.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#f1f5f9" }}>Level {lvl.current.level} — {lvl.current.title}</div>
+                    <div style={{ fontSize: 9, color: "#64748b", marginTop: 1 }}>Total: {totalXP} XP</div>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.7 }}>
-                Pick a subject to start your quest. Complete challenges to earn XP and level up!
+              {/* Progress bar */}
+              <div style={{ marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 8, color: "#64748b" }}>Lv {lvl.current.level}</span>
+                  <span style={{ fontSize: 8, color: "#64748b" }}>Lv {lvl.next.level}</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                  <div style={{
+                    width: `${lvl.progress}%`, height: "100%", borderRadius: 4,
+                    background: "linear-gradient(90deg, #00d4ff, #a855f7)",
+                    transition: "width 0.5s ease",
+                  }} />
+                </div>
+                <div style={{ fontSize: 8, color: "#475569", textAlign: "center", marginTop: 4 }}>
+                  {lvl.xpForNext - lvl.xpInLevel > 0 ? `${lvl.xpForNext - lvl.xpInLevel} XP to next level` : "Max level!"}
+                </div>
+              </div>
+              {/* Welcome message */}
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
+                  {totalXP === 0 ? "Hey there, explorer! 👋" : `Welcome back, ${lvl.current.title}! 👋`}
+                </div>
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>
+                  Pick a subject to start your quest.
+                </div>
               </div>
             </div>
 
@@ -242,9 +345,10 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
               ))}
             </div>
           </>
-        )}
+          );
+        })()}
 
-        {/* Subject selected — quest placeholder (Part 2+) */}
+        {/* Subject selected */}
         {selectedSubject && (() => {
           const subj = SUBJECTS.find((s) => s.id === selectedSubject)!;
           return (
