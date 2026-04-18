@@ -104,6 +104,59 @@ const READING_PASSAGES = [
   },
 ];
 
+// ── Daily missions ──────────────────────────────────────────────────────────
+const ALL_MISSIONS = [
+  { id: "math3",    label: "Solve 3 math problems",         icon: "🔢", xp: 20, subject: "math",    target: 3 },
+  { id: "math5",    label: "Solve 5 math problems",         icon: "🔢", xp: 35, subject: "math",    target: 5 },
+  { id: "read2",    label: "Read 2 stories",                icon: "📖", xp: 25, subject: "reading", target: 2 },
+  { id: "read3",    label: "Read 3 stories",                icon: "📖", xp: 40, subject: "reading", target: 3 },
+  { id: "streak3",  label: "Get a 3-problem math streak",   icon: "🔥", xp: 30, subject: "math",    target: 3 },
+  { id: "xp50",     label: "Earn 50 XP today",              icon: "⭐", xp: 15, subject: "any",     target: 50 },
+  { id: "xp100",    label: "Earn 100 XP today",             icon: "💪", xp: 25, subject: "any",     target: 100 },
+  { id: "try2",     label: "Try 2 different subjects",       icon: "🎯", xp: 20, subject: "any",     target: 2 },
+];
+
+function getDailyMissions(): typeof ALL_MISSIONS {
+  // Pick 3 missions deterministically based on the date so they're the same all day
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const shuffled = [...ALL_MISSIONS].sort((a, b) => {
+    const ha = ((seed * 31 + a.id.charCodeAt(0)) % 1000) / 1000;
+    const hb = ((seed * 31 + b.id.charCodeAt(0)) % 1000) / 1000;
+    return ha - hb;
+  });
+  return shuffled.slice(0, 3);
+}
+
+const LS_KEY_MISSIONS = "navi-bigkids-missions";
+
+interface MissionProgress {
+  date: string; // YYYY-MM-DD
+  completed: string[]; // mission ids
+  mathCount: number;
+  readCount: number;
+  xpToday: number;
+  subjectsUsed: string[];
+}
+
+function loadMissionProgress(): MissionProgress {
+  const today = new Date().toISOString().slice(0, 10);
+  if (typeof window === "undefined") return { date: today, completed: [], mathCount: 0, readCount: 0, xpToday: 0, subjectsUsed: [] };
+  try {
+    const raw = localStorage.getItem(LS_KEY_MISSIONS);
+    if (raw) {
+      const parsed = JSON.parse(raw) as MissionProgress;
+      if (parsed.date === today) return parsed;
+    }
+  } catch { /* ignore */ }
+  return { date: today, completed: [], mathCount: 0, readCount: 0, xpToday: 0, subjectsUsed: [] };
+}
+
+function saveMissionProgress(p: MissionProgress) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(LS_KEY_MISSIONS, JSON.stringify(p)); } catch { /* ignore */ }
+}
+
 // ── XP + Level system ───────────────────────────────────────────────────────
 const LEVELS = [
   { level: 1,  title: "Beginner",    xpNeeded: 0,    icon: "🌱" },
@@ -147,9 +200,11 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
   const [totalXP, setTotalXP] = useState(() => loadSavedXP());
   const [levelUpMsg, setLevelUpMsg] = useState<string | null>(null);
   const prevLevelRef = useRef(getLevelInfo(loadSavedXP()).current.level);
+  const [missionProgress, setMissionProgress] = useState(() => loadMissionProgress());
+  const dailyMissions = getDailyMissions();
 
-  // Centralized XP adder — checks for level-up
-  const addXP = useCallback((pts: number) => {
+  // Centralized XP adder — checks for level-up + updates mission progress
+  const addXP = useCallback((pts: number, subject?: string) => {
     setTotalXP((prev) => {
       const next = prev + pts;
       saveXP(next);
@@ -161,6 +216,33 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
         prevLevelRef.current = newLevel;
       }
       return next;
+    });
+    // Update mission tracking
+    setMissionProgress((prev) => {
+      const updated = { ...prev, xpToday: prev.xpToday + pts };
+      if (subject === "math") updated.mathCount = prev.mathCount + 1;
+      if (subject === "reading") updated.readCount = prev.readCount + 1;
+      if (subject && !prev.subjectsUsed.includes(subject)) {
+        updated.subjectsUsed = [...prev.subjectsUsed, subject];
+      }
+      // Check mission completions
+      for (const m of getDailyMissions()) {
+        if (updated.completed.includes(m.id)) continue;
+        let done = false;
+        if (m.id.startsWith("math") && m.subject === "math") done = updated.mathCount >= m.target;
+        else if (m.id.startsWith("read") && m.subject === "reading") done = updated.readCount >= m.target;
+        else if (m.id === "streak3") done = false; // handled separately
+        else if (m.id === "xp50") done = updated.xpToday >= 50;
+        else if (m.id === "xp100") done = updated.xpToday >= 100;
+        else if (m.id === "try2") done = updated.subjectsUsed.length >= 2;
+        if (done) {
+          updated.completed = [...updated.completed, m.id];
+          // Bonus XP for completing mission
+          setTotalXP((p) => { const n = p + m.xp; saveXP(n); return n; });
+        }
+      }
+      saveMissionProgress(updated);
+      return updated;
     });
   }, []);
 
@@ -192,7 +274,7 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     if (correct) {
       const pts = currentPassage.difficulty * 15;
       setReadingScore((s) => s + pts);
-      addXP(pts);
+      addXP(pts, "reading");
       setReadingFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
     } else {
       setReadingFeedback({ correct: false, message: TRYAGAINS[Math.floor(Math.random() * TRYAGAINS.length)] });
@@ -211,7 +293,7 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     if (correct) {
       const pts = mathDifficulty * 10;
       setMathScore((s) => s + pts);
-      addXP(pts);
+      addXP(pts, "math");
       setMathStreak((s) => s + 1);
       setMathFeedback({ correct: true, message: ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)] + ` +${pts} XP` });
       // Auto-level up after 3 streak
@@ -311,6 +393,49 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
                   Pick a subject to start your quest.
                 </div>
               </div>
+            </div>
+
+            {/* Daily Missions */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(201,162,39,0.03))",
+              border: "1px solid rgba(245,158,11,0.15)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b" }}>🎯 Daily Missions</div>
+                <div style={{ fontSize: 8, color: "#64748b" }}>{missionProgress.completed.length}/{dailyMissions.length} done</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {dailyMissions.map((m) => {
+                  const done = missionProgress.completed.includes(m.id);
+                  return (
+                    <div key={m.id} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 10px", borderRadius: 10,
+                      background: done ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.02)",
+                      border: done ? "1px solid rgba(52,211,153,0.20)" : "1px solid rgba(255,255,255,0.06)",
+                    }}>
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{done ? "✅" : m.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontSize: 10, fontWeight: 600,
+                          color: done ? "#34d399" : "#e2e8f0",
+                          textDecoration: done ? "line-through" : "none",
+                        }}>{m.label}</div>
+                      </div>
+                      <span style={{
+                        fontSize: 9, fontWeight: 700,
+                        color: done ? "#34d399" : "#f59e0b",
+                      }}>+{m.xp} XP</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {missionProgress.completed.length === dailyMissions.length && (
+                <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, fontWeight: 700, color: "#34d399" }}>
+                  🎉 All missions complete! Come back tomorrow!
+                </div>
+              )}
             </div>
 
             {/* Subject cards */}
