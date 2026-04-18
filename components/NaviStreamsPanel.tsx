@@ -314,15 +314,26 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
                 <input value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="Paste YouTube Live or Twitch embed URL"
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
 
-                {/* YouTube Live quick-start guide */}
+                {/* Streaming quick-start guide */}
                 <div style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
                   <div style={{ fontSize: 9, fontWeight: 700, color: "#ef4444", marginBottom: 6 }}>📡 How to stream from your camera:</div>
+
+                  <div style={{ fontSize: 9, fontWeight: 600, color: "#a855f7", marginBottom: 3, marginTop: 6 }}>Option 1 — Facebook Live</div>
                   <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.6 }}>
-                    1. Go to <a href="https://youtube.com/live" target="_blank" rel="noopener noreferrer" style={{ color: "#ef4444", textDecoration: "underline" }}>youtube.com/live</a> → click "Go Live" → select "Webcam"{"\n"}
-                    2. Add your title → click "Go Live"{"\n"}
-                    3. Copy the video URL from the address bar{"\n"}
-                    4. Replace "watch?v=" with "embed/" and paste above{"\n"}
-                    <span style={{ color: "#64748b" }}>Example: youtube.com/embed/abc123</span>
+                    1. Go to your <a href="https://www.facebook.com/live/producer" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "underline" }}>Facebook Page → Live Video</a>{"\n"}
+                    2. Select "Use Camera" → add title → Go Live{"\n"}
+                    3. Click ⋯ on the video → Embed → copy the URL{"\n"}
+                    4. Paste above{"\n"}
+                    <span style={{ color: "#64748b" }}>Format: facebook.com/plugins/video.php?href=...</span>
+                  </div>
+
+                  <div style={{ fontSize: 9, fontWeight: 600, color: "#ef4444", marginBottom: 3, marginTop: 8 }}>Option 2 — YouTube Live</div>
+                  <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.6 }}>
+                    1. Go to <a href="https://youtube.com/live" target="_blank" rel="noopener noreferrer" style={{ color: "#ef4444", textDecoration: "underline" }}>youtube.com/live</a> → "Go Live" → "Webcam"{"\n"}
+                    2. Add title → Go Live{"\n"}
+                    3. Copy video URL → replace "watch?v=" with "embed/"{"\n"}
+                    4. Paste above{"\n"}
+                    <span style={{ color: "#64748b" }}>Format: youtube.com/embed/abc123</span>
                   </div>
                 </div>
 
