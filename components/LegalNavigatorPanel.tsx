@@ -234,9 +234,121 @@ export default function LegalNavigatorPanel({ onClose }: { onClose: () => void }
         )}
 
         {/* Placeholder for other tabs — will be added in parts 2-4 */}
-        {activeTab === "understand" && (
-          <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>Case Understanding — coming next</div>
-        )}
+        {/* ── UNDERSTAND YOUR CASE ────────────────────────────────────── */}
+        {activeTab === "understand" && (() => {
+          const selected = CASE_TYPES.find((c) => c.id === caseType);
+          const CASE_INFO: Record<string, { overview: string; timeline: string[]; nextSteps: string[] }> = {
+            family: {
+              overview: "Family law covers divorce, child custody, child support, alimony, adoption, and domestic violence protection orders. These cases are handled in family court and often involve mediation before trial.",
+              timeline: ["Consultation with attorney (Week 1)", "File petition with court (Week 2–3)", "Serve the other party (Week 3–4)", "Response period (30 days)", "Discovery / mediation (Month 2–4)", "Trial or settlement (Month 4–12)"],
+              nextSteps: ["Gather financial documents (bank statements, tax returns, pay stubs)", "Document custody-related concerns", "List all shared assets and debts", "Consult a family law attorney for a case evaluation"],
+            },
+            criminal: {
+              overview: "Criminal defense covers charges filed by the government against you — misdemeanors or felonies. You have constitutional rights including the right to an attorney. If you can't afford one, a public defender will be assigned.",
+              timeline: ["Arrest / charges filed (Day 1)", "First court appearance / arraignment (24–72 hrs)", "Bail hearing (if applicable)", "Pre-trial motions and discovery (Month 1–3)", "Plea negotiations (ongoing)", "Trial or plea deal (Month 3–12)"],
+              nextSteps: ["Do NOT discuss your case with anyone except your attorney", "Write down exactly what happened while it's fresh", "Gather any evidence (photos, texts, witnesses)", "Request a public defender if you can't afford an attorney"],
+            },
+            housing: {
+              overview: "Tenant law protects your rights as a renter — from illegal evictions to unsafe living conditions. Landlords must follow specific legal procedures to evict you, and you have the right to habitable housing.",
+              timeline: ["Issue arises (Day 1)", "Written notice to landlord (required in most states)", "Landlord response period (7–30 days depending on state)", "File complaint with housing authority if unresolved", "Court hearing if eviction is filed (2–4 weeks after filing)", "Appeal period if judgment entered"],
+              nextSteps: ["Save all written communication with your landlord", "Take photos/video of any housing issues", "Review your lease agreement", "Contact local tenant rights organization"],
+            },
+            employment: {
+              overview: "Employment law covers wrongful termination, workplace discrimination, unpaid wages, harassment, and retaliation. Federal and state laws protect workers from unfair treatment.",
+              timeline: ["Incident occurs (Day 1)", "Internal complaint / HR report (Week 1)", "File EEOC or state agency complaint (within 180–300 days of incident)", "Agency investigation (2–10 months)", "Right to sue letter issued", "Civil lawsuit if needed (6–18 months)"],
+              nextSteps: ["Document everything — dates, witnesses, emails, texts", "File an internal complaint with HR (creates a paper trail)", "Do NOT quit before consulting an attorney", "Check if your employer has more than 15 employees (federal law threshold)"],
+            },
+            immigration: {
+              overview: "Immigration law covers visas, green cards, asylum, deportation defense, DACA, and citizenship. Cases are handled by USCIS (applications) or immigration court (deportation proceedings).",
+              timeline: ["Determine immigration status and options", "File application with USCIS (processing: 6–24 months)", "Biometrics appointment (2–3 months after filing)", "Interview (if required)", "Decision issued", "Appeal if denied (30 days to file)"],
+              nextSteps: ["Never miss a court date or filing deadline", "Keep copies of ALL documents submitted", "Do not sign anything you don't understand", "Consult an immigration attorney — many offer free initial consultations"],
+            },
+            personal: {
+              overview: "Personal injury law covers situations where you're hurt due to someone else's negligence — car accidents, medical malpractice, slip and falls, product defects. Most attorneys work on contingency (no fee unless you win).",
+              timeline: ["Injury occurs (Day 1)", "Seek medical treatment immediately", "Consult a personal injury attorney (free consultation)", "Investigation and evidence gathering (Month 1–3)", "Demand letter / negotiations (Month 3–6)", "Lawsuit filed if no settlement (Month 6–12)", "Trial (Year 1–2)"],
+              nextSteps: ["Get medical treatment and keep all records", "Do NOT give a recorded statement to insurance companies", "Take photos of injuries, accident scene, property damage", "Most personal injury attorneys offer free consultations and work on contingency"],
+            },
+            consumer: {
+              overview: "Consumer law protects you from unfair debt collection, fraud, predatory lending, and identity theft. The Fair Debt Collection Practices Act (FDCPA) gives you specific rights against debt collectors.",
+              timeline: ["Issue identified (Day 1)", "Send written dispute or cease-and-desist letter", "Creditor must verify debt within 30 days", "File complaint with CFPB or FTC if violations found", "Consult attorney if sued or need to file bankruptcy", "Bankruptcy process (if needed): 3–6 months"],
+              nextSteps: ["Request debt validation in writing within 30 days of first contact", "Check your credit reports for errors (annualcreditreport.com)", "Document all communication from collectors", "Know that collectors cannot threaten, harass, or call before 8am or after 9pm"],
+            },
+            civil: {
+              overview: "Civil rights law addresses discrimination based on race, gender, religion, disability, or national origin. It also covers police misconduct, voting rights violations, and First Amendment issues.",
+              timeline: ["Incident occurs (Day 1)", "Document everything immediately", "File complaint with relevant agency (EEOC, DOJ, local human rights commission)", "Agency investigation (2–12 months)", "Right to sue letter or agency action", "Civil lawsuit if needed"],
+              nextSteps: ["Write down exactly what happened, when, where, and who was involved", "Save any evidence (emails, recordings, witness contact info)", "File a complaint with the appropriate agency", "Contact the ACLU, NAACP, or a civil rights attorney"],
+            },
+            business: {
+              overview: "Business law covers contracts, LLC formation, partnerships, intellectual property, and commercial disputes. Having proper legal structure protects your personal assets from business liabilities.",
+              timeline: ["Identify legal need (Day 1)", "Consult a business attorney", "Draft or review documents (1–2 weeks)", "File with state if forming entity (1–4 weeks)", "Ongoing compliance and contract review"],
+              nextSteps: ["Gather all relevant contracts and agreements", "Document the business dispute or need in writing", "Determine if you need formation, litigation, or advisory services", "Many business attorneys offer flat-fee consultations"],
+            },
+            other: {
+              overview: "If you're not sure what kind of legal help you need, that's okay. Many attorneys offer free initial consultations where they can help you understand your situation and what options are available.",
+              timeline: ["Identify and document your situation", "Research attorneys in your area", "Schedule free consultations (most offer 15–30 min)", "Choose an attorney who explains things clearly", "Follow their guidance on next steps"],
+              nextSteps: ["Write down your situation in your own words", "List your key questions", "Search for attorneys on Avvo or your state bar website", "Ask friends or family for referrals"],
+            },
+          };
+          const info = CASE_INFO[caseType || "other"] ?? CASE_INFO.other;
+          return (
+            <>
+              <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+                  <span style={{ color: "#60a5fa", fontWeight: 700 }}>NAVI:</span> {caseType ? `Here's what you should know about ${selected?.label ?? "your"} cases.` : "Select a case type in the Find tab first, or read the general overview below."}
+                </div>
+              </div>
+
+              {/* Case type quick selector */}
+              <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 4 }}>
+                {CASE_TYPES.map((ct) => (
+                  <button key={ct.id} onClick={() => setCaseType(ct.id)} style={{
+                    padding: "5px 10px", borderRadius: 999, whiteSpace: "nowrap",
+                    fontSize: 9, fontFamily: "monospace", cursor: "pointer",
+                    fontWeight: caseType === ct.id ? 700 : 400,
+                    background: caseType === ct.id ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)",
+                    border: caseType === ct.id ? "1px solid rgba(96,165,250,0.40)" : "1px solid rgba(255,255,255,0.06)",
+                    color: caseType === ct.id ? "#60a5fa" : "#64748b",
+                  }}>{ct.icon} {ct.label}</button>
+                ))}
+              </div>
+
+              {/* Overview */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#60a5fa", marginBottom: 8 }}>What you need to know</div>
+                <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.7 }}>{info.overview}</div>
+              </div>
+
+              {/* Timeline */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#34d399", marginBottom: 10 }}>Typical timeline</div>
+                {info.timeline.map((step, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                      background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 8, fontWeight: 700, color: "#34d399",
+                    }}>{i + 1}</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5, paddingTop: 2 }}>{step}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Next steps */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#C9A227", marginBottom: 10 }}>What you should do right now</div>
+                {info.nextSteps.map((step, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: "#C9A227", fontSize: 10, flexShrink: 0, marginTop: 1 }}>→</span>
+                    <div style={{ fontSize: 10, color: "#e2e8f0", lineHeight: 1.55 }}>{step}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.6 }}>⚖️ {DISCLAIMER}</div>
+            </>
+          );
+        })()}
         {activeTab === "prepare" && (
           <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>Preparation Tools — coming next</div>
         )}
