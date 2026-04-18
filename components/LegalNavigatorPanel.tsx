@@ -204,22 +204,59 @@ export default function LegalNavigatorPanel({ onClose }: { onClose: () => void }
 
             {/* Results */}
             {searchResults && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ fontSize: 9, color: "#60a5fa", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
-                  Results for {CASE_TYPES.find((c) => c.id === caseType)?.label} in {location}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 9, color: "#60a5fa", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 2 }}>
+                  {CASE_TYPES.find((c) => c.id === caseType)?.label} lawyers in {location}
+                </div>
+
+                {/* Google Maps embed showing real lawyer results */}
+                <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(96,165,250,0.20)", background: "#000" }}>
+                  <iframe
+                    width="100%"
+                    height="300"
+                    frameBorder="0"
+                    style={{ display: "block", border: "none" }}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent((CASE_TYPES.find((c) => c.id === caseType)?.label ?? "lawyer") + " lawyer near " + location)}&output=embed`}
+                    allowFullScreen
+                    title="Lawyer search results"
+                  />
+                </div>
+                <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.5 }}>
+                  Tap any result on the map for name, address, phone, hours, and reviews. Results are from Google Maps.
+                </div>
+
+                {/* Open full search in Google Maps */}
+                <a
+                  href={`https://www.google.com/maps/search/${encodeURIComponent((CASE_TYPES.find((c) => c.id === caseType)?.label ?? "lawyer") + " lawyer near " + location)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    padding: "10px", borderRadius: 10,
+                    background: "rgba(96,165,250,0.10)",
+                    border: "1px solid rgba(96,165,250,0.25)",
+                    color: "#60a5fa", fontSize: 11, fontWeight: 700,
+                    fontFamily: "monospace", textDecoration: "none",
+                  }}
+                >
+                  📍 Open full map with all results ↗
+                </a>
+
+                {/* Directory links */}
+                <div style={{ fontSize: 9, color: "#475569", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", marginTop: 4 }}>
+                  Also search on
                 </div>
                 {searchResults.map((r) => (
                   <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                     <div style={{
-                      padding: "12px 14px", borderRadius: 12,
-                      background: `${r.color}08`, border: `1px solid ${r.color}20`,
-                      display: "flex", alignItems: "flex-start", gap: 10,
+                      padding: "10px 14px", borderRadius: 10,
+                      background: `${r.color}06`, border: `1px solid ${r.color}18`,
+                      display: "flex", alignItems: "center", gap: 10,
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.label}</div>
-                        <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{r.desc}</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: r.color }}>{r.label}</div>
+                        <div style={{ fontSize: 8, color: "#64748b", marginTop: 1 }}>{r.desc}</div>
                       </div>
-                      <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>↗</span>
+                      <span style={{ fontSize: 10, color: "#475569" }}>↗</span>
                     </div>
                   </a>
                 ))}
