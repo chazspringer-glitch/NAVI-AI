@@ -3051,6 +3051,11 @@ export default function HomePage() {
       {showNewsWeb && (
         <NewsWebPanel
           onClose={() => setShowNewsWeb(false)}
+          onSpeak={(text) => {
+            if (voiceEnabledRef.current || isAdminRef.current) {
+              speakRef.current(text, () => setIsSpeaking(true), () => setIsSpeaking(false));
+            }
+          }}
           onOpenAccountability={(state) => {
             setAccountabilityState(state);
             if (hasSeenIntro("accountability")) { setShowAccountability(true); }

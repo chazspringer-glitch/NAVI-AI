@@ -181,9 +181,10 @@ interface NewsWebPanelProps {
   onAction?: (feature: FeatureId) => void;
   userContext?: { location?: string; interests?: string[] };
   onOpenAccountability?: (state: string) => void;
+  onSpeak?: (text: string) => void;
 }
 
-export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAccountability }: NewsWebPanelProps) {
+export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAccountability, onSpeak }: NewsWebPanelProps) {
   const canvasRef         = useRef<HTMLCanvasElement>(null);
   const containerRef      = useRef<HTMLDivElement>(null);
   const nodesRef          = useRef<NodeT[]>([]);
@@ -765,6 +766,9 @@ export default function NewsWebPanel({ onClose, onAction, userContext, onOpenAcc
         const json = await res.json() as { insight?: Insight; error?: string };
         if (json.insight) {
           setInsight(json.insight);
+          if (onSpeak && json.insight.whatsHappening) {
+            onSpeak(`${json.insight.whatsHappening} ${json.insight.whyItMatters}`);
+          }
         } else {
           setInsightError(json.error ?? "No insight returned.");
         }
