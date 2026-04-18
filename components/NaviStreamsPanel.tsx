@@ -48,6 +48,9 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
   const [liveTopic, setLiveTopic] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
   const [goingLive, setGoingLive] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const cameraRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
 
   // Co-host insight
   const [coHost, setCoHost] = useState<CoHostInsight | null>(null);
@@ -112,6 +115,24 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
     finally { setSending(false); }
   };
 
+  // Camera preview
+  const startCamera = async () => {
+    try {
+      const ms = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      cameraStreamRef.current = ms;
+      setCameraActive(true);
+      setTimeout(() => {
+        if (cameraRef.current) cameraRef.current.srcObject = ms;
+      }, 100);
+    } catch { /* permission denied or no camera */ }
+  };
+
+  const stopCamera = () => {
+    cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
+    cameraStreamRef.current = null;
+    setCameraActive(false);
+  };
+
   // Go Live
   const handleGoLive = async () => {
     if (goingLive) return;
@@ -135,6 +156,7 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
 
   // End Stream
   const handleEndStream = async () => {
+    stopCamera();
     await fetch("/api/streams", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -258,14 +280,54 @@ export default function NaviStreamsPanel({ onClose, isAdmin, onAction }: Props) 
               </button>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Camera preview */}
+                <div style={{ borderRadius: 10, overflow: "hidden", background: "#000", position: "relative" }}>
+                  {cameraActive ? (
+                    <video ref={cameraRef} autoPlay muted playsInline style={{ width: "100%", height: 160, objectFit: "cover", display: "block", transform: "scaleX(-1)" }} />
+                  ) : (
+                    <div style={{ height: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <button onClick={startCamera} style={{
+                        padding: "10px 20px", borderRadius: 10,
+                        background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.30)",
+                        color: "#a855f7", fontSize: 11, fontWeight: 700, fontFamily: "monospace", cursor: "pointer",
+                      }}>
+                        📷 Preview Camera
+                      </button>
+                      <div style={{ fontSize: 8, color: "#475569" }}>Check your camera before going live</div>
+                    </div>
+                  )}
+                  {cameraActive && (
+                    <button onClick={stopCamera} style={{
+                      position: "absolute", top: 6, right: 6, padding: "3px 8px", borderRadius: 6,
+                      background: "rgba(0,0,0,0.7)", border: "none", color: "#f87171", fontSize: 8,
+                      fontFamily: "monospace", cursor: "pointer",
+                    }}>
+                      ✕ Close cam
+                    </button>
+                  )}
+                </div>
+
                 <input value={liveTitle} onChange={(e) => setLiveTitle(e.target.value)} placeholder="Stream title"
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
                 <input value={liveTopic} onChange={(e) => setLiveTopic(e.target.value)} placeholder="Topic (e.g. Getting Clients, Building Credit)"
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
-                <input value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="Stream URL (YouTube/Twitch embed, optional)"
+                <input value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="Paste YouTube Live or Twitch embed URL"
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace", outline: "none" }} />
+
+                {/* YouTube Live quick-start guide */}
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: "#ef4444", marginBottom: 6 }}>📡 How to stream from your camera:</div>
+                  <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.6 }}>
+                    1. Go to <a href="https://youtube.com/live" target="_blank" rel="noopener noreferrer" style={{ color: "#ef4444", textDecoration: "underline" }}>youtube.com/live</a> → click "Go Live" → select "Webcam"{"\n"}
+                    2. Add your title → click "Go Live"{"\n"}
+                    3. Copy the video URL from the address bar{"\n"}
+                    4. Replace "watch?v=" with "embed/" and paste above{"\n"}
+                    <span style={{ color: "#64748b" }}>Example: youtube.com/embed/abc123</span>
+                  </div>
+                </div>
+
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => setShowGoLive(false)} style={{ flex: 1, padding: "10px", borderRadius: 8, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+                  <button onClick={() => { setShowGoLive(false); stopCamera(); }} style={{ flex: 1, padding: "10px", borderRadius: 8, background: "none", border: "1px solid rgba(255,255,255,0.08)", color: "#64748b", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
                   <button onClick={handleGoLive} disabled={goingLive} style={{
                     flex: 2, padding: "10px", borderRadius: 8,
                     background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none",
