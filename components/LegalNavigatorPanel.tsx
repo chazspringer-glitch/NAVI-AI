@@ -349,9 +349,67 @@ export default function LegalNavigatorPanel({ onClose }: { onClose: () => void }
             </>
           );
         })()}
-        {activeTab === "prepare" && (
-          <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>Preparation Tools — coming next</div>
-        )}
+        {/* ── PREPARE ────────────────────────────────────────────────── */}
+        {activeTab === "prepare" && (() => {
+          const PREP: Record<string, { checklist: string[]; questions: string[]; documents: string[] }> = {
+            family:      { checklist: ["Research attorneys specializing in family law", "Gather financial records for the past 2 years", "Document custody schedule or concerns", "List all shared assets and debts", "Prepare a summary of your situation in writing"], questions: ["What are my options — mediation, collaborative, or litigation?", "How long does this typically take in our county?", "What is your fee structure and estimated total cost?", "What should I expect at the first court hearing?", "How will custody and support be determined?"], documents: ["Tax returns (last 2 years)", "Pay stubs (last 3 months)", "Bank and investment statements", "Mortgage / lease agreement", "Prenuptial agreement (if any)", "List of all debts"] },
+            criminal:    { checklist: ["Do NOT speak to police without your attorney present", "Write down exactly what happened while fresh", "Identify any witnesses", "Save any text messages, photos, or evidence", "Arrange for bail if applicable"], questions: ["What are the exact charges against me?", "What is the best-case and worst-case scenario?", "Is a plea deal possible and advisable?", "Can any evidence be suppressed?", "What are the consequences for my record and employment?"], documents: ["Arrest report or citation", "Bail paperwork", "Any correspondence from the court", "Witness contact information", "Character references", "Employment verification"] },
+            housing:     { checklist: ["Review your lease agreement thoroughly", "Document all issues with photos and dates", "Send written notice to landlord (keep a copy)", "Research your state's tenant rights", "Check if there's a local tenant rights organization"], questions: ["Is my landlord's action legal under our state law?", "What are my rights if I'm being evicted?", "Can I withhold rent for uninhabitable conditions?", "What is the timeline for this type of case?", "Are there any local ordinances that protect me?"], documents: ["Lease agreement", "All written communication with landlord", "Photos/videos of housing issues", "Receipts for any repairs you paid for", "Records of rent payments", "Move-in inspection report"] },
+            employment:  { checklist: ["Document all incidents with dates and details", "Save emails, texts, and any written evidence", "Identify witnesses to discrimination or harassment", "Review your employee handbook", "File an internal HR complaint (creates paper trail)"], questions: ["Do I have a viable case?", "Should I file with the EEOC or a state agency?", "What is the statute of limitations?", "Should I resign or wait to be terminated?", "What damages could I recover?"], documents: ["Employment contract or offer letter", "Employee handbook / HR policies", "Performance reviews", "Emails or messages showing discrimination/harassment", "Pay stubs showing wage issues", "Termination letter or notice"] },
+            immigration: { checklist: ["Never miss a court date or filing deadline", "Keep originals AND copies of all documents", "Do not sign anything you don't understand", "Find an attorney who speaks your language if needed", "Check for free legal aid in your area"], questions: ["What is my current immigration status?", "What options are available to me?", "What are the risks of this application/action?", "How long will the process take?", "What happens if my application is denied?"], documents: ["Passport and travel documents", "I-94 arrival record", "Any USCIS notices or receipts", "Employment authorization card (if any)", "Birth certificates and marriage certificates", "Evidence of ties to the U.S. (lease, bills, tax returns)"] },
+            personal:    { checklist: ["Seek medical treatment immediately and follow up", "Do NOT give recorded statements to insurance", "Take photos of injuries and the accident scene", "Get contact info from witnesses", "Keep all medical bills and records"], questions: ["Do you work on contingency (no fee unless we win)?", "What is my case worth?", "How long will this take?", "Will I need to go to trial?", "What percentage do you take as your fee?"], documents: ["Medical records and bills", "Police report (if applicable)", "Photos of injuries and damage", "Insurance information (yours and theirs)", "Lost wage documentation", "Witness statements or contact info"] },
+            consumer:    { checklist: ["Request debt validation in writing within 30 days", "Check your credit reports at annualcreditreport.com", "Document all collector communications", "Know that collectors cannot harass or threaten you", "Research if bankruptcy is a viable option"], questions: ["Is this debt valid and within the statute of limitations?", "Are the collectors violating the FDCPA?", "Should I negotiate, dispute, or file bankruptcy?", "What assets are protected in my state?", "How will this affect my credit long-term?"], documents: ["Debt validation letters", "Credit reports from all 3 bureaus", "Collection letters and call logs", "Original loan or credit agreements", "Bank statements", "Income documentation"] },
+            civil:       { checklist: ["Document the discrimination or violation immediately", "Save all evidence (emails, recordings, photos)", "File a complaint with the relevant agency", "Contact the ACLU or NAACP for guidance", "Identify witnesses who can corroborate your account"], questions: ["Was my constitutional right violated?", "Which agency should I file with first?", "What is the deadline to file a complaint?", "Can I file both an agency complaint and a lawsuit?", "What remedies are available to me?"], documents: ["Written account of what happened", "Any physical evidence (photos, recordings)", "Witness names and contact information", "Agency complaint form or receipt", "Employment records (if workplace discrimination)", "Prior complaints filed (if any)"] },
+            business:    { checklist: ["Gather all relevant contracts and agreements", "Document the dispute or issue in writing", "Review your business formation documents", "Check insurance coverage for the dispute", "Assess whether mediation could resolve it"], questions: ["What type of business entity should I form?", "Is this contract enforceable?", "What are my liability risks?", "Should I pursue litigation or mediation?", "What are the costs vs. potential recovery?"], documents: ["Articles of incorporation / LLC operating agreement", "Contracts in dispute", "Business financial statements", "Correspondence related to the dispute", "Insurance policies", "Partnership or shareholder agreements"] },
+            other:       { checklist: ["Write down your situation in your own words", "List your key questions and concerns", "Gather any documents related to your issue", "Research attorneys in your area (try Avvo)", "Schedule free consultations with 2–3 attorneys"], questions: ["What area of law does my issue fall under?", "Do I need an attorney or can I handle this myself?", "What is your experience with cases like mine?", "What are my options and their likely outcomes?", "What will this cost me?"], documents: ["Any documents related to your situation", "Written timeline of events", "Contact information for relevant parties", "Photos or evidence if applicable", "Your questions written down", "ID and contact information"] },
+          };
+          const prep = PREP[caseType || "other"] ?? PREP.other;
+          const typeLabel = CASE_TYPES.find((c) => c.id === caseType)?.label ?? "Legal";
+          return (
+            <>
+              <div style={{ padding: "12px 14px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+                  <span style={{ color: "#60a5fa", fontWeight: 700 }}>NAVI:</span> Being prepared makes a huge difference. Here{"'"}s your {typeLabel.toLowerCase()} preparation guide — checklist, key questions, and documents to bring.
+                </div>
+              </div>
+
+              {/* Checklist */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#34d399", marginBottom: 10 }}>✅ Pre-Consultation Checklist</div>
+                {prep.checklist.map((item, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: "#34d399", fontSize: 11, flexShrink: 0 }}>☐</span>
+                    <span style={{ fontSize: 10, color: "#e2e8f0", lineHeight: 1.55 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Questions */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#60a5fa", marginBottom: 10 }}>❓ Questions to Ask Your Lawyer</div>
+                {prep.questions.map((q, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, color: "#60a5fa", flexShrink: 0, fontWeight: 700 }}>{i + 1}.</span>
+                    <span style={{ fontSize: 10, color: "#e2e8f0", lineHeight: 1.55 }}>{q}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Documents */}
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(201,162,39,0.04)", border: "1px solid rgba(201,162,39,0.12)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#C9A227", marginBottom: 10 }}>📁 Documents to Bring</div>
+                {prep.documents.map((doc, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                    <span style={{ color: "#C9A227", fontSize: 9 }}>📄</span>
+                    <span style={{ fontSize: 10, color: "#e2e8f0" }}>{doc}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.6 }}>⚖️ {DISCLAIMER}</div>
+            </>
+          );
+        })()}
         {activeTab === "rights" && (
           <div style={{ textAlign: "center", padding: "40px 0", fontSize: 11, color: "#64748b" }}>Know Your Rights — coming next</div>
         )}
