@@ -45,6 +45,7 @@ const StartHerePanel          = dynamic(() => import("@/components/StartHerePane
 const OnboardingWalkthrough   = dynamic(() => import("@/components/OnboardingWalkthrough"),   { ssr: false });
 const PoliceAccountabilityPanel = dynamic(() => import("@/components/PoliceAccountabilityPanel"), { ssr: false });
 const NaviLivePanel            = dynamic(() => import("@/components/NaviLivePanel"),            { ssr: false });
+const LegalNavigatorPanel      = dynamic(() => import("@/components/LegalNavigatorPanel"),      { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -835,6 +836,8 @@ export default function HomePage() {
   const [showAccountabilityIntro, setShowAccountabilityIntro] = useState(false);
   const [showNaviLive,       setShowNaviLive]       = useState(false);
   const [showNaviLiveIntro,  setShowNaviLiveIntro]  = useState(false);
+  const [showLegalNav,       setShowLegalNav]       = useState(false);
+  const [showLegalNavIntro,  setShowLegalNavIntro]  = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -2191,7 +2194,8 @@ export default function HomePage() {
         setMenuOpen(false);
         break;
       case "legalRights":
-        setShowLegalRights(true);
+        if (hasSeenIntro("legalNav")) { setShowLegalNav(true); }
+        else { markIntroSeen("legalNav"); setShowLegalNavIntro(true); }
         setMenuOpen(false);
         break;
       case "startHere":
@@ -5579,7 +5583,11 @@ export default function HomePage() {
                 <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "#34d399", textTransform: "uppercase", marginBottom: 10 }}>Life</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {toolBtn("📍", "Local Help", "#86efac", () => { if (proLocked) { setProGateFeature("Local Help"); return; } setShowLocalResources(true); setMenuOpen(false); }, proLocked)}
-                  {toolBtn("⚖️", "Legal Rights Guide", "#60a5fa", () => { setShowLegalRights(true); setMenuOpen(false); }, false)}
+                  {toolBtn("⚖️", "Legal Navigator", "#60a5fa", () => {
+                    if (hasSeenIntro("legalNav")) { setShowLegalNav(true); }
+                    else { markIntroSeen("legalNav"); setShowLegalNavIntro(true); }
+                    setMenuOpen(false);
+                  }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
                   {toolBtn("🔴", "NAVI Live", "#ef4444", () => {
                     if (hasSeenIntro("naviLive")) { setShowNaviLive(true); }
@@ -6879,6 +6887,62 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* Legal Navigator Cinematic Intro */}
+    {showLegalNavIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(96,165,250,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(96,165,250,0.45))" }}>⚖️</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#60a5fa", marginBottom: 10 }}>NAVI Legal</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(96,165,250,0.20)" }}>Legal Navigator</div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 22 }}>
+            Understand your situation. Find the right lawyer. Walk in prepared. NAVI helps you navigate the legal system with confidence — not confusion.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "🔍", label: "Smart lawyer search — by case type, location, budget", color: "#60a5fa" },
+              { icon: "📋", label: "Plain-English case breakdown + timeline", color: "#34d399" },
+              { icon: "✅", label: "Checklists, questions to ask, documents to bring", color: "#C9A227" },
+              { icon: "⚖️", label: "Know Your Rights — your constitutional protections", color: "#a855f7" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: `${color}06`, border: `1px solid ${color}18` }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 8, color: "#475569", lineHeight: 1.6, marginBottom: 18 }}>
+            This is informational guidance, not legal advice. Always consult a licensed attorney.
+          </div>
+
+          <button onClick={() => { setShowLegalNavIntro(false); setShowLegalNav(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #60a5fa, #3b82f6)", border: "none", color: "#08080f", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(96,165,250,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Open Legal Navigator →
+          </button>
+          <button onClick={() => setShowLegalNavIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Legal Navigator Panel */}
+    {showLegalNav && (
+      <LegalNavigatorPanel onClose={() => setShowLegalNav(false)} />
+    )}
 
     {/* NAVI Live Cinematic Intro */}
     {showNaviLiveIntro && (

@@ -36,7 +36,7 @@ TOOL PANELS (hub menu → tool grid, organized by Life / Learning / Financial co
 
 LIFE column:
 • 📍 Local Help — finds nearby community resources (PRO-gated)
-• ⚖️ Legal Rights Guide — plain-language civil rights reference
+• ⚖️ Legal Navigator — upgraded legal help tool with 4 tabs: Find a Lawyer (search by case type, location, budget → Avvo, FindLaw, LegalAid, State Bar links), Understand Your Case (plain-English overviews + timelines + next steps for 10 case types), Prepare (checklists, questions to ask your lawyer, documents to bring), Know Your Rights (constitutional protections + police encounter guidance + legal resources). NOT legal advice — always includes disclaimer.
 • 🔍 Police Accountability — verified policing data dashboard from the Washington Post Fatal Police Shootings Database. Three tabs: National (total incidents, demographics, year-over-year trends, body camera rate), State (city-level breakdown, unarmed count, recent incidents), Take Action (how to file a complaint, transparency resources, ACLU/DOJ links). Aggregated data only — no individual officers identified. Also accessible from the Pulse location bar.
 • 💛 Family Support Finder — benefits, programs, family resources
 • 🥬 Fresh Food Market — LOCKED / "Coming Soon"; partnerships with local farms still being finalized. If asked, tell the user it's launching soon.
