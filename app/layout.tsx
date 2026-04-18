@@ -3,10 +3,33 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Pet — Your Digital Companion",
-  description: "A futuristic AI Tamagotchi powered by OpenAI",
+  title: "NAVI — Your AI Life Navigation System",
+  description: "Find jobs, opportunities, resources, and take action in real time. Powered by Springer Industries.",
+  metadataBase: new URL("https://meetnavi.space"),
+  openGraph: {
+    title: "NAVI — Your AI Life Navigation System",
+    description: "Find jobs, opportunities, resources, and take action in real time. Powered by Springer Industries.",
+    url: "https://meetnavi.space",
+    siteName: "NAVI",
+    type: "website",
+    images: [
+      {
+        url: "/preview.png",
+        width: 1200,
+        height: 630,
+        alt: "NAVI — AI Life Navigation System by Springer Industries",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NAVI — Your AI Life Navigation System",
+    description: "Find jobs, opportunities, resources, and take action in real time. Powered by Springer Industries.",
+    images: ["/preview.png"],
+  },
   icons: {
-    icon: "data:image/svg+xml," + encodeURIComponent(
+    icon: "/favicon.ico",
+    apple: "data:image/svg+xml," + encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
           <radialGradient id="g" cx="42%" cy="38%" r="55%">
