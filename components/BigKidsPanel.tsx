@@ -1,6 +1,24 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import NaviOrb from "./NaviOrb";
+
+type KidsView = "home" | "play" | "learn" | "missions" | "rewards" | "parent";
+
+const NAVI_GREETINGS = [
+  "Hey explorer! Ready to learn something awesome? 🚀",
+  "Welcome back! Let's crush some quests today! 💪",
+  "I missed you! Pick something fun to do! ✨",
+  "You're getting smarter every day. Let's go! 🧠",
+  "Another day, another adventure. What's first? 🎯",
+];
+
+const NAVI_REACTIONS: Record<string, string[]> = {
+  correct: ["You're amazing! 🎉", "Boom! Nailed it! 💥", "That brain is ON FIRE! 🔥", "Too easy for you! 😎"],
+  wrong: ["So close! Try again! 💪", "Almost! You got this! 🌟", "Don't give up! 🚀"],
+  levelUp: ["LEVEL UP! You're unstoppable! 🏆", "New level unlocked! Keep going! ⭐"],
+  streak: ["Streak mode! You're on a roll! 🔥🔥🔥"],
+};
 
 const SUBJECTS = [
   { id: "math",     label: "Math",            icon: "🔢", color: "#00d4ff", desc: "Numbers, counting, and puzzles" },
@@ -300,8 +318,28 @@ function saveXP(xp: number) {
 }
 
 export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
+  const [kidsView, setKidsView] = useState<KidsView>("home");
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [totalXP, setTotalXP] = useState(() => loadSavedXP());
+  const [naviMessage, setNaviMessage] = useState(() => NAVI_GREETINGS[Math.floor(Math.random() * NAVI_GREETINGS.length)]);
+  const [naviAnimating, setNaviAnimating] = useState(false);
+
+  // Animated stars
+  const [stars] = useState(() =>
+    Array.from({ length: 25 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 1 + Math.random() * 2,
+      delay: Math.random() * 3,
+    }))
+  );
+
+  const naviSpeak = useCallback((msg: string) => {
+    setNaviMessage(msg);
+    setNaviAnimating(true);
+    setTimeout(() => setNaviAnimating(false), 600);
+  }, []);
   const [levelUpMsg, setLevelUpMsg] = useState<string | null>(null);
   const prevLevelRef = useRef(getLevelInfo(loadSavedXP()).current.level);
   const [missionProgress, setMissionProgress] = useState(() => loadMissionProgress());
@@ -456,30 +494,73 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
     setMathTotal((t) => t + 1);
   };
 
+  // Update NAVI reactions based on actions
+  const origAddXP = addXP;
+
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 70,
       display: "flex", flexDirection: "column",
       overflow: "hidden",
-      background: "linear-gradient(180deg, #0a0a1a 0%, #12122a 100%)",
+      background: "linear-gradient(180deg, #0a0a1a 0%, #0d0d2b 50%, #12122a 100%)",
       fontFamily: "monospace",
     }}>
+      {/* Animated star background */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+        {stars.map((s) => (
+          <div key={s.id} style={{
+            position: "absolute",
+            left: `${s.x}%`, top: `${s.y}%`,
+            width: s.size, height: s.size,
+            borderRadius: "50%",
+            background: "#fff",
+            opacity: 0.4,
+            animation: `twinkle ${2 + s.delay}s ease-in-out infinite`,
+            animationDelay: `${s.delay}s`,
+          }} />
+        ))}
+        <style jsx>{`
+          @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.3); }
+          }
+        `}</style>
+      </div>
+
       {/* Header */}
       <div style={{
         padding: "14px 16px 12px",
         borderBottom: "1px solid rgba(0,212,255,0.12)",
         flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "relative", zIndex: 2,
       }}>
-        <div>
-          <div style={{ fontSize: 8, letterSpacing: "0.30em", textTransform: "uppercase", color: "#00d4ff", marginBottom: 3 }}>Ages 7–12</div>
-          <div style={{ fontSize: 15, fontWeight: "bold", color: "#f1f5f9" }}>🎮 NAVI Big Kids</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {kidsView !== "home" && (
+            <button onClick={() => { setKidsView("home"); setSelectedSubject(null); }} style={{
+              width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.20)",
+              color: "#00d4ff", cursor: "pointer", fontSize: 12,
+            }}>←</button>
+          )}
+          <div>
+            <div style={{ fontSize: 8, letterSpacing: "0.30em", textTransform: "uppercase", color: "#00d4ff", marginBottom: 3 }}>Ages 7–12</div>
+            <div style={{ fontSize: 15, fontWeight: "bold", color: "#f1f5f9" }}>🎮 NAVI Big Kids</div>
+          </div>
         </div>
-        <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 13 }} aria-label="Close">✕</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Parent dashboard button */}
+          <button onClick={() => setKidsView("parent")} style={{
+            padding: "4px 8px", borderRadius: 6,
+            background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.20)",
+            color: "#a855f7", fontSize: 8, fontWeight: 700, fontFamily: "monospace", cursor: "pointer",
+          }}>👨‍👩‍👧 Parent</button>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", cursor: "pointer", fontSize: 13 }} aria-label="Close">✕</button>
+        </div>
       </div>
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 32px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 32px", display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 2 }}>
 
         {/* Level-up celebration */}
         {levelUpMsg && (
@@ -495,125 +576,71 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* Welcome */}
-        {!selectedSubject && (() => {
+        {/* ── HOME VIEW — Character hub ────────────────────────────────── */}
+        {kidsView === "home" && (() => {
           const lvl = getLevelInfo(totalXP);
           return (
           <>
-            {/* XP + Level card */}
+            {/* NAVI Character */}
+            <div style={{ textAlign: "center", padding: "20px 0 10px" }}>
+              <div style={{
+                display: "inline-block",
+                transform: naviAnimating ? "scale(1.1)" : "scale(1)",
+                transition: "transform 0.3s ease",
+              }}>
+                <NaviOrb size={80} />
+              </div>
+              {/* Speech bubble */}
+              <div style={{
+                margin: "12px auto 0", maxWidth: 280,
+                padding: "10px 14px", borderRadius: 14,
+                background: "rgba(0,212,255,0.08)",
+                border: "1px solid rgba(0,212,255,0.20)",
+                position: "relative",
+              }}>
+                <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.6, textAlign: "center" }}>
+                  {naviMessage}
+                </div>
+              </div>
+            </div>
+
+            {/* Level badge */}
             <div style={{
-              padding: "16px", borderRadius: 18,
-              background: "linear-gradient(135deg, rgba(0,212,255,0.08), rgba(168,85,247,0.05))",
-              border: "1px solid rgba(0,212,255,0.15)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              padding: "10px 16px", borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(0,212,255,0.06), rgba(168,85,247,0.04))",
+              border: "1px solid rgba(0,212,255,0.12)",
             }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 28 }}>{lvl.current.icon}</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#f1f5f9" }}>Level {lvl.current.level} — {lvl.current.title}</div>
-                    <div style={{ fontSize: 9, color: "#64748b", marginTop: 1 }}>Total: {totalXP} XP</div>
+              <span style={{ fontSize: 24 }}>{lvl.current.icon}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9" }}>Level {lvl.current.level} — {lvl.current.title}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                  <div style={{ flex: 1, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ width: `${lvl.progress}%`, height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #00d4ff, #a855f7)", transition: "width 0.5s ease" }} />
                   </div>
-                </div>
-              </div>
-              {/* Progress bar */}
-              <div style={{ marginBottom: 6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 8, color: "#64748b" }}>Lv {lvl.current.level}</span>
-                  <span style={{ fontSize: 8, color: "#64748b" }}>Lv {lvl.next.level}</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                  <div style={{
-                    width: `${lvl.progress}%`, height: "100%", borderRadius: 4,
-                    background: "linear-gradient(90deg, #00d4ff, #a855f7)",
-                    transition: "width 0.5s ease",
-                  }} />
-                </div>
-                <div style={{ fontSize: 8, color: "#475569", textAlign: "center", marginTop: 4 }}>
-                  {lvl.xpForNext - lvl.xpInLevel > 0 ? `${lvl.xpForNext - lvl.xpInLevel} XP to next level` : "Max level!"}
-                </div>
-              </div>
-              {/* Welcome message */}
-              <div style={{ textAlign: "center", marginTop: 8 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
-                  {totalXP === 0 ? "Hey there, explorer! 👋" : `Welcome back, ${lvl.current.title}! 👋`}
-                </div>
-                <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                  Pick a subject to start your quest.
+                  <span style={{ fontSize: 9, color: "#00d4ff", fontWeight: 700 }}>{totalXP} XP</span>
                 </div>
               </div>
             </div>
 
-            {/* Daily Missions */}
-            <div style={{
-              padding: "14px 16px", borderRadius: 16,
-              background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(201,162,39,0.03))",
-              border: "1px solid rgba(245,158,11,0.15)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b" }}>🎯 Daily Missions</div>
-                <div style={{ fontSize: 8, color: "#64748b" }}>{missionProgress.completed.length}/{dailyMissions.length} done</div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {dailyMissions.map((m) => {
-                  const done = missionProgress.completed.includes(m.id);
-                  return (
-                    <div key={m.id} style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "8px 10px", borderRadius: 10,
-                      background: done ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.02)",
-                      border: done ? "1px solid rgba(52,211,153,0.20)" : "1px solid rgba(255,255,255,0.06)",
-                    }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>{done ? "✅" : m.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{
-                          fontSize: 10, fontWeight: 600,
-                          color: done ? "#34d399" : "#e2e8f0",
-                          textDecoration: done ? "line-through" : "none",
-                        }}>{m.label}</div>
-                      </div>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700,
-                        color: done ? "#34d399" : "#f59e0b",
-                      }}>+{m.xp} XP</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {missionProgress.completed.length === dailyMissions.length && (
-                <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, fontWeight: 700, color: "#34d399" }}>
-                  🎉 All missions complete! Come back tomorrow!
-                </div>
-              )}
-            </div>
-
-            {/* Subject cards */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {SUBJECTS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedSubject(s.id)}
+            {/* Navigation buttons — Play / Learn / Missions / Rewards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[
+                { view: "play" as KidsView,     icon: "🎮", label: "Play",     desc: "Jump into quests", color: "#00d4ff" },
+                { view: "learn" as KidsView,    icon: "📚", label: "Learn",    desc: "Pick a subject",   color: "#34d399" },
+                { view: "missions" as KidsView, icon: "🎯", label: "Missions", desc: `${missionProgress.completed.length}/${dailyMissions.length} done`, color: "#f59e0b" },
+                { view: "rewards" as KidsView,  icon: "🏆", label: "Rewards",  desc: `Level ${lvl.current.level}`, color: "#a855f7" },
+              ].map(({ view, icon, label, desc, color }) => (
+                <button key={view} onClick={() => { setKidsView(view); naviSpeak(view === "play" ? "Let's play! Pick a quest! 🎮" : view === "learn" ? "Smart choice! What subject? 📚" : view === "missions" ? "Check your daily goals! 🎯" : "Look at all you've earned! 🏆"); }}
                   style={{
-                    width: "100%", padding: "18px 16px", borderRadius: 16, cursor: "pointer",
-                    background: `${s.color}0a`,
-                    border: `2px solid ${s.color}30`,
-                    display: "flex", alignItems: "center", gap: 14,
-                    textAlign: "left", fontFamily: "monospace",
-                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                  }}
-                >
-                  <div style={{
-                    width: 50, height: 50, borderRadius: 14,
-                    background: `${s.color}18`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 28, flexShrink: 0,
+                    padding: "18px 12px", borderRadius: 16, cursor: "pointer",
+                    background: `${color}0c`,
+                    border: `2px solid ${color}28`,
+                    textAlign: "center", fontFamily: "monospace",
                   }}>
-                    {s.icon}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>{s.label}</div>
-                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.desc}</div>
-                  </div>
-                  <span style={{ marginLeft: "auto", fontSize: 16, color: s.color, flexShrink: 0 }}>→</span>
+                  <div style={{ fontSize: 32, marginBottom: 6 }}>{icon}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{label}</div>
+                  <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{desc}</div>
                 </button>
               ))}
             </div>
@@ -621,8 +648,172 @@ export default function BigKidsPanel({ onClose }: { onClose: () => void }) {
           );
         })()}
 
-        {/* Subject selected */}
-        {selectedSubject && (() => {
+        {/* ── PLAY VIEW — Quick subject picker ─────────────────────────── */}
+        {kidsView === "play" && !selectedSubject && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ textAlign: "center", marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>Pick a Quest!</div>
+            </div>
+            {SUBJECTS.map((s) => (
+              <button key={s.id} onClick={() => setSelectedSubject(s.id)}
+                style={{
+                  width: "100%", padding: "18px 16px", borderRadius: 16, cursor: "pointer",
+                  background: `${s.color}0a`, border: `2px solid ${s.color}30`,
+                  display: "flex", alignItems: "center", gap: 14,
+                  textAlign: "left", fontFamily: "monospace",
+                }}>
+                <div style={{ width: 50, height: 50, borderRadius: 14, background: `${s.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>{s.label}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.desc}</div>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 16, color: s.color, flexShrink: 0 }}>→</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── LEARN VIEW — Subject picker (same as Play) ───────────────── */}
+        {kidsView === "learn" && !selectedSubject && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ textAlign: "center", marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>Choose a Subject</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>Learn at your own pace!</div>
+            </div>
+            {SUBJECTS.map((s) => (
+              <button key={s.id} onClick={() => setSelectedSubject(s.id)}
+                style={{
+                  width: "100%", padding: "18px 16px", borderRadius: 16, cursor: "pointer",
+                  background: `${s.color}0a`, border: `2px solid ${s.color}30`,
+                  display: "flex", alignItems: "center", gap: 14,
+                  textAlign: "left", fontFamily: "monospace",
+                }}>
+                <div style={{ width: 50, height: 50, borderRadius: 14, background: `${s.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>{s.label}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.desc}</div>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 16, color: s.color, flexShrink: 0 }}>→</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── MISSIONS VIEW ─────────────────────────────────────────────── */}
+        {kidsView === "missions" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ textAlign: "center", marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>🎯 Today's Missions</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>Complete all 3 for bonus XP!</div>
+            </div>
+            {dailyMissions.map((m) => {
+              const done = missionProgress.completed.includes(m.id);
+              return (
+                <div key={m.id} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "14px 14px", borderRadius: 14,
+                  background: done ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.03)",
+                  border: done ? "2px solid rgba(52,211,153,0.25)" : "2px solid rgba(255,255,255,0.06)",
+                }}>
+                  <span style={{ fontSize: 24, flexShrink: 0 }}>{done ? "✅" : m.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: done ? "#34d399" : "#f1f5f9", textDecoration: done ? "line-through" : "none" }}>{m.label}</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: done ? "#34d399" : "#f59e0b" }}>+{m.xp}</span>
+                </div>
+              );
+            })}
+            {missionProgress.completed.length === dailyMissions.length && (
+              <div style={{ textAlign: "center", padding: "16px 0", fontSize: 14, fontWeight: 700, color: "#34d399" }}>🎉 All done! Amazing work!</div>
+            )}
+            <button onClick={() => { setKidsView("play"); naviSpeak("Let's complete those missions! 💪"); }} style={{
+              width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer",
+              background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none",
+              color: "#08080f", fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+            }}>
+              Go Play →
+            </button>
+          </div>
+        )}
+
+        {/* ── REWARDS VIEW ──────────────────────────────────────────────── */}
+        {kidsView === "rewards" && (() => {
+          const lvl = getLevelInfo(totalXP);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ textAlign: "center", marginBottom: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>🏆 Your Rewards</div>
+              </div>
+              {LEVELS.map((lv) => {
+                const unlocked = totalXP >= lv.xpNeeded;
+                return (
+                  <div key={lv.level} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px", borderRadius: 14,
+                    background: unlocked ? "rgba(168,85,247,0.08)" : "rgba(255,255,255,0.02)",
+                    border: unlocked ? "2px solid rgba(168,85,247,0.25)" : "2px solid rgba(255,255,255,0.05)",
+                    opacity: unlocked ? 1 : 0.5,
+                  }}>
+                    <span style={{ fontSize: 28, flexShrink: 0 }}>{unlocked ? lv.icon : "🔒"}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: unlocked ? "#f1f5f9" : "#64748b" }}>Level {lv.level} — {lv.title}</div>
+                      <div style={{ fontSize: 9, color: "#64748b" }}>{lv.xpNeeded} XP needed</div>
+                    </div>
+                    {unlocked && <span style={{ fontSize: 10, color: "#a855f7", fontWeight: 700 }}>✓</span>}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ── PARENT DASHBOARD ──────────────────────────────────────────── */}
+        {kidsView === "parent" && (() => {
+          const lvl = getLevelInfo(totalXP);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#a855f7", marginBottom: 8 }}>👨‍👩‍👧 Parent Dashboard</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.6 }}>Track your child{"'"}s learning progress, subjects studied, and skill development.</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.12)", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#00d4ff" }}>{totalXP}</div>
+                  <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 2 }}>Total XP Earned</div>
+                </div>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.12)", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#a855f7" }}>{lvl.current.icon} Lv{lvl.current.level}</div>
+                  <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 2 }}>{lvl.current.title}</div>
+                </div>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#34d399" }}>{mathTotal + readingTotal + lifeTotal + puzzleTotal}</div>
+                  <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 2 }}>Questions Answered</div>
+                </div>
+                <div style={{ padding: "14px 12px", borderRadius: 12, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.12)", textAlign: "center" }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#f59e0b" }}>{missionProgress.completed.length}</div>
+                  <div style={{ fontSize: 8, color: "#94a3b8", marginTop: 2 }}>Missions Today</div>
+                </div>
+              </div>
+              <div style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>Subjects Practiced</div>
+                {[
+                  { label: "Math", score: mathScore, total: mathTotal, color: "#00d4ff" },
+                  { label: "Reading", score: readingScore, total: readingTotal, color: "#34d399" },
+                  { label: "Life Skills", score: lifeScore, total: lifeTotal, color: "#f59e0b" },
+                  { label: "Problem Solving", score: puzzleScore, total: puzzleTotal, color: "#a855f7" },
+                ].map((s) => (
+                  <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                    <span style={{ fontSize: 10, color: s.color, fontWeight: 600 }}>{s.label}</span>
+                    <span style={{ fontSize: 9, color: "#94a3b8" }}>{s.total} questions · {s.score} XP</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── QUEST VIEWS (Play/Learn with subject selected) ────────────── */}
+        {(kidsView === "play" || kidsView === "learn") && selectedSubject && (() => {
           const subj = SUBJECTS.find((s) => s.id === selectedSubject)!;
           return (
             <>
