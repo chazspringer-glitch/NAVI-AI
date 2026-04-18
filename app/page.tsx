@@ -47,6 +47,7 @@ const PoliceAccountabilityPanel = dynamic(() => import("@/components/PoliceAccou
 const NaviLivePanel            = dynamic(() => import("@/components/NaviLivePanel"),            { ssr: false });
 const LegalNavigatorPanel      = dynamic(() => import("@/components/LegalNavigatorPanel"),      { ssr: false });
 const FoodIntelPanel           = dynamic(() => import("@/components/FoodIntelPanel"),           { ssr: false });
+const NaviStreamsPanel          = dynamic(() => import("@/components/NaviStreamsPanel"),          { ssr: false });
 const WhyNaviPanel            = dynamic(() => import("@/components/WhyNaviPanel"),            { ssr: false });
 const NaviParticleFace        = dynamic(() => import("@/components/NaviParticleFace"),        { ssr: false });
 const TradesModePanel         = dynamic(() => import("@/components/TradesModePanel"),         { ssr: false });
@@ -841,6 +842,8 @@ export default function HomePage() {
   const [showLegalNavIntro,  setShowLegalNavIntro]  = useState(false);
   const [showFoodIntel,      setShowFoodIntel]      = useState(false);
   const [showFoodIntelIntro, setShowFoodIntelIntro] = useState(false);
+  const [showStreams,        setShowStreams]         = useState(false);
+  const [showStreamsIntro,   setShowStreamsIntro]    = useState(false);
   const [showWalkthrough,    setShowWalkthrough]        = useState(false);
   const [showNaviTV,         setShowNaviTV]             = useState(false);
   const [showWhyNavi,        setShowWhyNavi]            = useState(false);
@@ -5602,6 +5605,11 @@ export default function HomePage() {
                     setMenuOpen(false);
                   }, false)}
                   {toolBtn("💛", "Family Support Finder", "#f59e0b", () => { setShowFamilySupport(true); setMenuOpen(false); }, false)}
+                  {toolBtn("🎬", "NAVI Streams", "#a855f7", () => {
+                    if (hasSeenIntro("streams")) { setShowStreams(true); }
+                    else { markIntroSeen("streams"); setShowStreamsIntro(true); }
+                    setMenuOpen(false); trackXP("tool_used");
+                  }, false)}
                   {toolBtn("🔴", "NAVI Live", "#ef4444", () => {
                     if (hasSeenIntro("naviLive")) { setShowNaviLive(true); }
                     else { markIntroSeen("naviLive"); setShowNaviLiveIntro(true); }
@@ -6904,6 +6912,73 @@ export default function HomePage() {
         </div>
       )}
     </div>
+
+    {/* NAVI Streams Cinematic Intro */}
+    {showStreamsIntro && (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 500,
+        background: "rgba(2,2,10,0.97)",
+        backdropFilter: "blur(16px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: 20,
+        animation: "overlayIn 0.4s ease forwards",
+      }}>
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%, -50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", textAlign: "center", maxWidth: 380 }}>
+          <div style={{ fontSize: 56, marginBottom: 16, filter: "drop-shadow(0 0 24px rgba(168,85,247,0.45))" }}>🎬</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#a855f7", marginBottom: 10 }}>Live from NAVI</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, textShadow: "0 0 24px rgba(168,85,247,0.20)" }}>NAVI Streams</div>
+          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.75, marginBottom: 22 }}>
+            Watch live streams from the founder. Learn business strategy, get community updates, and take action in real time with NAVI as your co-host.
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22, textAlign: "left" }}>
+            {[
+              { icon: "🎬", label: "Live streams hosted by the founder", color: "#a855f7" },
+              { icon: "💬", label: "Interactive live chat", color: "#00d4ff" },
+              { icon: "🤖", label: "NAVI co-host — AI-powered insights + resources", color: "#34d399" },
+              { icon: "⚡", label: "Action buttons to NAVI tools during stream", color: "#C9A227" },
+            ].map(({ icon, label, color }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 8, background: `${color}06`, border: `1px solid ${color}18` }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 10, color: "#94a3b8" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => { setShowStreamsIntro(false); setShowStreams(true); }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, background: "linear-gradient(135deg, #a855f7, #7c3aed)", border: "none", color: "#fff", fontSize: 14, fontFamily: "monospace", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 24px rgba(168,85,247,0.30)", marginBottom: 12, letterSpacing: "0.06em" }}>
+            Enter Streams →
+          </button>
+          <button onClick={() => setShowStreamsIntro(false)}
+            style={{ background: "none", border: "none", color: "#475569", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* NAVI Streams Panel */}
+    {showStreams && (
+      <NaviStreamsPanel
+        onClose={() => setShowStreams(false)}
+        isAdmin={isAdmin}
+        onAction={(feature) => {
+          setShowStreams(false);
+          setTimeout(() => {
+            switch (feature) {
+              case "business": setShowBizPlanBuilder(true); break;
+              case "resume":   setShowResumeBuilder(true); break;
+              case "jobs":     setShowJobFinder(true); break;
+              case "trades":   setShowTrades(true); break;
+            }
+            trackXP("tool_used");
+          }, 120);
+        }}
+      />
+    )}
 
     {/* Food Intelligence Cinematic Intro */}
     {showFoodIntelIntro && (
