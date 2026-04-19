@@ -2487,15 +2487,15 @@ export default function HomePage() {
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
         padding: "6px 16px",
-        background: `linear-gradient(135deg, ${portal.accent}18, ${portal.accent}08)`,
-        borderBottom: `1px solid ${portal.accent}30`,
+        background: `linear-gradient(135deg, ${portal.branding.accentColor}18, ${portal.branding.primaryColor}40)`,
+        borderBottom: `1px solid ${portal.branding.accentColor}30`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         fontFamily: "monospace",
         backdropFilter: "blur(12px)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: portal.accent, boxShadow: `0 0 6px ${portal.accent}` }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: portal.accent, letterSpacing: "0.08em" }}>{portal.tagline}</span>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: portal.branding.accentColor, boxShadow: `0 0 6px ${portal.branding.accentColor}` }} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: portal.branding.accentColor, letterSpacing: "0.08em" }}>{portal.name}</span>
           <span style={{ fontSize: 8, color: "#64748b" }}>·</span>
           <span style={{ fontSize: 8, color: "#94a3b8" }}>{portal.fullName}</span>
         </div>

@@ -5,31 +5,44 @@
  * and featured content without changing any core NAVI code.
  *
  * Detection: URL param ?portal=wilmington or direct link meetnavi.space?portal=wilmington
+ *
+ * Adding a new city = one new object in PORTALS. No other files to touch.
  */
+
+export interface PortalBranding {
+  primaryColor: string;
+  accentColor:  string;
+}
 
 export interface PortalConfig {
   id:          string;
+  name:        string;          // "Wilmington Assistant"
+  type:        string;          // "city" | "org" | "school"
   city:        string;
   state:       string;
-  fullName:    string;       // "Wilmington, NC"
-  tagline:     string;       // shown in header
-  accent:      string;       // hex color override
-  features:    string[];     // featured tool IDs to highlight
-  partners:    string[];     // partner names to highlight
-  newsQuery:   string;       // Google News RSS search term for local feed
-  crimeQuery:  string;       // crime data search term
+  fullName:    string;          // "Wilmington, NC"
+  tagline:     string;          // shown in header banner
+  branding:    PortalBranding;
+  homeCards:   string[];        // featured action labels shown on portal home
+  features:    string[];        // featured tool IDs (navigate destinations)
+  partners:    string[];        // partner names to highlight
+  newsQuery:   string;          // Google News RSS search term
+  crimeQuery:  string;          // crime data search term
   resources:   { label: string; url: string; desc: string }[];
 }
 
 export const PORTALS: Record<string, PortalConfig> = {
   wilmington: {
     id:        "wilmington",
+    name:      "Wilmington Assistant",
+    type:      "city",
     city:      "Wilmington",
     state:     "NC",
     fullName:  "Wilmington, NC",
     tagline:   "NAVI for Wilmington",
-    accent:    "#00d4ff",
-    features:  ["trades", "housing", "jobs", "foodIntel", "legalRights"],
+    branding:  { primaryColor: "#0B3C5D", accentColor: "#1E90FF" },
+    homeCards: ["Find Job", "Find Housing", "Get Food", "Stay Safe"],
+    features:  ["jobs", "housing", "foodIntel", "trades", "legalRights", "policeAccountability"],
     partners:  ["Schmaders 910", "7 Birds Co."],
     newsQuery: "Wilmington NC",
     crimeQuery: "Wilmington NC",
@@ -38,16 +51,20 @@ export const PORTALS: Record<string, PortalConfig> = {
       { label: "Wilmington Police Dept", url: "https://www.wilmingtonnc.gov/departments/police", desc: "Local law enforcement" },
       { label: "New Hanover County DSS", url: "https://health.nhcgov.com/", desc: "Social services & benefits" },
       { label: "Cape Fear Community College", url: "https://cfcc.edu/", desc: "Workforce training & education" },
+      { label: "Wilmington Housing Authority", url: "https://www.wha.net/", desc: "Public housing & Section 8" },
     ],
   },
   atlanta: {
     id:        "atlanta",
+    name:      "Atlanta Assistant",
+    type:      "city",
     city:      "Atlanta",
     state:     "GA",
     fullName:  "Atlanta, GA",
     tagline:   "NAVI for Atlanta",
-    accent:    "#ef4444",
-    features:  ["trades", "housing", "jobs", "foodIntel"],
+    branding:  { primaryColor: "#1a1a2e", accentColor: "#ef4444" },
+    homeCards: ["Find Job", "Find Housing", "Get Food", "Stay Safe"],
+    features:  ["jobs", "housing", "foodIntel", "trades"],
     partners:  [],
     newsQuery: "Atlanta GA",
     crimeQuery: "Atlanta GA",
@@ -58,12 +75,15 @@ export const PORTALS: Record<string, PortalConfig> = {
   },
   charlotte: {
     id:        "charlotte",
+    name:      "Charlotte Assistant",
+    type:      "city",
     city:      "Charlotte",
     state:     "NC",
     fullName:  "Charlotte, NC",
     tagline:   "NAVI for Charlotte",
-    accent:    "#a855f7",
-    features:  ["trades", "housing", "jobs", "foodIntel"],
+    branding:  { primaryColor: "#0d1b2a", accentColor: "#a855f7" },
+    homeCards: ["Find Job", "Find Housing", "Get Food", "Stay Safe"],
+    features:  ["jobs", "housing", "foodIntel", "trades"],
     partners:  [],
     newsQuery: "Charlotte NC",
     crimeQuery: "Charlotte NC",
