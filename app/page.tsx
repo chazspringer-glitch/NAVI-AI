@@ -3490,9 +3490,18 @@ export default function HomePage() {
       >
         {/* Greeting */}
         <span style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.92)", letterSpacing: "0.03em" }}>
-          Hey
-          {userName && (
-            <span style={{ color: "#00d4ff" }}>, {userName}</span>
+          {portal ? (
+            <>
+              <span style={{ color: portal.branding.accentColor, fontWeight: 700 }}>{portal.name}</span>
+              <span style={{ fontSize: 9, color: "#64748b", marginLeft: 6 }}>Powered by NAVI</span>
+            </>
+          ) : (
+            <>
+              Hey
+              {userName && (
+                <span style={{ color: "#00d4ff" }}>, {userName}</span>
+              )}
+            </>
           )}
         </span>
 
@@ -4529,7 +4538,65 @@ export default function HomePage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-            {messages.length === 0 && (
+            {messages.length === 0 && portal && (
+              <div style={{ padding: "16px 8px 8px", display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Portal welcome */}
+                <div style={{ textAlign: "center", marginBottom: 4 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: portal.branding.accentColor, marginBottom: 4, fontFamily: "monospace" }}>
+                    {portal.name}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#64748b", fontFamily: "monospace" }}>
+                    Powered by NAVI · {portal.fullName}
+                  </div>
+                </div>
+                {/* HomeCards — 2x2 grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {portal.homeCards.map((card) => {
+                    const cardMap: Record<string, { icon: string; action: string }> = {
+                      "Find Job":      { icon: "💼", action: "jobs" },
+                      "Find Housing":  { icon: "🏠", action: "housing" },
+                      "Get Food":      { icon: "🥗", action: "foodIntel" },
+                      "Stay Safe":     { icon: "🛡️", action: "newsWeb" },
+                    };
+                    const cfg = cardMap[card] ?? { icon: "📌", action: "" };
+                    return (
+                      <button key={card} onClick={() => {
+                        if (cfg.action) switchTab(cfg.action);
+                      }} style={{
+                        padding: "16px 10px", borderRadius: 14, cursor: "pointer",
+                        background: `${portal.branding.accentColor}0c`,
+                        border: `2px solid ${portal.branding.accentColor}25`,
+                        textAlign: "center", fontFamily: "monospace",
+                      }}>
+                        <div style={{ fontSize: 24, marginBottom: 4 }}>{cfg.icon}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#f1f5f9" }}>{card}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Local resources */}
+                {portal.resources.length > 0 && (
+                  <div style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 8, color: "#475569", fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 6 }}>Local Resources</div>
+                    {portal.resources.slice(0, 3).map((r) => (
+                      <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 4 }}>
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 8,
+                          background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace",
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 9, fontWeight: 600, color: portal.branding.accentColor }}>{r.label}</div>
+                            <div style={{ fontSize: 7, color: "#475569" }}>{r.desc}</div>
+                          </div>
+                          <span style={{ fontSize: 8, color: "#475569" }}>↗</span>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {messages.length === 0 && !portal && (
               <div className="flex items-center justify-center h-full">
                 <p className="text-xs font-mono text-slate-600 text-center leading-relaxed whitespace-pre-line">
                   {MODES.find((m) => m.id === mentorMode)?.emptyHint ?? ""}
