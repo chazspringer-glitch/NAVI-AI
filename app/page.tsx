@@ -5704,6 +5704,52 @@ export default function HomePage() {
             </button>
           );
           const proLocked = !isPro && !isAdmin;
+
+          // Portal-only explore view
+          if (portal) {
+            const portalTools: { icon: string; label: string; color: string; action: string }[] = [
+              { icon: "💼", label: "Job Finder",          color: "#00d4ff", action: "jobFinder" },
+              { icon: "🏠", label: "Housing Finder",      color: "#34d399", action: "housing" },
+              { icon: "🥗", label: "Food Intelligence",   color: "#34d399", action: "foodIntel" },
+              { icon: "📡", label: "News Pulse",          color: "#a855f7", action: "newsWeb" },
+              { icon: "⚖️", label: "Legal Navigator",     color: "#60a5fa", action: "legalRights" },
+              { icon: "🚛", label: "Trades Mode",         color: "#f59e0b", action: "trades" },
+              { icon: "🔍", label: "Police Accountability",color: "#f59e0b", action: "policeAccountability" },
+              { icon: "🕊️", label: "Gun Violence Awareness",color: "#ef4444", action: "gunViolence" },
+              { icon: "💛", label: "Family Support",       color: "#f59e0b", action: "familySupport" },
+              { icon: "🔴", label: "NAVI Live",            color: "#ef4444", action: "naviLive" },
+            ];
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 8 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: portal.branding.accentColor, fontFamily: "monospace" }}>{portal.city} Tools</div>
+                  <div style={{ fontSize: 9, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>Features available in the {portal.name}</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {portalTools.map(({ icon, label, color, action }) => (
+                    <button key={action} onClick={() => switchTab(action)} style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+                      background: `${color}0a`, border: `1px solid ${color}30`,
+                      color, fontSize: 12, fontFamily: "monospace",
+                    }}>
+                      <span style={{ fontSize: 16 }}>{icon}</span>
+                      <span style={{ fontWeight: 600 }}>{label}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.4 }}>→</span>
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setPortal(null)} style={{
+                  width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+                  color: "#475569", fontSize: 9, fontFamily: "monospace", textAlign: "center",
+                }}>
+                  Switch to full NAVI experience →
+                </button>
+              </div>
+            );
+          }
+
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 8 }}>
 
