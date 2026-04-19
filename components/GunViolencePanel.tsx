@@ -62,7 +62,10 @@ export default function GunViolencePanel({ onClose }: { onClose: () => void }) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [localIncidents, setLocalIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
-  const [localLoading, setLocalLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [userCity, setUserCity] = useState("Wilmington, NC");
+  const [cityInput, setCityInput] = useState("");
+  const [showCitySearch, setShowCitySearch] = useState(false);
 
   // Fetch LIVE national gun violence news
   useEffect(() => {
