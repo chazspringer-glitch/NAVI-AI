@@ -5135,59 +5135,72 @@ export default function HomePage() {
         {displayedHubTab === "home" && <>
 
         {/* ── Portal homeCards — shown at top when portal is active ──────── */}
-        {portal && (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ textAlign: "center", marginBottom: 10 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: portal.branding.accentColor, fontFamily: "monospace" }}>
-                {portal.name}
-              </div>
-              <div style={{ fontSize: 9, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>
-                Powered by NAVI · {portal.fullName}
-              </div>
+        {portal ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 16 }}>
+            <div style={{
+              textAlign: "center", padding: "20px 16px", borderRadius: 18,
+              background: `linear-gradient(135deg, ${portal.branding.primaryColor}40, ${portal.branding.accentColor}12)`,
+              border: `1px solid ${portal.branding.accentColor}25`,
+            }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: portal.branding.accentColor, fontFamily: "monospace", marginBottom: 4 }}>{portal.name}</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", fontFamily: "monospace" }}>Powered by NAVI · {portal.fullName}</div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {portal.homeCards.map((card) => {
-                const cardMap: Record<string, { icon: string; action: string }> = {
-                  "Find Job":      { icon: "💼", action: "jobs" },
-                  "Find Housing":  { icon: "🏠", action: "housing" },
-                  "Get Food":      { icon: "🥗", action: "foodIntel" },
-                  "Stay Safe":     { icon: "🛡️", action: "newsWeb" },
+                const cardMap: Record<string, { icon: string; action: string; desc: string }> = {
+                  "Find Job":      { icon: "💼", action: "jobs",      desc: "Search jobs in " + portal.city },
+                  "Find Housing":  { icon: "🏠", action: "housing",   desc: "Affordable housing near you" },
+                  "Get Food":      { icon: "🥗", action: "foodIntel", desc: "Food banks, meals, recipes" },
+                  "Stay Safe":     { icon: "🛡️", action: "newsWeb",   desc: "Safety alerts & local news" },
                 };
-                const cfg = cardMap[card] ?? { icon: "📌", action: "" };
+                const cfg = cardMap[card] ?? { icon: "📌", action: "", desc: "" };
                 return (
                   <button key={card} onClick={() => { if (cfg.action) switchTab(cfg.action); }} style={{
-                    padding: "16px 10px", borderRadius: 14, cursor: "pointer",
-                    background: `${portal.branding.accentColor}0c`,
-                    border: `2px solid ${portal.branding.accentColor}25`,
+                    padding: "20px 12px", borderRadius: 16, cursor: "pointer",
+                    background: `${portal.branding.accentColor}0c`, border: `2px solid ${portal.branding.accentColor}25`,
                     textAlign: "center", fontFamily: "monospace",
                   }}>
-                    <div style={{ fontSize: 24, marginBottom: 4 }}>{cfg.icon}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#f1f5f9" }}>{card}</div>
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>{cfg.icon}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>{card}</div>
+                    <div style={{ fontSize: 8, color: "#64748b", marginTop: 3 }}>{cfg.desc}</div>
                   </button>
                 );
               })}
             </div>
-            {portal.resources.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 8, color: "#475569", fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>Local Resources</div>
-                {portal.resources.slice(0, 3).map((r) => (
-                  <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 3 }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "5px 10px", borderRadius: 8,
-                      background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace",
-                    }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 9, fontWeight: 600, color: portal.branding.accentColor }}>{r.label}</div>
-                        <div style={{ fontSize: 7, color: "#475569" }}>{r.desc}</div>
-                      </div>
-                      <span style={{ fontSize: 8, color: "#475569" }}>↗</span>
+            <div>
+              <div style={{ fontSize: 9, color: portal.branding.accentColor, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>📍 {portal.city} Resources</div>
+              {portal.resources.map((r) => (
+                <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: `${portal.branding.accentColor}06`, border: `1px solid ${portal.branding.accentColor}15`, fontFamily: "monospace" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: portal.branding.accentColor }}>{r.label}</div>
+                      <div style={{ fontSize: 8, color: "#64748b", marginTop: 1 }}>{r.desc}</div>
                     </div>
-                  </a>
-                ))}
+                    <span style={{ fontSize: 10, color: "#475569" }}>↗</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+            {portal.partners.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, color: "#C9A227", fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>🤝 Local Partners</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {portal.partners.map((p) => (
+                    <span key={p} style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(201,162,39,0.06)", border: "1px solid rgba(201,162,39,0.15)", fontSize: 10, color: "#C9A227", fontWeight: 600, fontFamily: "monospace" }}>{p}</span>
+                  ))}
+                </div>
               </div>
             )}
+            <button onClick={() => setPortal(null)} style={{
+              width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+              color: "#475569", fontSize: 9, fontFamily: "monospace", textAlign: "center",
+            }}>
+              Switch to full NAVI experience →
+            </button>
           </div>
-        )}
+        ) : (
+        <>
 
         {/* ── Daily Missions — always visible at top ─────────────────────── */}
         {missions.length > 0 && (
@@ -5379,6 +5392,8 @@ export default function HomePage() {
           </div>
         </div>
 
+        </>
+        )}
         </>}{/* end home tab */}
 
         {/* ── Settings tab ── */}
