@@ -2499,9 +2499,6 @@ export default function HomePage() {
           <span style={{ fontSize: 8, color: "#64748b" }}>·</span>
           <span style={{ fontSize: 8, color: "#94a3b8" }}>{portal.fullName}</span>
         </div>
-        <button onClick={() => setPortal(null)} style={{
-          background: "none", border: "none", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "monospace",
-        }}>✕</button>
       </div>
     )}
 
@@ -5191,13 +5188,6 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-            <button onClick={() => setPortal(null)} style={{
-              width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
-              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-              color: "#475569", fontSize: 9, fontFamily: "monospace", textAlign: "center",
-            }}>
-              Switch to full NAVI experience →
-            </button>
           </div>
         ) : (
         <>
@@ -5739,13 +5729,6 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setPortal(null)} style={{
-                  width: "100%", padding: "10px", borderRadius: 10, cursor: "pointer",
-                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-                  color: "#475569", fontSize: 9, fontFamily: "monospace", textAlign: "center",
-                }}>
-                  Switch to full NAVI experience →
-                </button>
               </div>
             );
           }
