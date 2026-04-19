@@ -62,6 +62,7 @@ import { matchServiceRoute } from "@/lib/voiceNav";
 import { playTabSwitch, playConfirm, playNaviResponse } from "@/lib/sounds";
 import { EMAIL_RECEIVER } from "@/lib/emailConfig";
 import { hasSeenIntro, markIntroSeen } from "@/lib/introSeen";
+import { detectPortal, type PortalConfig } from "@/lib/portals";
 import { supabase } from "@/lib/supabase";
 import { track } from "@vercel/analytics";
 import {
@@ -794,6 +795,7 @@ function speakChunks(
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
+  const [portal, setPortal] = useState<PortalConfig | null>(null);
   const [showNameSetup, setShowNameSetup] = useState(false);
   const [userName, setUserName] = useState("");
   const [petName, setPetName] = useState("NAVI");
@@ -1153,6 +1155,7 @@ export default function HomePage() {
     }
 
     setMounted(true);
+    setPortal(detectPortal());
 
     // Auto-show walkthrough for first-time visitors (after a brief delay
     // so the app finishes rendering first).
@@ -2478,9 +2481,33 @@ export default function HomePage() {
     <DiagnosticProvider onRecovery={handleDiagnosticRecovery}>
     <>
     <CosmicBackground isSpeaking={isSpeaking} isLoading={isLoading} />
+
+    {/* City Portal banner — shows when ?portal=wilmington is in the URL */}
+    {portal && (
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+        padding: "6px 16px",
+        background: `linear-gradient(135deg, ${portal.accent}18, ${portal.accent}08)`,
+        borderBottom: `1px solid ${portal.accent}30`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        fontFamily: "monospace",
+        backdropFilter: "blur(12px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: portal.accent, boxShadow: `0 0 6px ${portal.accent}` }} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: portal.accent, letterSpacing: "0.08em" }}>{portal.tagline}</span>
+          <span style={{ fontSize: 8, color: "#64748b" }}>·</span>
+          <span style={{ fontSize: 8, color: "#94a3b8" }}>{portal.fullName}</span>
+        </div>
+        <button onClick={() => setPortal(null)} style={{
+          background: "none", border: "none", color: "#475569", fontSize: 10, cursor: "pointer", fontFamily: "monospace",
+        }}>✕</button>
+      </div>
+    )}
+
     <div
       className="fixed inset-0 flex flex-col grid-bg overflow-hidden"
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", paddingTop: portal ? 32 : 0 }}
     >
       {/* Cinematic intro */}
       {showIntro && (
