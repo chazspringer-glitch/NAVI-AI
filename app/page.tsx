@@ -5711,6 +5711,42 @@ export default function HomePage() {
             ];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 8 }}>
+                {/* Start Here — tailored for portal */}
+                <button onClick={() => {
+                    if (hasSeenIntro("startHere")) { setShowStartHere(true); }
+                    else { markIntroSeen("startHere"); setShowStartHereIntro(true); }
+                    setMenuOpen(false);
+                  }}
+                  style={{
+                    width: "100%", padding: "16px", borderRadius: 14, cursor: "pointer",
+                    background: `linear-gradient(135deg, ${portal.branding.accentColor}10, ${portal.branding.primaryColor}20)`,
+                    border: `1px solid ${portal.branding.accentColor}25`,
+                    display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                  }}>
+                  <NaviOrb size={24} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: portal.branding.accentColor, fontFamily: "monospace" }}>Start Here</div>
+                    <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.4, fontFamily: "monospace" }}>New to the {portal.name}? Learn how it helps {portal.city}</div>
+                  </div>
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: "#475569", opacity: 0.5 }}>→</span>
+                </button>
+
+                {/* Why NAVI Exists — tailored for portal */}
+                <button onClick={() => { setShowWhyNavi(true); setMenuOpen(false); }}
+                  style={{
+                    width: "100%", padding: "16px", borderRadius: 14, cursor: "pointer",
+                    background: "linear-gradient(135deg, rgba(201,162,39,0.08), rgba(168,85,247,0.04))",
+                    border: "1px solid rgba(201,162,39,0.22)",
+                    display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                  }}>
+                  <NaviOrb size={24} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A227", marginBottom: 2, fontFamily: "monospace" }}>Why This Exists</div>
+                    <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.4, fontFamily: "monospace" }}>The mission behind bringing NAVI to {portal.city}</div>
+                  </div>
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: "#475569", opacity: 0.5 }}>→</span>
+                </button>
+
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: portal.branding.accentColor, fontFamily: "monospace" }}>{portal.city} Tools</div>
                   <div style={{ fontSize: 9, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>Features available in the {portal.name}</div>
