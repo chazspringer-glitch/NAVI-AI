@@ -5089,7 +5089,8 @@ export default function HomePage() {
           >
             ⚙️ Settings
           </button>
-          {/* My Business — auth gated */}
+          {/* My Business — auth gated, hidden in portal mode */}
+          {!portal && (
           <button
             onClick={() => {
               if (!isLoggedIn) {
@@ -5112,6 +5113,7 @@ export default function HomePage() {
           >
             {isLoggedIn ? "💼" : "🔒"} Biz
           </button>
+          )}
         </div>
 
         {/* ── Tab content — 2-phase transition (tabOut → tabIn), no remount ── */}
@@ -5410,7 +5412,7 @@ export default function HomePage() {
             <span style={{ fontSize: 16 }}>{soundEnabled ? "🔔" : "🔕"}</span>
             <span>Sound {soundEnabled ? "On" : "Off"}</span>
           </button>
-          {ttsSupported && (isPro || isAdmin) && (
+          {ttsSupported && (isPro || isAdmin) && !portal && (
             <button
               onClick={toggleVoice}
               style={{
@@ -5425,7 +5427,7 @@ export default function HomePage() {
               <span>Voice {voiceEnabled ? "On" : "Off"}</span>
             </button>
           )}
-          {ttsSupported && !isAdmin && !isPro && (
+          {ttsSupported && !isAdmin && !isPro && !portal && (
             <button
               onClick={() => setHubTab("subscription")}
               style={{
