@@ -5134,6 +5134,61 @@ export default function HomePage() {
         {/* ── Home tab (settings / modes) ── */}
         {displayedHubTab === "home" && <>
 
+        {/* ── Portal homeCards — shown at top when portal is active ──────── */}
+        {portal && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ textAlign: "center", marginBottom: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: portal.branding.accentColor, fontFamily: "monospace" }}>
+                {portal.name}
+              </div>
+              <div style={{ fontSize: 9, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>
+                Powered by NAVI · {portal.fullName}
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {portal.homeCards.map((card) => {
+                const cardMap: Record<string, { icon: string; action: string }> = {
+                  "Find Job":      { icon: "💼", action: "jobs" },
+                  "Find Housing":  { icon: "🏠", action: "housing" },
+                  "Get Food":      { icon: "🥗", action: "foodIntel" },
+                  "Stay Safe":     { icon: "🛡️", action: "newsWeb" },
+                };
+                const cfg = cardMap[card] ?? { icon: "📌", action: "" };
+                return (
+                  <button key={card} onClick={() => { if (cfg.action) switchTab(cfg.action); }} style={{
+                    padding: "16px 10px", borderRadius: 14, cursor: "pointer",
+                    background: `${portal.branding.accentColor}0c`,
+                    border: `2px solid ${portal.branding.accentColor}25`,
+                    textAlign: "center", fontFamily: "monospace",
+                  }}>
+                    <div style={{ fontSize: 24, marginBottom: 4 }}>{cfg.icon}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#f1f5f9" }}>{card}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {portal.resources.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 8, color: "#475569", fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>Local Resources</div>
+                {portal.resources.slice(0, 3).map((r) => (
+                  <a key={r.label} href={r.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block", marginBottom: 3 }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "5px 10px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace",
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: portal.branding.accentColor }}>{r.label}</div>
+                        <div style={{ fontSize: 7, color: "#475569" }}>{r.desc}</div>
+                      </div>
+                      <span style={{ fontSize: 8, color: "#475569" }}>↗</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Daily Missions — always visible at top ─────────────────────── */}
         {missions.length > 0 && (
           <div style={{
